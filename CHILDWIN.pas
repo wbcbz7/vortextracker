@@ -600,6 +600,7 @@ type
     FBSetQuickAccess: TMenuItem;
     FBSaveInstrument: TMenuItem;
     N1: TMenuItem;
+    Label4: TLabel;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -677,7 +678,8 @@ type
     procedure DisposeUndo(All: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure SetFileName(Name: string);
-    function LoadTrackerModule(Name: string; var VTMP2: PModule): Boolean;
+//    function LoadTrackerModule(Name: string; var VTMP2, VTMP3: PModule): Boolean;
+    function LoadTrackerModule(Name: string; iter: Integer; var cnt: Integer; var VTMP2, VTMP3: PModule): Boolean;
     procedure TracksMouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
     procedure TracksMouseWheelUp(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
     procedure ResetSampleVolumeBuf;
@@ -882,7 +884,7 @@ type
     procedure SetLoopPos(lp: Integer);
     procedure AddUndo(CA: TChangeAction; par1, par2: Integer);
     procedure DoUndo(Steps: Integer; Undo: Boolean);
-    procedure SaveModuleAs;
+    function SaveModuleAs: Boolean;
     procedure SaveModule;
     procedure SaveModuleBackup;
     procedure FormActivate(Sender: TObject);
@@ -1070,8 +1072,8 @@ type
     WinNumber: Integer;
     WinFileName: string;
     SavedAsText: Boolean;
-    TSWindow: TMDIChild;
-    LeftModule: Boolean;
+    TSWindow: array [0..1] of TMDIChild;
+    NumModule: Integer;
     Closed: Boolean;
     IsSinchronizing: Boolean;
     BlockRecursion: Boolean;
@@ -2180,7 +2182,12 @@ begin
 
   if MainForm.SnapedToRight and (Msg.CmdType <> SC_CLOSE) then Exit;
 
-  if (MainForm.MDIChildCount = 2) and (TMDIChild(MainForm.MDIChildren[0]).TSWindow <> nil) and (Msg.CmdType <> SC_CLOSE) then
+  if ((MainForm.MDIChildCount = 2)
+  and (TMDIChild(MainForm.MDIChildren[0]).TSWindow[0] <> nil)
+  and (Msg.CmdType <> SC_CLOSE)) or
+     ((MainForm.MDIChildCount = 3)
+  and (TMDIChild(MainForm.MDIChildren[0]).TSWindow[1] <> nil)
+  and (Msg.CmdType <> SC_CLOSE)) then
     exit;
 
   if (msg.CmdType = SC_RESTORE) or (msg.CmdType = SC_MAXIMIZE) then
@@ -2211,14 +2218,16 @@ begin
   inherited;
 
   // Drag turbosound window too
-  if TSWindow <> nil then begin
+  if TSWindow[0] <> nil then begin
     ChildsEventsBlocked := True;
 
-    TSWindow.Top  := Top;
-    if TSWindow.Left > Left then
-      TSWindow.Left := Left + Width
-    else
-      TSWindow.Left := Left - Width;
+    TSWindow[0].Top  := Top;
+    TSWindow[0].Left := Left + Width;
+
+    if TSWindow[1] <> nil then begin
+      TSWindow[1].Top  := Top;
+      TSWindow[1].Left := Left + Width*2
+    end;
 
     ChildsEventsBlocked := False;
   end;
@@ -2353,7 +2362,8 @@ end;
 procedure TMDIChild.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   //?
-  if IsPlaying and ((PlayingWindow[1] = Self) or ((NumberOfSoundChips > 1) and (PlayingWindow[2] = Self))) then
+  if IsPlaying and ((PlayingWindow[1] = Self) or ((NumberOfSoundChips >= 2) and (PlayingWindow[2] = Self))
+  or ((NumberOfSoundChips = 3) and (PlayingWindow[3] = Self))) then
   begin
     StopPlaying;
     MainForm.RestoreControls;
@@ -2403,10 +2413,13 @@ end;
 
 function TMDIChild.ModuleInPlayingWindow: Boolean;
 begin
-  if PlayingWindow[2] <> nil then
-    Result := (PlayingWindow[2] = Self) or (PlayingWindow[2].TSWindow = Self)
+  if PlayingWindow[3] <> nil then
+    Result := (PlayingWindow[3] = Self) or (PlayingWindow[3].TSWindow[0] = Self) or (PlayingWindow[3].TSWindow[1] = Self)
   else
-    Result := PlayingWindow[1] = Self;
+  if PlayingWindow[2] <> nil then
+    Result := (PlayingWindow[2] = Self) or (PlayingWindow[2].TSWindow[0] = Self) or (PlayingWindow[2].TSWindow[1] = Self)
+  else
+    Result := (PlayingWindow[1] = Self) or (PlayingWindow[1].TSWindow[0] = Self) or (PlayingWindow[1].TSWindow[1] = Self);
 end;
 
 procedure TMDIChild.SetModuleFreq;
@@ -2434,14 +2447,15 @@ begin
     BorderStyle := bsSingle;
 
   PageControl1.ActivePageIndex := 0;
-  LeftModule := True;
+  NumModule := 1;
   AutoScroll := False;
   AutoSize := False;
   LastWidth := 0;
   LastHeight := 0;
   ControlStyle := ControlStyle + [csOpaque];
   IsSinchronizing := False;
-  TSWindow := nil;
+  TSWindow[0] := nil;
+  TSWindow[1] := nil;
   WinFileName  := '';
   SamplesDir   := MainForm.SamplesDir;
   OrnamentsDir := MainForm.OrnamentsDir;
@@ -3446,7 +3460,7 @@ const
   SpecFonts: Array[0..2] of String = (
     'ProTracker 2', 'WST_Germ', 'ZX Spectrum'
   );
-  
+
 var
   DC: HDC;
   sz: tagSIZE;
@@ -3492,7 +3506,7 @@ begin
   Samples.fBitmap := TBitmap.Create;
 
   Samples.ClientWidth := Samples.CelW * 40;
-  if Samples.ClientWidth < 400 then Samples.ClientWidth := 400;
+  if Samples.ClientWidth < 320 then Samples.ClientWidth := 320;
 
   ReleaseDC(Samples.Handle, DC);
 end;
@@ -4215,7 +4229,7 @@ begin
 end;
 
 
-procedure TTracks.RedrawTracks;
+procedure TTracks.RedrawTracks(DC: HDC);
 var
   Line, i, j, j1, n, i1, CurY, Top, ToLine, num: Integer;
 
@@ -5679,7 +5693,7 @@ begin
   fBitmap.Canvas.Font := Font;
 
   ClientWidth := CelW * OrnNCol * OrnNChars;
-  if ClientWidth < 400 then ClientWidth := 400;
+  if ClientWidth < 320 then ClientWidth := 320;
 
   ReleaseDC(Handle, DC);
 end;
@@ -7128,47 +7142,57 @@ procedure TMDIChild.TracksKeyDown(Sender: TObject; var Key: Word; Shift: TShiftS
 var
   PLen, i, j: Integer;
   Incr, Decr: Boolean;
-  
+
   procedure GoToNextWindow(Right: Boolean);
   var
     CurWinCurY, PLen: Integer;
+    dir:integer;
   begin
 
-    if (TSWindow = nil) or (TSWindow = Self) or Tracks.IsSelected then
+    if (TSWindow[0] = nil) or (TSWindow[0] = Self) or (TSWindow[1] = Self) or Tracks.IsSelected then
       Exit;
 
     CurWinCurY := Tracks.CursorY;
 
-    if TSWindow.Tracks.Enabled then with TSWindow do
+    dir:=-1;
+    if ((TSWindow[1]=nil) or not Right) and (TSWindow[0].Tracks.Enabled) then
+      dir:=0 //2ts or 3ts =>
+    else
+    if (TSWindow[1]<>nil) and (TSWindow[1].Tracks.Enabled) and Right then //3ts <=
+      dir:=1;
+
+    if dir>=0 then
     begin
+      with TSWindow[dir] do
+      begin
+        // Set cursor X
+        if Right then
+          Tracks.CursorX := 48
+        else
+          Tracks.CursorX := 0;
 
-      // Set cursor X
-      if Right then
-        Tracks.CursorX := 48
-      else
-        Tracks.CursorX := 0;
+        // Set cursor Y
+        Tracks.CursorY := CurWinCurY;
 
-      // Set cursor Y
-      Tracks.CursorY := CurWinCurY;
+        // Is CursorY < ShownFrom?
+        if Tracks.CurrentPatLine < 0 then
+          Tracks.CursorY := Tracks.N1OfLines - Tracks.ShownFrom;
 
-      // Is CursorY < ShownFrom?
-      if Tracks.CurrentPatLine < 0 then
-        Tracks.CursorY := Tracks.N1OfLines - Tracks.ShownFrom;
+        // Is CursorY > ShownFrom?
+        PLen := Tracks.ShownPattern.Length;
+        if Tracks.CurrentPatLine >= PLen then
+          Tracks.CursorY := PLen - Tracks.ShownFrom + Tracks.N1OfLines - 1;
 
-      // Is CursorY > ShownFrom?
-      PLen := Tracks.ShownPattern.Length;
-      if Tracks.CurrentPatLine >= PLen then
-        Tracks.CursorY := PLen - Tracks.ShownFrom + Tracks.N1OfLines - 1;
+        Tracks.RemoveSelection;
+        Tracks.RedrawTracks(0);
+        PageControl1.ActivePageIndex := 0;
+        Show;
+        SetFocus;
+        if Tracks.CanFocus then
+          Tracks.SetFocus;
+      end;
 
-      Tracks.RemoveSelection;
-      Tracks.RedrawTracks(0);
-      PageControl1.ActivePageIndex := 0;
-      Show;
-      SetFocus;
-      if Tracks.CanFocus then
-        Tracks.SetFocus;
     end;
-
   end;
 
   procedure RemSel;
@@ -7425,8 +7449,10 @@ var
     To1, PLen: Integer;
   begin
     Tracks.ManualBitBlt := True;
-    if TSWindow <> nil then
-      TSWindow.Tracks.ManualBitBlt := True;
+    if TSWindow[0] <> nil then
+      TSWindow[0].Tracks.ManualBitBlt := True;
+    if TSWindow[1] <> nil then
+      TSWindow[1].Tracks.ManualBitBlt := True;
 
     if Tracks.ShownPattern = nil then
       PLen := DefPatLen
@@ -7484,10 +7510,15 @@ var
     Tracks.ShowMyCaret;
     Tracks.ManualBitBlt := False;
 
-    if TSWindow <> nil then
+    if TSWindow[0] <> nil then
     begin
-      TSWindow.Tracks.ManualBitBlt := False;
-      TSWindow.Tracks.DoBitBlt;
+      TSWindow[0].Tracks.ManualBitBlt := False;
+      TSWindow[0].Tracks.DoBitBlt;
+    end;
+    if TSWindow[1] <> nil then
+    begin
+      TSWindow[1].Tracks.ManualBitBlt := False;
+      TSWindow[1].Tracks.DoBitBlt;
     end;
 
   end;
@@ -7497,8 +7528,10 @@ var
     From, PLen: Integer;
   begin
     Tracks.ManualBitBlt := True;
-    if TSWindow <> nil then
-      TSWindow.Tracks.ManualBitBlt := True;
+    if TSWindow[0] <> nil then
+      TSWindow[0].Tracks.ManualBitBlt := True;
+    if TSWindow[1] <> nil then
+      TSWindow[1].Tracks.ManualBitBlt := True;
 
     From := (Tracks.N1OfLines - Tracks.ShownFrom);
     if From < 0 then
@@ -7555,10 +7588,15 @@ var
     Tracks.ShowMyCaret;
     Tracks.ManualBitBlt := False;
 
-    if TSWindow <> nil then
+    if TSWindow[0] <> nil then
     begin
-      TSWindow.Tracks.ManualBitBlt := False;
-      TSWindow.Tracks.DoBitBlt;
+      TSWindow[0].Tracks.ManualBitBlt := False;
+      TSWindow[0].Tracks.DoBitBlt;
+    end;
+    if TSWindow[1] <> nil then
+    begin
+      TSWindow[1].Tracks.ManualBitBlt := False;
+      TSWindow[1].Tracks.DoBitBlt;
     end;
 
   end;
@@ -8408,7 +8446,7 @@ begin
           Tracks.CursorY := Tracks.N1OfLines;
           Tracks.RedrawTracks(0);
           ShowStat;
-          if TSWindow = nil then
+          if TSWindow[0] = nil then
             RestartPlaying(True, True)
           else
             RestartPlayingTS(True, False);
@@ -8469,7 +8507,7 @@ procedure TTestLine.TestLineMidiOff(note: Integer);
 begin
   if Self.CurrentMidiNote <> note then
     Exit;
-  if (PlayMode = PMPlayLine) and IsPlaying and (PlayingWindow[1] = ParWind) then
+  if (PlayMode = PMPlayLine) and IsPlaying and ((PlayingWindow[1] = ParWind) or (PlayingWindow[2] = ParWind) or (PlayingWindow[3] = ParWind)) then
   begin
     ResetPlaying;
     TMDIChild(ParWind).PlayStopState := BPlay;
@@ -12423,7 +12461,9 @@ end;
 procedure TMDIChild.FormDestroy(Sender: TObject);
 begin
 
-  if IsPlaying and ((PlayingWindow[1] = Self) or ((NumberOfSoundChips > 1) and (PlayingWindow[2] = Self))) then
+  if IsPlaying and ((PlayingWindow[1] = Self) or
+  ((NumberOfSoundChips >= 2) and (PlayingWindow[2] = Self)) or
+  ((NumberOfSoundChips = 3) and (PlayingWindow[3] = Self))) then
   begin
     StopPlaying;
     MainForm.RestoreControls;
@@ -12464,17 +12504,17 @@ begin
   BackupVersionCounter := GetBackupVersionCounter;
 end;
 
-function TMDIChild.LoadTrackerModule(Name: string; var VTMP2: PModule): Boolean;
+function TMDIChild.LoadTrackerModule(Name: string; iter: Integer; var cnt: integer; var VTMP2, VTMP3: PModule): Boolean;
 const
   ers: array[1..6] of string = ('Module not found', 'Syntax error', 'Parameter out of range', 'Unexpected end of file', 'Bad sample structure', 'Bad pattern structure');
 var
   ZXP: TSpeccyModule;
-  i, Tm, TSSize2: Integer;
+  i, i2, Tm, TSSize1, TSSize2: Integer;
   Andsix: byte;
   ZXAddr: word;
   AuthN, SongN: string;
 
-  function Convert(FType: Available_Types; VTMP: PModule; var VTMP2: PModule): Boolean;
+  function Convert(FType: Available_Types; VTMP: PModule; var VTMP2, VTMP3: PModule): Boolean;
   var
     j: Integer;
   begin
@@ -12483,7 +12523,7 @@ var
 
       Unknown:
         begin
-          i := LoadModuleFromText(Name, VTMP, VTMP2);
+          i := LoadModuleFromText(Name, VTMP, VTMP2, VTMP3);
 
           if i <> 0 then
             Result := False;
@@ -12502,6 +12542,11 @@ var
           if VTMP2 <> nil then begin
             VTMP2.ShowInfo := VTMP.ShowInfo;
             VTMP2.Info     := VTMP.Info;
+          end;
+
+          if VTMP3 <> nil then begin
+            VTMP3.ShowInfo := VTMP.ShowInfo;
+            VTMP3.Info     := VTMP.Info;
           end;
 
         end;
@@ -12592,7 +12637,7 @@ var
   end;
 
 var
-  FileType, FType2: Available_Types;
+  FileType, FType1, FType2: Available_Types;
   s: string;
   f: file;
   dummy: PModule;
@@ -12610,43 +12655,69 @@ begin
   end;
 
   try
-    if VTMP2 = nil then
+    if (iter=0) then
     begin
-      FileType := LoadAndDetect(@ZXP, Name, i, FType2, TSSize2, ZXAddr, Tm, Andsix, AuthN, SongN);
-      Result := Convert(FileType, VTMP, VTMP2);
+      FileType := LoadAndDetect(@ZXP, Name, i, FType1, FType2, TSSize1, TSSize2, ZXAddr, Tm, Andsix, AuthN, SongN);
+      Result := Convert(FileType, VTMP, VTMP2, VTMP3);
       if not Result then
         Exit;
-        
-      if (VTMP2 = nil) and (FType2 <> Unknown) and (TSSize2 <> 0) then
+      if (VTMP2=nil) and (VTMP3=nil) then cnt := 1
+      else if (VTMP3=nil) then cnt := 2
+      else cnt := 3;
+      if (VTMP2=nil) and (FType1 <> Unknown) and (TSSize1 <> 0) then
       begin
         FillChar(ZXP, 65536, 0);
         AssignFile(f, Name);
         Reset(f, 1);
         Seek(f, i);
-        BlockRead(f, ZXP, TSSize2, i);
+        BlockRead(f, ZXP, TSSize1, i2);
         CloseFile(f);
-        if i = TSSize2 then
+        if i2 = TSSize1 then //success loading 2nd sub-module
         begin
-          PrepareZXModule(@ZXP, FType2, TSSize2);
-          if FType2 <> Unknown then
+          PrepareZXModule(@ZXP, FType1, TSSize1);
+          if FType1 <> Unknown then
           begin
             NewVTMP(VTMP2);
             dummy := nil;
-            Convert(FType2, VTMP2, dummy);
+            Convert(FType1, VTMP2, dummy, dummy);
             if dummy <> nil then
               FreeVTMP(dummy);
+            inc(cnt);
+            if (FType2 <> Unknown) and (TSSize2 <> 0) then
+            begin
+              FillChar(ZXP, 65536, 0);
+              AssignFile(f, Name);
+              Reset(f, 1);
+              Seek(f, i + TSSize1); //third sub-module offset
+              BlockRead(f, ZXP, TSSize2, i2);
+              CloseFile(f);
+              if i2 = TSSize2 then //success
+              begin
+                PrepareZXModule(@ZXP, FType2, TSSize2);
+                if FType2 <> Unknown then
+                begin
+                  NewVTMP(VTMP3);
+                  dummy := nil;
+                  Convert(FType2, VTMP3, dummy, dummy);
+                  inc(cnt);
+                  if dummy <> nil then
+                    FreeVTMP(dummy);
+                end;
+              end;
+            end;
           end;
         end;
       end;
-    end
-    else
-    begin
-      FreeVTMP(VTMP);
-      VTMP := VTMP2;
-      if LowerCase(ExtractFileExt(Name)) = '.pt3' then
-        SavedAsText := False;
     end;
-    Module_SetPointer(VTMP, 1);
+
+    if iter=1 then VTMP := VTMP2
+    else
+    if iter=2 then VTMP := VTMP3;
+
+    if LowerCase(ExtractFileExt(Name)) = '.pt3' then
+      SavedAsText := False;
+
+    Module_SetPointer(VTMP, iter+1); // iter 0..2 chip 1..3
     SetFileName(Name);
     VtmFeaturesGrp.ItemIndex := VTMP.FeaturesLevel;
     SaveHead.ItemIndex := Ord(not VTMP.VortexModule_Header);
@@ -12735,8 +12806,10 @@ begin
 
 
   Tracks.ManualBitBlt := True;
-  if TSWindow <> nil then
-    TSWindow.Tracks.ManualBitBlt := True;
+  if TSWindow[0] <> nil then
+    TSWindow[0].Tracks.ManualBitBlt := True;
+  if TSWindow[1] <> nil then
+    TSWindow[1].Tracks.ManualBitBlt := True;
 
   Handled := True;
   if Tracks.ShownPattern = nil then
@@ -12775,10 +12848,15 @@ begin
 
   Tracks.ManualBitBlt := False;
   Tracks.DoBitBlt;
-  if TSWindow <> nil then
+  if TSWindow[0] <> nil then
   begin
-    TSWindow.Tracks.ManualBitBlt := False;
-    TSWindow.Tracks.DoBitBlt;
+    TSWindow[0].Tracks.ManualBitBlt := False;
+    TSWindow[0].Tracks.DoBitBlt;
+  end;
+  if TSWindow[1] <> nil then
+  begin
+    TSWindow[1].Tracks.ManualBitBlt := False;
+    TSWindow[1].Tracks.DoBitBlt;
   end;
 
 end;
@@ -12802,8 +12880,10 @@ begin
 
 
   Tracks.ManualBitBlt := True;
-  if TSWindow <> nil then
-    TSWindow.Tracks.ManualBitBlt := True;
+  if TSWindow[0] <> nil then
+    TSWindow[0].Tracks.ManualBitBlt := True;
+  if TSWindow[1] <> nil then
+    TSWindow[1].Tracks.ManualBitBlt := True;
 
   Handled := True;
   if Tracks.ShownFrom > 0 then
@@ -12842,10 +12922,15 @@ begin
 
   Tracks.ManualBitBlt := False;
   Tracks.DoBitBlt;
-  if TSWindow <> nil then
+  if TSWindow[0] <> nil then
   begin
-    TSWindow.Tracks.ManualBitBlt := False;
-    TSWindow.Tracks.DoBitBlt;
+    TSWindow[0].Tracks.ManualBitBlt := False;
+    TSWindow[0].Tracks.DoBitBlt;
+  end;
+  if TSWindow[1] <> nil then
+  begin
+    TSWindow[1].Tracks.ManualBitBlt := False;
+    TSWindow[1].Tracks.DoBitBlt;
   end;
 end;
 
@@ -13259,14 +13344,23 @@ begin
     Tracks.RedrawTracks(0);
     Tracks.ShowMyCaret;
 
-    if Self.TSWindow <> nil then
+    if Self.TSWindow[0] <> nil then
     begin
       SinchronizeModules;
-      Self.TSWindow.Tracks.ShownFrom := Tracks.ReturnShownFrom;
-      Self.TSWindow.Tracks.CursorY   := Tracks.ReturnCursorY;
-      Self.TSWindow.Tracks.RemoveSelection;
+      Self.TSWindow[0].Tracks.ShownFrom := Tracks.ReturnShownFrom;
+      Self.TSWindow[0].Tracks.CursorY   := Tracks.ReturnCursorY;
+      Self.TSWindow[0].Tracks.RemoveSelection;
       Tracks.HideMyCaret;
-      Self.TSWindow.Tracks.RedrawTracks(0);
+      Self.TSWindow[0].Tracks.RedrawTracks(0);
+      Tracks.ShowMyCaret;
+    end;
+    if Self.TSWindow[1] <> nil then
+    begin
+      Self.TSWindow[1].Tracks.ShownFrom := Tracks.ReturnShownFrom;
+      Self.TSWindow[1].Tracks.CursorY   := Tracks.ReturnCursorY;
+      Self.TSWindow[1].Tracks.RemoveSelection;
+      Tracks.HideMyCaret;
+      Self.TSWindow[1].Tracks.RedrawTracks(0);
       Tracks.ShowMyCaret;
     end;
     Tracks.ReturnAfterPlay := False;
@@ -13308,11 +13402,18 @@ begin
     RerollToPos(Pos, 1);
     UnresetPlaying;
   end
-  else if (NumberOfSoundChips > 1) and (PlayingWindow[2] = Self) then
+  else if (NumberOfSoundChips >= 2) and (PlayingWindow[2] = Self) then
   begin
     if not Reseted then
       ResetPlaying;
     RerollToPos(Pos, 2);
+    UnresetPlaying;
+  end
+  else if (NumberOfSoundChips = 3) and (PlayingWindow[3] = Self) then
+  begin
+    if not Reseted then
+      ResetPlaying;
+    RerollToPos(Pos, 3);
     UnresetPlaying;
   end;
 end;
@@ -13326,15 +13427,24 @@ begin
 
   SetModuleFreq;
   PlayingWindow[1] := Self;
-  NumberOfSoundChips := 1;
-  if TSWindow <> nil then begin
-    PlayingWindow[2] := TSWindow;
+  PlayingWindow[2] := nil;
+  PlayingWindow[3] := nil;
+  if (TSWindow[0] <> nil) and (TSWindow[1] <> nil) then begin
+    PlayingWindow[2] := TSWindow[0];
+    PlayingWindow[3] := TSWindow[1];
+    NumberOfSoundChips := 3;
+  end
+  else
+  if TSWindow[0] <> nil then begin
+    PlayingWindow[2] := TSWindow[0];
     NumberOfSoundChips := 2;
-  end;
+  end
+  else
+    NumberOfSoundChips := 1;
 
   RerollToLineNum(1, Tracks.CurrentPatLine, True);
-  
-  if TSWindow = nil then
+
+  if TSWindow[0] = nil then
     RestartPlayingLine(Line)
   else
     RestartPlayingTS(True, True);
@@ -13449,6 +13559,8 @@ begin
   if Enter then
   begin
     PlayingWindow[1] := Self;
+    PlayingWindow[2] := nil;
+    PlayingWindow[3] := nil;
     //BetweenPatterns.Enabled := False;
     //DuplicateNoteParams.Enabled := False;
     //EnvelopeAsNoteOpt.Enabled := False;
@@ -13505,10 +13617,16 @@ begin
   end;
 
   PlayingWindow[1] := Self;
-  PlayingWindow[2] := TSWindow;
+  PlayingWindow[2] := TSWindow[0];
   PlayingWindow[1].Tracks.RemoveSelection;
   PlayingWindow[2].Tracks.RemoveSelection;
-  NumberOfSoundChips := 2;
+  if TSWindow[1] <> nil then begin
+    PlayingWindow[3] := TSWindow[1];
+    PlayingWindow[3].Tracks.RemoveSelection;
+    NumberOfSoundChips := 3;
+  end
+  else
+    NumberOfSoundChips := 2;
 
   // Shift+Enter - infinite play current line
   if PlayNote or (GetKeyState(VK_SHIFT) and 128 <> 0) then
@@ -13540,7 +13658,7 @@ begin
   UnresetPlaying;
 end;
 
-procedure TMDIChild.RerollToInt;
+procedure TMDIChild.RerollToInt(Int_, Chip: Integer);
 begin
   Module_SetPointer(VTMP, Chip);
   Module_SetDelay(VTMP.Initial_Delay);
@@ -13561,7 +13679,7 @@ begin
   end;
 end;
 
-procedure TMDIChild.RerollToPos;
+procedure TMDIChild.RerollToPos(Pos, Chip: Integer);
 var
   i: Integer;
 begin
@@ -13576,10 +13694,16 @@ begin
     until (i = 2) and (PlVars[Chip].CurrentPosition = Pos);
     LineReady := True;
   end;
-  if NumberOfSoundChips > 1 then
-    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip);
+  if NumberOfSoundChips = 2 then
+    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip)
+  else
+  if NumberOfSoundChips = 3 then
+    for i := 1 to 3 do
+    begin
+      if i = Chip then continue;
+      PlayingWindow[i].RerollToInt(PlVars[Chip].IntCnt, i);
+    end;
 end;
-
 
 procedure TMDIChild.RerollToLineNum(Chip, Line: Integer; ZeroLine: Boolean; SrcVTMP: PModule = nil);
 var
@@ -13605,16 +13729,24 @@ begin
     Module_PlayCurrentLine;
     LineReady := True;
   end
-  
+
   else if Line > 0 then
-  begin                            
+  begin
     repeat
       i := Module_PlayCurrentLine
     until (i = 1) and (PlVars[Chip].CurrentLine = Line + 1);
     LineReady := True
   end;
-  if NumberOfSoundChips > 1 then
-    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip);
+  if NumberOfSoundChips = 2 then
+    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip)
+  else
+  if NumberOfSoundChips = 3 then
+    for i := 1 to 3 do
+    begin
+      if i = Chip then continue;
+      PlayingWindow[i].RerollToInt(PlVars[Chip].IntCnt, i);
+    end;
+
 end;
 
 procedure TMDIChild.RerollToLine(Chip: Integer);
@@ -13639,8 +13771,15 @@ begin
     until (i = 1) and (PlVars[Chip].CurrentLine = Tracks.ShownFrom + 1);
     LineReady := True
   end;
-  if NumberOfSoundChips > 1 then
-    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip);
+  if NumberOfSoundChips = 2 then
+    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip)
+  else
+  if NumberOfSoundChips = 3 then
+    for i := 1 to 3 do
+    begin
+      if i = Chip then continue;
+      PlayingWindow[i].RerollToInt(PlVars[Chip].IntCnt, i);
+    end;
 end;
 
 procedure TMDIChild.RerollToLine0(Chip: Integer);
@@ -13672,11 +13811,18 @@ begin
     LineReady := True
   end;
 
-  if NumberOfSoundChips > 1 then
-    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip);
+  if NumberOfSoundChips = 2 then
+    PlayingWindow[3 - Chip].RerollToInt(PlVars[Chip].IntCnt, 3 - Chip)
+  else
+  if NumberOfSoundChips = 3 then
+    for i := 1 to 3 do
+    begin
+      if i = Chip then continue;
+      PlayingWindow[i].RerollToInt(PlVars[Chip].IntCnt, i);
+    end;
 end;
 
-procedure TMDIChild.RerollToPatternLine;
+procedure TMDIChild.RerollToPatternLine(Chip: Integer);
 var
   i, j: Integer;
 begin
@@ -13704,19 +13850,31 @@ end;
 
 procedure TMDIChild.SinchronizeModules;
 begin
-  if IsSinchronizing or (TSWindow = nil) or (TSWindow = Self) then
-    Exit;
-  if (Tracks.ShownFrom = TSWindow.Tracks.ShownFrom) and (PositionNumber = TSWindow.PositionNumber) then
-    Exit;
 
+  if IsSinchronizing or ((TSWindow[0] = nil) and (TSWindow[1] = nil)) then
+//   or (TSWindow[0] = Self) then
+    Exit;
+  if (TSWindow[0]<>nil) and (Tracks.ShownFrom = TSWindow[0].Tracks.ShownFrom) and (PositionNumber = TSWindow[0].PositionNumber) then
+    Exit;
+  if (TSWindow[1]<>nil) and (Tracks.ShownFrom = TSWindow[1].Tracks.ShownFrom) and (PositionNumber = TSWindow[1].PositionNumber) then
+    Exit;
 
   if not IsPlaying or (PlayMode <> PMPlayModule) then
   begin
-    TSWindow.IsSinchronizing := True;
+    TSWindow[0].IsSinchronizing := True;
     try
-      TSWindow.GoToTime(PosBegin + LineInts);
+      TSWindow[0].GoToTime(PosBegin + LineInts);
     finally
-      TSWindow.IsSinchronizing := False;
+      TSWindow[0].IsSinchronizing := False;
+    end;
+    if TSWindow[1]<>nil then
+    begin
+      TSWindow[1].IsSinchronizing := True;
+      try
+        TSWindow[1].GoToTime(PosBegin + LineInts);
+      finally
+        TSWindow[1].IsSinchronizing := False;
+      end;
     end;
   end;
 end;
@@ -13726,7 +13884,7 @@ procedure TMDIChild.SetStringGrid1Scroll(ACol: Integer);
 var
   ScrollPos, ColPos, VisibleArea, SelRows, VisibleColCount: Integer;
   Shift: Boolean;
-  
+
 begin
   VisibleColCount := PositionsScrollBox.ClientWidth div (StringGrid1.DefaultColWidth+1);
   SelRows := StringGrid1.Selection.Right - StringGrid1.Selection.Left + 1;
@@ -13753,10 +13911,15 @@ begin
 
   PositionsScrollBox.HorzScrollBar.Position := ScrollPos;
 
-  if (TSWindow <> nil) and not IsSinchronizing then begin
-    TSWindow.IsSinchronizing := True;
-    TSWindow.SelectPosition2(PositionNumber);
-    TSWindow.IsSinchronizing := False;
+  if (TSWindow[0] <> nil) and not IsSinchronizing then begin
+    TSWindow[0].IsSinchronizing := True;
+    TSWindow[0].SelectPosition2(PositionNumber);
+    TSWindow[0].IsSinchronizing := False;
+  end;
+  if (TSWindow[1] <> nil) and not IsSinchronizing then begin
+    TSWindow[1].IsSinchronizing := True;
+    TSWindow[1].SelectPosition2(PositionNumber);
+    TSWindow[1].IsSinchronizing := False;
   end;
 
 end;
@@ -13783,7 +13946,9 @@ begin
   if Pos < 0 then Pos := 0;
 
 
-  if IsPlaying and (PlayMode = PMPlayModule) and ((PlayingWindow[1] = Self) or ((NumberOfSoundChips > 1) and (PlayingWindow[2] = Self))) then
+  if IsPlaying and (PlayMode = PMPlayModule) and ((PlayingWindow[1] = Self)
+    or ((NumberOfSoundChips >= 2) and (PlayingWindow[2] = Self))
+    or ((NumberOfSoundChips = 3) and (PlayingWindow[3] = Self))) then
   begin
     PositionNumber := Pos;
     CalculatePos0;
@@ -14050,7 +14215,7 @@ begin
   begin
     if (SourceColsRight <= Loop) then
       Dec(VTMP.Positions.Loop, NumChangedPositions);
-      
+
     if LoopInsideSelected then
       VTMP.Positions.Loop := 0;
   end;
@@ -14080,7 +14245,7 @@ begin
   // Save current positions array
   New(ChangeList[ChangeCount - 1].PositionList);
   ChangeList[ChangeCount - 1].PositionList^ := VTMP.Positions;
-  
+
 end;
 
 
@@ -14671,7 +14836,10 @@ procedure TMDIChild.StringGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
   case Key of
     '0'..'9':
-      if not (IsPlaying and (PlayMode = PMPlayModule) and ((PlayingWindow[1] = Self) or ((NumberOfSoundChips = 2) and (PlayingWindow[2] = Self)))) and (StringGrid1.Selection.Left <= VTMP.Positions.Length) then
+      if not (IsPlaying and (PlayMode = PMPlayModule) and ((PlayingWindow[1] = Self)
+       or ((NumberOfSoundChips >= 2) and (PlayingWindow[2] = Self))
+       or ((NumberOfSoundChips = 3) and (PlayingWindow[3] = Self))))
+       and (StringGrid1.Selection.Left <= VTMP.Positions.Length) then
       begin
         InputPNumber := InputPNumber * 10 + Ord(Key) - Ord('0');
         if InputPNumber > MaxPatNum then
@@ -15623,10 +15791,15 @@ begin
 
   if BlockRecursion then Exit;
 
-  if TSWindow <> nil then begin
-    TSWindow.BlockRecursion := True;
-    TSWindow.UpDown4.Position := NewValue;
-    TSWindow.BlockRecursion := False;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].BlockRecursion := True;
+    TSWindow[0].UpDown4.Position := NewValue;
+    TSWindow[0].BlockRecursion := False;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].BlockRecursion := True;
+    TSWindow[1].UpDown4.Position := NewValue;
+    TSWindow[1].BlockRecursion := False;
   end;
 end;
 
@@ -15990,8 +16163,15 @@ begin
   CheckButtonStateChanA;
   CheckButtonStateChanB;
   CheckButtonStateChanC;
-  if TSWindow <> nil then
-    with TSWindow do
+  if TSWindow[0] <> nil then
+    with TSWindow[0] do
+    begin
+      CheckButtonStateChanA;
+      CheckButtonStateChanB;
+      CheckButtonStateChanC;
+    end;
+  if TSWindow[1] <> nil then
+    with TSWindow[1] do
     begin
       CheckButtonStateChanA;
       CheckButtonStateChanB;
@@ -16008,8 +16188,17 @@ begin
   Tracks.RedrawTracks(0);
   Tracks.ShowMyCaret;
 
-  if TSWindow <> nil then
-    with TSWindow do
+  if TSWindow[0] <> nil then
+    with TSWindow[0] do
+    begin
+      UpdateHintsForChannelButtons;
+      UpdateChannelsMutedState;
+      Tracks.HideMyCaret;
+      Tracks.RedrawTracks(0);
+      Tracks.ShowMyCaret;
+    end;
+  if TSWindow[1] <> nil then
+    with TSWindow[1] do
     begin
       UpdateHintsForChannelButtons;
       UpdateChannelsMutedState;
@@ -16024,8 +16213,10 @@ end;
 function TMDIChild.AnotherSoloPressed: Boolean;
 begin
   Result := SpeedButton13.Down or SpeedButton14.Down or SpeedButton15.Down;
-  if TSWindow = nil then Exit;
-  Result := Result or TSWindow.SpeedButton13.Down or TSWindow.SpeedButton14.Down or TSWindow.SpeedButton15.Down;
+  if TSWindow[0] = nil then Exit;
+  Result := Result or TSWindow[0].SpeedButton13.Down or TSWindow[0].SpeedButton14.Down or TSWindow[0].SpeedButton15.Down;
+  if TSWindow[1] = nil then Exit;
+  Result := Result or TSWindow[1].SpeedButton13.Down or TSWindow[1].SpeedButton14.Down or TSWindow[1].SpeedButton15.Down;
 end;
 
 procedure TMDIChild.MuteChannelA(Force: Boolean);
@@ -16110,7 +16301,16 @@ begin
     SpeedButton13.Down := False;
     SpeedButton14.Down := False;
     SpeedButton15.Down := False;
-    if TSWindow <> nil then with TSWindow do
+    if TSWindow[0] <> nil then with TSWindow[0] do
+    begin
+      DismuteChannelA;
+      DismuteChannelB;
+      DismuteChannelC;
+      SpeedButton13.Down := False;
+      SpeedButton14.Down := False;
+      SpeedButton15.Down := False;
+    end;
+    if TSWindow[1] <> nil then with TSWindow[1] do
     begin
       DismuteChannelA;
       DismuteChannelB;
@@ -16125,8 +16325,15 @@ begin
   if AnotherSoloPressed then MuteChannelA(False) else DismuteChannelA;
   if AnotherSoloPressed then MuteChannelB(False) else DismuteChannelB;
   if AnotherSoloPressed then MuteChannelC(False) else DismuteChannelC;
-  if TSWindow <> nil then
-    with TSWindow do
+  if TSWindow[0] <> nil then
+    with TSWindow[0] do
+    begin
+      if AnotherSoloPressed then MuteChannelA(False) else DismuteChannelA;
+      if AnotherSoloPressed then MuteChannelB(False) else DismuteChannelB;
+      if AnotherSoloPressed then MuteChannelC(False) else DismuteChannelC;
+    end;
+  if TSWindow[1] <> nil then
+    with TSWindow[1] do
     begin
       if AnotherSoloPressed then MuteChannelA(False) else DismuteChannelA;
       if AnotherSoloPressed then MuteChannelB(False) else DismuteChannelB;
@@ -16136,8 +16343,15 @@ end;
 
 procedure TMDIChild.MuteSecondWidnowChannels;
 begin
-  if TSWindow <> nil then
-    with TSWindow do
+  if TSWindow[0] <> nil then
+    with TSWindow[0] do
+    begin
+      MuteChannelA(False);
+      MuteChannelB(False);
+      MuteChannelC(False);
+    end;
+  if TSWindow[1] <> nil then
+    with TSWindow[1] do
     begin
       MuteChannelA(False);
       MuteChannelB(False);
@@ -16292,10 +16506,15 @@ begin
 
   if BlockRecursion then Exit;
 
-  if TSWindow <> nil then begin
-    TSWindow.BlockRecursion := True;
-    TSWindow.VtmFeaturesGrp.ItemIndex := VtmFeaturesGrp.ItemIndex;
-    TSWindow.BlockRecursion := False;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].BlockRecursion := True;
+    TSWindow[0].VtmFeaturesGrp.ItemIndex := VtmFeaturesGrp.ItemIndex;
+    TSWindow[0].BlockRecursion := False;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].BlockRecursion := True;
+    TSWindow[1].VtmFeaturesGrp.ItemIndex := VtmFeaturesGrp.ItemIndex;
+    TSWindow[1].BlockRecursion := False;
   end;
 
 end;
@@ -16312,10 +16531,15 @@ begin
 
   if BlockRecursion then Exit;
 
-  if TSWindow <> nil then begin
-    TSWindow.BlockRecursion := True;
-    TSWindow.SaveHead.ItemIndex := SaveHead.ItemIndex;
-    TSWindow.BlockRecursion := False;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].BlockRecursion := True;
+    TSWindow[0].SaveHead.ItemIndex := SaveHead.ItemIndex;
+    TSWindow[0].BlockRecursion := False;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].BlockRecursion := True;
+    TSWindow[1].SaveHead.ItemIndex := SaveHead.ItemIndex;
+    TSWindow[1].BlockRecursion := False;
   end;
 end;
 
@@ -16815,15 +17039,22 @@ begin
     StringGrid1.Selection := sel;   }
   end;
 
-  if (TSWindow = nil) or (TSWindow.Closed) or not TSWindow.Visible then Exit;
+  if (TSWindow[0] = nil) or (TSWindow[0].Closed) or not TSWindow[0].Visible then Exit;
 
-  if (TSWindow.StringGrid1.Selection.Left > TSWindow.VTMP.Positions.Length - 1) then begin
-    TSWindow.SelectPosition2(TSWindow.VTMP.Positions.Length - 1);
+  if (TSWindow[0].StringGrid1.Selection.Left > TSWindow[0].VTMP.Positions.Length - 1) then begin
+    TSWindow[0].SelectPosition2(TSWindow[0].VTMP.Positions.Length - 1);
+
 {    sel.Left := TSWindow.VTMP.Positions.Length - 1;
     sel.Right := sel.Left;
     sel.Top := 0;
     sel.Bottom := 0;
     TSWindow.StringGrid1.Selection := sel; }
+  end;
+
+  if (TSWindow[1] = nil) or (TSWindow[1].Closed) or not TSWindow[1].Visible then Exit;
+
+  if (TSWindow[1].StringGrid1.Selection.Left > TSWindow[1].VTMP.Positions.Length - 1) then begin
+    TSWindow[1].SelectPosition2(TSWindow[1].VTMP.Positions.Length - 1);
   end;
 
 end;
@@ -17451,7 +17682,7 @@ var
   res: Integer;
 begin
 
-  CanClose := not (SongChanged or ((TSWindow <> nil) and TSWindow.SongChanged));
+  CanClose := not (SongChanged or ((TSWindow[0] <> nil) and TSWindow[0].SongChanged) or ((TSWindow[1] <> nil) and TSWindow[1].SongChanged));
 
   // Save changes dialog
   if not CanClose then begin
@@ -17466,17 +17697,28 @@ begin
     Closed := True;
     SongChanged := False;
     BackupSongChanged := False;
-    if (TSWindow <> nil) and (not TSWindow.Closed) then begin
-      TSWindow.SongChanged := False;
-      TSWindow.BackupSongChanged := False;
-      TSWindow.Closed := True;
+    if (TSWindow[0] <> nil) and (not TSWindow[0].Closed) then begin
+      TSWindow[0].SongChanged := False;
+      TSWindow[0].BackupSongChanged := False;
+      TSWindow[0].Closed := True;
       DrawOffAfterClose := True;
 
       // When application exit, we no need to close second child manually.
       // Otherwise there will be crash
       if SysCmd <> SC_CLOSE then
-        TSWindow.Close;
+        TSWindow[0].Close;
+     // DrawOffAfterClose := False;
+    end;
+    if (TSWindow[1] <> nil) and (not TSWindow[1].Closed) then begin
+      TSWindow[1].SongChanged := False;
+      TSWindow[1].BackupSongChanged := False;
+      TSWindow[1].Closed := True;
+      DrawOffAfterClose := True;
 
+      // When application exit, we no need to close second child manually.
+      // Otherwise there will be crash
+      if SysCmd <> SC_CLOSE then
+        TSWindow[1].Close;
      // DrawOffAfterClose := False;
     end
   end;
@@ -19910,7 +20152,7 @@ begin
   end;
 end;
 
-procedure TMDIChild.SaveModuleAs;
+function TMDIChild.SaveModuleAs: boolean;
 begin
   with MainForm do
   begin
@@ -19919,8 +20161,11 @@ begin
     if WinFileName <> '' then
       SaveDialog1.FileName := WinFileName
 
-    else if (TSWindow <> nil) and (TSWindow.WinFileName <> '') then
-      SaveDialog1.FileName := TSWindow.WinFileName
+    else if (TSWindow[0] <> nil) and (TSWindow[0].WinFileName <> '') then
+      SaveDialog1.FileName := TSWindow[0].WinFileName
+
+    else if (TSWindow[1] <> nil) and (TSWindow[1].WinFileName <> '') then
+      SaveDialog1.FileName := TSWindow[1].WinFileName
 
     else
       SaveDialog1.FileName := 'MyBestTrack' + IntToStr(WinNumber);
@@ -19938,6 +20183,7 @@ begin
       SaveDialog1.FileName := SaveDialog1.InitialDir + ExtractFileName(SaveDialog1.FileName);
 
 
+    Result := False;
     if SaveDialog1.Execute then
     begin
       IsDemosong := False;
@@ -19951,6 +20197,7 @@ begin
       SaveDialog1.InitialDir := SaveDialog1.FileName;
       SetFileName(SaveDialog1.FileName);
       SavePT3(Self, SaveDialog1.FileName, SaveDialog1.FilterIndex = 1);
+      Result := True;
     end
 
 
@@ -19962,9 +20209,11 @@ procedure TMDIChild.SaveModule;
 var
   s: string;
 begin
-  if not SongChanged and (TSWindow = nil) then Exit;
-  if not SongChanged and not TSWindow.SongChanged then Exit;
-  
+  if not SongChanged and (TSWindow[0] = nil) then Exit;
+  if not SongChanged and (TSWindow[0] <> nil) and not TSWindow[0].SongChanged then Exit;
+  if not SongChanged and (TSWindow[0] <> nil) and not TSWindow[0].SongChanged
+     and (TSWindow[1] <> nil) and not TSWindow[1].SongChanged  then Exit;
+
   if WinFileName = '' then
     SaveModuleAs
   else
@@ -20012,8 +20261,11 @@ begin
     TogSam[i].Checked := (VTMP.Samples[i] = nil) or VTMP.Samples[i].Enabled;
   SetToolsPattern;
 
-  if (MainForm.MDIChildCount > 2) and (TSWindow <> nil) then
-    SetWindowPos(TSWindow.Handle, HWND_TOP, 0,0,0,0, SWP_NOACTIVATE+SWP_NOMOVE+SWP_NOSIZE);
+  if (MainForm.MDIChildCount > 3) and (TSWindow[1] <> nil) then
+    SetWindowPos(TSWindow[1].Handle, HWND_TOP, 0,0,0,0, SWP_NOACTIVATE+SWP_NOMOVE+SWP_NOSIZE)
+  else
+  if (MainForm.MDIChildCount > 2) and (TSWindow[0] <> nil) then
+    SetWindowPos(TSWindow[0].Handle, HWND_TOP, 0,0,0,0, SWP_NOACTIVATE+SWP_NOMOVE+SWP_NOSIZE);
 
   if Tracks.CanFocus then
     Tracks.SetFocus;
@@ -20039,52 +20291,154 @@ begin
 end;
 
 procedure TMDIChild.JoinChild(Child: TMDIChild);
-var LeftChild, RightChild: TMDIChild;
+var Childs: array[1..3] of TMDIChild;
+  n:integer;
+  name,filename:string;
+  x1,x2,x3:integer;
 begin
-
-  TSWindow := Child;
-  Child.TSWindow := Self;
-  SongChanged := True;  TSWindow.SongChanged := True;
-  IsTemplate  := False; TSWindow.IsTemplate  := False;
-  IsDemosong  := False; TSWindow.IsDemosong  := False;  
-
-  TSWindow.Top := Top;
-  TSWindow.Height := Height;
-  TSWindow.PageControl1.Height := ClientHeight;
-  TSWindow.Tracks.Height := Tracks.Height;
-  TSWindow.InterfaceOpts.Top := InterfaceOpts.Top;
-  TSWindow.InterfaceOpts.Width := InterfaceOpts.Width;
-  TSWindow.BetweenPatterns.Left := BetweenPatterns.Left;
-  TSWindow.DuplicateNoteParams.Left := DuplicateNoteParams.Left;
-  //TSWindow.SmartRedraw;
-
-  if Left < TSWindow.Left then begin
-    LeftModule := True;
-    TSWindow.LeftModule := False;
-    LeftChild := Self;
-    RightChild := TSWindow;
-  end
-  else begin
-    LeftModule := False;
-    TSWindow.LeftModule := True;
-    LeftChild := TSWindow;
-    RightChild := Self;
-  end;
-
-  if (LeftChild.WinFileName = '') and (RightChild.WinFileName = '') then begin
-    LeftChild.Caption  := 'Left turbosound module ' + IntToStr(WinCount);
-    RightChild.Caption := 'Right turbosound module ' + IntToStr(WinCount);
-  end
+  n := 0;
+  if (TSWindow[0]<>nil) and (TSWindow[1]=nil) then n := 1
   else
-  if (LeftChild.WinFileName <> '') and (RightChild.WinFileName = '') then begin
-    RightChild.Caption := LeftChild.Caption;
-    RightChild.WinFileName := LeftChild.WinFileName;
+  if (TSWindow[0]<>nil) and (TSWindow[1]<>nil) then exit; //already occupied
+
+  if (Child.TSWindow[0] <> nil) then //uh oh, double backward linking
+  begin
+    TSWindow[0]:=Child.TSWindow[0];
+    TSWindow[1]:=Child.TSWindow[0].TSWindow[0];
+    Child.TSWindow[1]:=Self;
+    Child.TSWindow[0].TSWindow[1]:=Self;
+    n:=1;// because it's actually double linking
   end
   else
   begin
-    LeftChild.Caption := RightChild.Caption;
-    LeftChild.WinFileName := RightChild.WinFileName;
+    TSWindow[n] := Child; //forward
+    Child.TSWindow[n] := Self; //backward
+    if n=1 then
+    begin
+      Child.TSWindow[0] := TSWindow[0];
+      TSWindow[0].TSWindow[1] := Child;
+    end;
   end;
+
+  SongChanged := True;  TSWindow[n].SongChanged := True;
+  IsTemplate  := False; TSWindow[n].IsTemplate  := False;
+  IsDemosong  := False; TSWindow[n].IsDemosong  := False;
+
+  TSWindow[n].Top := Top;
+  TSWindow[n].Height := Height;
+  TSWindow[n].PageControl1.Height := ClientHeight;
+  TSWindow[n].Tracks.Height := Tracks.Height;
+  TSWindow[n].InterfaceOpts.Top := InterfaceOpts.Top;
+  TSWindow[n].InterfaceOpts.Width := InterfaceOpts.Width;
+  TSWindow[n].BetweenPatterns.Left := BetweenPatterns.Left;
+  TSWindow[n].DuplicateNoteParams.Left := DuplicateNoteParams.Left;
+  //TSWindow.SmartRedraw;
+
+  if TSWindow[0]=nil then exit;
+
+  if n=0 then
+  begin
+    if Left<TSWindow[0].Left then
+    begin
+      Childs[1]:=self;
+      Childs[2]:=TSWindow[0];
+    end
+    else
+    begin
+      Childs[1]:=TSWindow[0];
+      Childs[2]:=self;
+    end;
+    Childs[3]:=nil;
+  end
+  else
+  begin // 6 variations
+    if (Left<TSWindow[0].Left) and (Left<TSWindow[1].Left) then
+    begin //leftmost
+      Childs[1]:=self;
+      if TSWindow[0].Left<TSWindow[1].Left then
+      begin
+        Childs[2]:=TSWindow[0];
+        Childs[3]:=TSWindow[1];
+      end
+      else
+      begin
+        Childs[2]:=TSWindow[1];
+        Childs[3]:=TSWindow[0];
+      end;
+    end
+    else
+    if (Left>TSWindow[0].Left) and (Left<TSWindow[1].Left) then
+    begin //middle
+      Childs[2]:=self;
+      if TSWindow[0].Left<TSWindow[1].Left then
+      begin
+        Childs[1]:=TSWindow[0];
+        Childs[3]:=TSWindow[1];
+      end
+      else
+      begin
+        Childs[1]:=TSWindow[1];
+        Childs[3]:=TSWindow[0];
+      end
+    end
+    else
+    begin //rightmost
+      Childs[3]:=self;
+      if TSWindow[0].Left<TSWindow[1].Left then
+      begin
+        Childs[1]:=TSWindow[0];
+        Childs[2]:=TSWindow[1];
+      end
+      else
+      begin
+        Childs[1]:=TSWindow[1];
+        Childs[2]:=TSWindow[0];
+      end;
+    end;
+  end;
+
+  if Childs[1].WinFileName <> '' then
+  begin
+    filename := Childs[1].WinFileName;
+    name := extractfilename(Childs[1].WinFileName);
+  end
+  else
+  if (Childs[2]<>nil) and (Childs[2].WinFileName <> '') then
+  begin
+    filename := Childs[2].WinFileName;
+    name := extractfilename(Childs[2].WinFileName);
+  end
+  else
+  if (Childs[3]<>nil) and (Childs[3].WinFileName <> '') then
+  begin
+    filename := Childs[3].WinFileName;
+    name := extractfilename(Childs[3].WinFileName);
+  end
+  else
+  begin
+    filename := '';
+    name := IntToStr(WinCount);
+  end;
+
+  Childs[1].Caption := 'Left TS ' + name;
+  Childs[1].NumModule := 1;
+  Childs[1].WinFileName := filename;
+
+  if n=0 then
+  begin
+    Childs[2].Caption := 'Right TS ' + name;
+    Childs[2].NumModule := 2;
+    Childs[2].WinFileName := filename;
+  end
+  else //ts3
+  begin
+    Childs[2].Caption := 'Mid TS ' + name;
+    Childs[2].NumModule := 2;
+    Childs[2].WinFileName := filename;
+    Childs[3].Caption := 'Right TS ' + name;
+    Childs[3].NumModule := 3;
+    Childs[3].WinFileName := filename;
+  end
 
 end;
 
@@ -20337,7 +20691,7 @@ begin
 
   ChildsEventsBlocked := True;
 
-  if TSWindow = nil then
+  if TSWindow[0] = nil then
     RedrawOff
   else
     MainForm.RedrawOff;   
@@ -20349,16 +20703,24 @@ begin
 
   AutoResizeForm;
 
-  if TSWindow <> nil then begin
-    TSWindow.Top := Top;
-    TSWindow.PageControl1.Height := ClientHeight;
-    TSWindow.ClientHeight := ClientHeight;
-    TSWindow.HeightChanged := True;
-    TSWindow.LastHeight := LastHeight;
-    TSWindow.AutoResizeForm;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].Top := Top;
+    TSWindow[0].PageControl1.Height := ClientHeight;
+    TSWindow[0].ClientHeight := ClientHeight;
+    TSWindow[0].HeightChanged := True;
+    TSWindow[0].LastHeight := LastHeight;
+    TSWindow[0].AutoResizeForm;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].Top := Top;
+    TSWindow[1].PageControl1.Height := ClientHeight;
+    TSWindow[1].ClientHeight := ClientHeight;
+    TSWindow[1].HeightChanged := True;
+    TSWindow[1].LastHeight := LastHeight;
+    TSWindow[1].AutoResizeForm;
   end;
 
-  if TSWindow = nil then begin
+  if TSWindow[0] = nil then begin
     RedrawOn;
     InvalidateChild;
   end
@@ -20889,8 +21251,11 @@ begin
   else if WinFileName <> '' then
     Dlg.FileName := ChangeFileExt(WinFileName, Ext)
 
-  else if (TSWindow <> nil) and (TSWindow.WinFileName <> '') then
-    Dlg.FileName := ChangeFileExt(TSWindow.WinFileName, Ext)
+  else if (TSWindow[0] <> nil) and (TSWindow[0].WinFileName <> '') then
+    Dlg.FileName := ChangeFileExt(TSWindow[0].WinFileName, Ext)
+
+  else if (TSWindow[1] <> nil) and (TSWindow[1].WinFileName <> '') then
+    Dlg.FileName := ChangeFileExt(TSWindow[1].WinFileName, Ext)
 
   else
     Dlg.FileName := 'MyBestTrack' + Ext;
@@ -20935,20 +21300,32 @@ procedure TMDIChild.ExportToWavFile;
     if not(Result) then
       CloseHandle(HFileRes);
   end;
-  
+
 begin
 
   PlayingWindow[1] := Self;
   if PlayingWindow[1] = PlayingWindow[2] then
     PlayingWindow[2] := nil;
+  if PlayingWindow[1] = PlayingWindow[3] then
+    PlayingWindow[3] := nil;
 
-  if (PlayingWindow[1].TSWindow <> nil) and (PlayingWindow[1].TSWindow.VTMP.Positions.Length <> 0) then
+  if (PlayingWindow[1].TSWindow[0] <> nil) and (PlayingWindow[1].TSWindow[0].VTMP.Positions.Length <> 0)
+  and (PlayingWindow[1].TSWindow[1] <> nil) and (PlayingWindow[1].TSWindow[1].VTMP.Positions.Length <> 0) then
   begin
-    PlayingWindow[2] := PlayingWindow[1].TSWindow;
+    PlayingWindow[3] := PlayingWindow[1].TSWindow[1];
+    PlayingWindow[2] := PlayingWindow[1].TSWindow[0];
+    NumberOfSoundChips := 3;
+  end
+  else
+  if (PlayingWindow[1].TSWindow[0] <> nil) and (PlayingWindow[1].TSWindow[0].VTMP.Positions.Length <> 0) then
+  begin
+    PlayingWindow[2] := PlayingWindow[1].TSWindow[0];
+    PlayingWindow[3] := nil;
     NumberOfSoundChips := 2;
   end
   else
   begin
+    PlayingWindow[3] := nil;
     PlayingWindow[2] := nil;
     NumberOfSoundChips := 1;
   end;
@@ -20958,7 +21335,9 @@ begin
   ExportOptions.ExportSelected.Checked :=
     (PlayingWindow[1].StringGrid1.Selection.Right > PlayingWindow[1].StringGrid1.Selection.Left)
     or
-    ((NumberOfSoundChips = 2) and (PlayingWindow[2].StringGrid1.Selection.Right > PlayingWindow[2].StringGrid1.Selection.Left));
+    ((NumberOfSoundChips >= 2) and (PlayingWindow[2].StringGrid1.Selection.Right > PlayingWindow[2].StringGrid1.Selection.Left))
+    or
+    ((NumberOfSoundChips = 3) and (PlayingWindow[3].StringGrid1.Selection.Right > PlayingWindow[3].StringGrid1.Selection.Left));
 
 
   if ExportOptions.ShowModal = mrCancel then
@@ -21248,8 +21627,8 @@ end;
 
 procedure TMDIChild.ExportPSG;
 var
-  Chip1Name, Chip2Name: String;
-  
+  Chip1Name, Chip2Name, Chip3Name: String;
+
 begin
 
   PrepareExportDialog(ExportPSGDlg, '.psg');
@@ -21257,12 +21636,22 @@ begin
   begin
     ExportPSGDlg.InitialDir := ExtractFilePath(ExportPSGDlg.FileName);
 
-    if TSWindow <> nil then
+    if (TSWindow[0] <> nil) and (TSWindow[1] <> nil) then
+    begin
+      Chip1Name := StringReplace(ExportPSGDlg.FileName, '.psg', '.1.psg', [rfReplaceAll, rfIgnoreCase]);
+      Chip2Name := StringReplace(ExportPSGDlg.FileName, '.psg', '.2.psg', [rfReplaceAll, rfIgnoreCase]);
+      Chip3Name := StringReplace(ExportPSGDlg.FileName, '.psg', '.3.psg', [rfReplaceAll, rfIgnoreCase]);
+      SavePSGRegisterDump(Chip1Name, VTMP, 1);
+      SavePSGRegisterDump(Chip2Name, TSWindow[0].VTMP, 2);
+      SavePSGRegisterDump(Chip3Name, TSWindow[1].VTMP, 3);
+    end
+    else
+    if TSWindow[0] <> nil then
     begin
       Chip1Name := StringReplace(ExportPSGDlg.FileName, '.psg', '.1.psg', [rfReplaceAll, rfIgnoreCase]);
       Chip2Name := StringReplace(ExportPSGDlg.FileName, '.psg', '.2.psg', [rfReplaceAll, rfIgnoreCase]);
       SavePSGRegisterDump(Chip1Name, VTMP, 1);
-      SavePSGRegisterDump(Chip2Name, TSWindow.VTMP, 2);
+      SavePSGRegisterDump(Chip2Name, TSWindow[0].VTMP, 2);
     end
     else
       SavePSGRegisterDump(ExportPSGDlg.FileName, VTMP, 1);
@@ -21406,14 +21795,22 @@ procedure TMDIChild.PageControl1Change(Sender: TObject);
 begin
 
   // If CTRL pressed, then change Tab in second turbotrack module
-  if (GetKeyState(VK_CONTROL) < 0) and (TSWindow <> nil) then begin
-    TSWindow.PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
+  if (GetKeyState(VK_CONTROL) < 0) and (TSWindow[0] <> nil) then begin
+    TSWindow[0].PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
 
     if PageControl1.ActivePage = OptTab then begin
-      TSWindow.ManualHz.Left := TrackChipFreq.Buttons[20].Left + 95;
-      TSWindow.ManualIntFreq.Left := TrackIntSel.Buttons[6].Left + 95;
+      TSWindow[0].ManualHz.Left := TrackChipFreq.Buttons[20].Left + 95;
+      TSWindow[0].ManualIntFreq.Left := TrackIntSel.Buttons[6].Left + 95;
     end;
+    // change Tab in third turbotrack module
+    if TSWindow[1] <> nil then begin
+      TSWindow[1].PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
 
+      if PageControl1.ActivePage = OptTab then begin
+        TSWindow[1].ManualHz.Left := TrackChipFreq.Buttons[20].Left + 95; //!!!
+        TSWindow[1].ManualIntFreq.Left := TrackIntSel.Buttons[6].Left + 95;
+      end;
+    end;
   end;
 
 
@@ -21562,10 +21959,15 @@ procedure TMDIChild.UpdateChipFreq;
 begin
   if BlockRecursion or not InitFinished or Closed then Exit;
 
-  if TSWindow <> nil then begin
-    TSWindow.BlockRecursion := True;
-    TSWindow.SetTrackFreq(VTMP.ChipFreq);
-    TSWindow.BlockRecursion := False;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].BlockRecursion := True;
+    TSWindow[0].SetTrackFreq(VTMP.ChipFreq);
+    TSWindow[0].BlockRecursion := False;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].BlockRecursion := True;
+    TSWindow[1].SetTrackFreq(VTMP.ChipFreq);
+    TSWindow[1].BlockRecursion := False;
   end;
 
   if not ModuleInPlayingWindow then Exit;
@@ -21594,7 +21996,7 @@ begin
   SetRTFText(TrackInfo, VTMP.Info);
   UpdateToneTableHints;
   
-  if LeftModule and not DisableInfoWin then
+  if (NumModule=1) and not DisableInfoWin then
     TrackInfoTimer.Enabled := True;
   ShowInfoOnLoad.Checked := VTMP.ShowInfo;
 
@@ -21673,13 +22075,21 @@ procedure TMDIChild.UpdateIntFreq;
 begin
   if BlockRecursion or not InitFinished or Closed then Exit;
 
-  if TSWindow <> nil then begin
-    TSWindow.BlockRecursion := True;
-    TSWindow.SetTrackIntFreq(VTMP.IntFreq);
-    TSWindow.CalcTotLen;
-    TSWindow.ReCalcTimes(TSWindow.PosBegin + TSWindow.LineInts);
-    TSWindow.UpdateSpeedBPM;
-    TSWindow.BlockRecursion := False;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].BlockRecursion := True;
+    TSWindow[0].SetTrackIntFreq(VTMP.IntFreq);
+    TSWindow[0].CalcTotLen;
+    TSWindow[0].ReCalcTimes(TSWindow[0].PosBegin + TSWindow[0].LineInts);
+    TSWindow[0].UpdateSpeedBPM;
+    TSWindow[0].BlockRecursion := False;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].BlockRecursion := True;
+    TSWindow[1].SetTrackIntFreq(VTMP.IntFreq);
+    TSWindow[1].CalcTotLen;
+    TSWindow[1].ReCalcTimes(TSWindow[1].PosBegin + TSWindow[1].LineInts);
+    TSWindow[1].UpdateSpeedBPM;
+    TSWindow[1].BlockRecursion := False;
   end;
 
   if not ModuleInPlayingWindow then Exit;
@@ -21817,9 +22227,13 @@ end;
 procedure TMDIChild.UpdateTrackInfo;
 begin
   VTMP.Info := GetRTFText(TrackInfo);
-  if TSWindow <> nil then begin
-    TSWindow.VTMP.Info := VTMP.Info;
-    SetRTFText(TSWindow.TrackInfo, VTMP.Info);
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].VTMP.Info := VTMP.Info;
+    SetRTFText(TSWindow[0].TrackInfo, VTMP.Info);
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].VTMP.Info := VTMP.Info;
+    SetRTFText(TSWindow[1].TrackInfo, VTMP.Info);
   end;
   SongChanged := True;
   BackupSongChanged := True;
@@ -21906,9 +22320,13 @@ procedure TMDIChild.ShowInfoOnLoadMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   VTMP.ShowInfo := ShowInfoOnLoad.Checked;
-  if TSWindow <> nil then begin
-    TSWindow.ShowInfoOnLoad.Checked := VTMP.ShowInfo;
-    TSWindow.VTMP.ShowInfo := VTMP.ShowInfo;
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].ShowInfoOnLoad.Checked := VTMP.ShowInfo;
+    TSWindow[0].VTMP.ShowInfo := VTMP.ShowInfo;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].ShowInfoOnLoad.Checked := VTMP.ShowInfo;
+    TSWindow[1].VTMP.ShowInfo := VTMP.ShowInfo;
   end;
   SongChanged := True;
   BackupSongChanged := True;

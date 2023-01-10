@@ -7,7 +7,7 @@ object MDIChild: TMDIChild
   BorderStyle = bsSingle
   Caption = 'Module'
   ClientHeight = 718
-  ClientWidth = 662
+  ClientWidth = 595
   Color = clBtnFace
   Constraints.MinHeight = 470
   ParentFont = True
@@ -38,11 +38,11 @@ object MDIChild: TMDIChild
   object PageControl1: TPageControl
     Left = 0
     Top = 0
-    Width = 634
+    Width = 585
     Height = 665
     ActivePage = PatternsSheet
     BiDiMode = bdLeftToRight
-    Constraints.MinWidth = 634
+    Constraints.MinWidth = 516
     Images = MainForm.ImageList1
     ParentBiDiMode = False
     TabHeight = 19
@@ -177,7 +177,7 @@ object MDIChild: TMDIChild
       object PatEmptyBox: TGroupBox
         Left = 0
         Top = -2
-        Width = 1127
+        Width = 1129
         Height = 58
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -321,7 +321,7 @@ object MDIChild: TMDIChild
       object TrackInfoBox: TGroupBox
         Left = -2
         Top = 49
-        Width = 800
+        Width = 1131
         Height = 34
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -377,7 +377,7 @@ object MDIChild: TMDIChild
       object PatOptions: TGroupBox
         Left = -2
         Top = -2
-        Width = 168
+        Width = 143
         Height = 58
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -388,7 +388,7 @@ object MDIChild: TMDIChild
         ParentCtl3D = False
         TabOrder = 0
         object Label2: TLabel
-          Left = 60
+          Left = 51
           Top = 15
           Width = 34
           Height = 13
@@ -403,7 +403,7 @@ object MDIChild: TMDIChild
           ParentFont = False
         end
         object Label5: TLabel
-          Left = 113
+          Left = 96
           Top = 15
           Width = 33
           Height = 13
@@ -452,7 +452,7 @@ object MDIChild: TMDIChild
           OnClick = SpeedButton27Click
         end
         object PatternNumUpDown: TUpDown
-          Left = 85
+          Left = 76
           Top = 32
           Width = 15
           Height = 20
@@ -463,7 +463,7 @@ object MDIChild: TMDIChild
           OnChangingEx = PatternNumUpDownChangingEx
         end
         object PatternNumEdit: TEdit
-          Left = 60
+          Left = 51
           Top = 32
           Width = 25
           Height = 20
@@ -480,7 +480,7 @@ object MDIChild: TMDIChild
           OnKeyPress = PatternNumEditKeyPress
         end
         object PatternLenEdit: TEdit
-          Left = 113
+          Left = 96
           Top = 32
           Width = 25
           Height = 20
@@ -494,7 +494,7 @@ object MDIChild: TMDIChild
           OnKeyPress = PatternLenEditKeyPress
         end
         object PatternLenUpDown: TUpDown
-          Left = 138
+          Left = 121
           Top = 32
           Width = 15
           Height = 20
@@ -506,9 +506,9 @@ object MDIChild: TMDIChild
         end
       end
       object SpeedBox: TGroupBox
-        Left = 164
+        Left = 139
         Top = -2
-        Width = 86
+        Width = 72
         Height = 58
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -519,7 +519,7 @@ object MDIChild: TMDIChild
         ParentCtl3D = False
         TabOrder = 2
         object Label3: TLabel
-          Left = 14
+          Left = 6
           Top = 15
           Width = 59
           Height = 13
@@ -534,7 +534,7 @@ object MDIChild: TMDIChild
           ParentFont = False
         end
         object SpeedBpmEdit: TEdit
-          Left = 14
+          Left = 6
           Top = 32
           Width = 43
           Height = 20
@@ -548,7 +548,7 @@ object MDIChild: TMDIChild
           OnKeyUp = SpeedBpmEditKeyUp
         end
         object SpeedBpmUpDown: TUpDown
-          Left = 57
+          Left = 49
           Top = 32
           Width = 15
           Height = 20
@@ -562,9 +562,9 @@ object MDIChild: TMDIChild
         end
       end
       object OctaveBox: TGroupBox
-        Left = 248
+        Left = 209
         Top = -2
-        Width = 68
+        Width = 54
         Height = 58
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -573,7 +573,7 @@ object MDIChild: TMDIChild
         ParentColor = False
         TabOrder = 3
         object Label1: TLabel
-          Left = 14
+          Left = 6
           Top = 15
           Width = 35
           Height = 13
@@ -588,7 +588,7 @@ object MDIChild: TMDIChild
           ParentFont = False
         end
         object OctaveEdit: TEdit
-          Left = 14
+          Left = 6
           Top = 32
           Width = 25
           Height = 20
@@ -601,7 +601,7 @@ object MDIChild: TMDIChild
           OnKeyPress = OctaveEditKeyPress
         end
         object OctaveUpDown: TUpDown
-          Left = 39
+          Left = 31
           Top = 32
           Width = 16
           Height = 20
@@ -614,9 +614,9 @@ object MDIChild: TMDIChild
         end
       end
       object AutoStepBox: TGroupBox
-        Left = 314
+        Left = 261
         Top = -2
-        Width = 90
+        Width = 74
         Height = 58
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -625,7 +625,7 @@ object MDIChild: TMDIChild
         ParentColor = False
         TabOrder = 4
         object AutoStepBtn: TSpeedButton
-          Left = 14
+          Left = 6
           Top = 11
           Width = 61
           Height = 20
@@ -644,7 +644,7 @@ object MDIChild: TMDIChild
           OnClick = AutoStepBtnClick
         end
         object AutoStepUpDown: TUpDown
-          Left = 57
+          Left = 49
           Top = 32
           Width = 18
           Height = 20
@@ -655,7 +655,7 @@ object MDIChild: TMDIChild
           TabOrder = 1
         end
         object AutoStepEdit: TEdit
-          Left = 14
+          Left = 6
           Top = 32
           Width = 43
           Height = 20
@@ -676,9 +676,9 @@ object MDIChild: TMDIChild
         end
       end
       object AutoEnvBox: TGroupBox
-        Left = 402
+        Left = 333
         Top = -2
-        Width = 94
+        Width = 73
         Height = 58
         BiDiMode = bdLeftToRight
         Color = clBtnFace
@@ -687,9 +687,9 @@ object MDIChild: TMDIChild
         ParentColor = False
         TabOrder = 5
         object AutoEnvBtn: TSpeedButton
-          Left = 14
+          Left = 6
           Top = 11
-          Width = 66
+          Width = 60
           Height = 20
           Hint = 'Toggle autoenvelope (Ctrl+E or Numpad 0 when editing tracks)'
           AllowAllUp = True
@@ -699,27 +699,27 @@ object MDIChild: TMDIChild
           OnClick = AutoEnvBtnClick
         end
         object SpeedButton16: TSpeedButton
-          Left = 14
+          Left = 6
           Top = 32
-          Width = 22
+          Width = 20
           Height = 20
           Hint = 'Tone frequency'
           Caption = '1'
           OnClick = SpeedButton16Click
         end
         object SpeedButton17: TSpeedButton
-          Left = 36
+          Left = 26
           Top = 32
-          Width = 22
+          Width = 20
           Height = 20
           Hint = 'Toggle standard combinations (Ctrl+Alt+E)'
           Caption = ':'
           OnClick = SpeedButton17Click
         end
         object SpeedButton18: TSpeedButton
-          Left = 58
+          Left = 46
           Top = 32
-          Width = 22
+          Width = 20
           Height = 20
           Hint = 'Envelope frequency'
           Caption = '1'
@@ -729,7 +729,7 @@ object MDIChild: TMDIChild
       object InterfaceOpts: TGroupBox
         Left = -10
         Top = 444
-        Width = 771
+        Width = 1131
         Height = 33
         Color = clBtnFace
         ParentColor = False
@@ -757,7 +757,7 @@ object MDIChild: TMDIChild
           OnMouseUp = EnvelopeAsNoteOptMouseUp
         end
         object DuplicateNoteParams: TCheckBox
-          Left = 220
+          Left = 198
           Top = 11
           Width = 125
           Height = 17
@@ -774,7 +774,7 @@ object MDIChild: TMDIChild
           OnMouseDown = DuplicateNoteParamsMouseDown
         end
         object BetweenPatterns: TCheckBox
-          Left = 398
+          Left = 376
           Top = 11
           Width = 133
           Height = 17
@@ -794,7 +794,7 @@ object MDIChild: TMDIChild
       object PositionsScrollBox: TScrollBox
         Left = 0
         Top = 85
-        Width = 677
+        Width = 1129
         Height = 36
         HorzScrollBar.Smooth = True
         HorzScrollBar.Style = ssFlat
@@ -810,7 +810,7 @@ object MDIChild: TMDIChild
         object StringGrid1: TStringGrid
           Left = 0
           Top = 0
-          Width = 673
+          Width = 559
           Height = 42
           Cursor = crArrow
           Hint = 'Position list'
@@ -853,20 +853,20 @@ object MDIChild: TMDIChild
         end
       end
       object ToneTableBox: TGroupBox
-        Left = 494
+        Left = 404
         Top = -2
-        Width = 81
+        Width = 68
         Height = 58
         TabOrder = 6
         object ToneTableLab: TLabel
-          Left = 12
+          Left = 5
           Top = 15
           Width = 55
           Height = 13
           Caption = 'Tone Table'
         end
         object Edit7: TEdit
-          Left = 13
+          Left = 6
           Top = 32
           Width = 39
           Height = 20
@@ -880,7 +880,7 @@ object MDIChild: TMDIChild
           OnKeyPress = Edit7KeyPress
         end
         object UpDown4: TUpDown
-          Left = 52
+          Left = 45
           Top = 32
           Width = 16
           Height = 20
@@ -893,16 +893,27 @@ object MDIChild: TMDIChild
         end
       end
       object JoinTracksBox: TGroupBox
-        Left = 573
+        Left = 470
         Top = -2
-        Width = 55
+        Width = 59
         Height = 58
         Hint = 'Join Tracks -> TurboSound'
         TabOrder = 7
+        object Label4: TLabel
+          Left = 8
+          Top = 40
+          Width = 40
+          Height = 13
+          Alignment = taCenter
+          AutoSize = False
+          BiDiMode = bdRightToLeft
+          Caption = '-- - --'
+          ParentBiDiMode = False
+        end
         object JoinTracksBtn: TButton
-          Left = 12
-          Top = 20
-          Width = 29
+          Left = 7
+          Top = 12
+          Width = 44
           Height = 25
           Action = MainForm.JoinTracksBtn
           TabOrder = 0
@@ -915,11 +926,11 @@ object MDIChild: TMDIChild
       object SampleOpts: TGroupBox
         Left = 0
         Top = 504
-        Width = 385
+        Width = 349
         Height = 33
         TabOrder = 5
         object SamOctaveLabel: TLabel
-          Left = 145
+          Left = 127
           Top = 12
           Width = 66
           Height = 13
@@ -929,7 +940,7 @@ object MDIChild: TMDIChild
           ShowHint = True
         end
         object SamOctaveTxt: TLabel
-          Left = 215
+          Left = 197
           Top = 12
           Width = 8
           Height = 13
@@ -945,7 +956,7 @@ object MDIChild: TMDIChild
           ShowHint = True
         end
         object SamOptsSep: TShape
-          Left = 130
+          Left = 121
           Top = 9
           Width = 1
           Height = 20
@@ -953,9 +964,9 @@ object MDIChild: TMDIChild
           Pen.Color = clActiveBorder
         end
         object RecalcTonesBtn: TSpeedButton
-          Left = 288
+          Left = 266
           Top = 10
-          Width = 81
+          Width = 75
           Height = 17
           Hint = 'Re-calculate Tones for a new Base Note'
           AllowAllUp = True
@@ -965,7 +976,7 @@ object MDIChild: TMDIChild
           ShowHint = True
         end
         object SamOptsSep1: TShape
-          Left = 280
+          Left = 260
           Top = 9
           Width = 1
           Height = 20
@@ -982,7 +993,7 @@ object MDIChild: TMDIChild
           OnClick = SamToneShiftAsNoteOptClick
         end
         object SamOctaveNum: TUpDown
-          Left = 232
+          Left = 214
           Top = 10
           Width = 41
           Height = 17
