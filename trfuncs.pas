@@ -54,7 +54,7 @@ const
 
   VortexModuleHeader: boolean = True;
   DetectModuleHeader: boolean = True;
-  MaxNumberOfSoundChips = 2;
+  MaxNumberOfSoundChips = 3;
 
   
 type
@@ -442,7 +442,7 @@ function LoadSampleDataTxt(Sam: PSample; DecNoise: Boolean): string;
 function GetEmptySample: TSample;
 procedure ValidateSample(sam: integer; VTM: PModule);
 function RecognizeOrnamentString(const orst: string; Orn: POrnament): boolean;
-function LoadModuleFromText(FN: string; VTM1: PModule; var VTM2: PModule): integer;
+function LoadModuleFromText(FN: string; VTM1: PModule; var VTM2, VTM3: PModule): integer;
 function PT22VTM(PT2: PSpeccyModule; VTM: PModule): boolean;
 function PT12VTM(PT1: PSpeccyModule; VTM: PModule): boolean;
 function STC2VTM(STC: PSpeccyModule; FSize: integer; VTM: PModule): boolean;
@@ -487,7 +487,7 @@ function VTM2PT3(PT3: PSpeccyModule; VTM: PModule;
 
 procedure PrepareZXModule(ZXP: PSpeccyModule; var FType: Available_Types; Length: integer);
 function LoadAndDetect(ZXP: PSpeccyModule; FileName: string; var Length: integer;
-  var FType2: Available_Types; var TSSize2: integer;
+  var FType1,FType2: Available_Types; var TSSize1,TSSize2: integer;
   var ZXAddr: word; var Tm: integer; var Andsix: byte;
   var AuthorName, SongName: string): Available_Types;
 function GetModuleTime(VTM: PModule): integer;
@@ -1595,7 +1595,7 @@ begin
   end
 end;
 
-function LoadModuleFromText(FN: string; VTM1: PModule; var VTM2: PModule): integer;
+function LoadModuleFromText(FN: string; VTM1: PModule; var VTM2, VTM3: PModule): integer;
 var
   s, s1: string;
   i, j, er, lp: integer;
@@ -1967,6 +1967,7 @@ begin
   Reset(TxtFile);
   TxtLine := 0;
   VTM2 := nil;
+  VTM3 := nil;
   try
     if not GetString(s) or (UpperCase(s) <> '[MODULE]') then
     begin
@@ -1978,6 +1979,10 @@ begin
     NewVTMP(VTM2);
     LoadTxtMod(VTM2);
     if Result <> 0 then FreeVTMP(VTM2);
+    if (TxtString = '') or (Result <> 0) then exit;
+    NewVTMP(VTM3);
+    LoadTxtMod(VTM3);
+    if Result <> 0 then FreeVTMP(VTM3);
   finally
     CloseFile(TxtFile);
   end;
@@ -6025,7 +6030,10 @@ begin
   end;
 end;
 
-function LoadAndDetect;
+function LoadAndDetect(ZXP: PSpeccyModule; FileName: string; var Length: integer;
+  var FType1,FType2: Available_Types; var TSSize1,TSSize2: integer;
+  var ZXAddr: word; var Tm: integer; var Andsix: byte;
+  var AuthorName, SongName: string): Available_Types;
 type
   TStr4 = array[0..3] of char;
 
@@ -6071,12 +6079,13 @@ var
   Byt: byte;
   Wrd: word;
   TSData: packed record
+    Type0: TStr4; Size0: word;
     Type1: TStr4; Size1: word;
     Type2: TStr4; Size2: word;
     TSID: TStr4;
   end;
 begin
-  Result := Unknown; FType2 := Unknown;
+  Result := Unknown; FType1 := Unknown; FType2 := Unknown;
   s := LowerCase(ExtractFileExt(FileName));
   if s = '.pt2' then
     Result := PT2File
@@ -6119,11 +6128,21 @@ begin
         exit;
       end;
       Seek(f, FileSize(f) - SizeOf(TSData));
-      BlockRead(f, TSData, 16);
+      BlockRead(f, TSData, 22);
       if TSData.TSID = '02TS' then
       begin
         Result := GetTSType(TSData.Type1); if Result = Unknown then exit;
         Length := TSData.Size1;
+        FType1 := GetTSType(TSData.Type2);
+        TSSize1 := TSData.Size2;
+        TSSize2 := 0;
+      end;
+      if TSData.TSID = '03TS' then
+      begin
+        Result := GetTSType(TSData.Type0); if Result = Unknown then exit;
+        Length := TSData.Size0;
+        FType1 := GetTSType(TSData.Type1);
+        TSSize1 := TSData.Size1;
         FType2 := GetTSType(TSData.Type2);
         TSSize2 := TSData.Size2;
       end;
@@ -9006,6 +9025,7 @@ var
   i, j, k, d, p: integer;
 begin
   Result := 0;
+  if VTM = nil then exit;
   d := VTM.Initial_Delay;
   for i := 0 to VTM.Positions.Length - 1 do
   begin
@@ -9032,6 +9052,7 @@ var
   i, j, k, d, p: integer;
 begin
   Result := 0;
+  if VTM = nil then exit;
   d := VTM.Initial_Delay;
   for i := 0 to Pos - 1 do
   begin
@@ -9059,6 +9080,7 @@ var
   j, k, p: integer;
 begin
   Result := 0;
+  if VTM = nil then exit;
   p := VTM.Positions.Value[Pos];
   if VTM.Patterns[p] = nil then
     Inc(Result, PosDelay * Line)
@@ -9080,6 +9102,7 @@ procedure GetTimeParams;
 var
   i, j, k, d, p, ct, tmp: integer;
 begin
+  if VTM = nil then exit;
   Pos := -1; Line := 0;
   d := VTM.Initial_Delay;
   ct := 0;

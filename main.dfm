@@ -1,7 +1,7 @@
 object MainForm: TMainForm
   Left = 641
   Top = 159
-  Width = 627
+  Width = 562
   Height = 618
   HorzScrollBar.Smooth = True
   HorzScrollBar.Tracking = True
@@ -30,8 +30,8 @@ object MainForm: TMainForm
   TextHeight = 13
   object StatusBar: TStatusBar
     Left = 0
-    Top = 539
-    Width = 611
+    Top = 547
+    Width = 554
     Height = 20
     AutoHint = True
     Panels = <
@@ -47,15 +47,14 @@ object MainForm: TMainForm
         Width = 61
       end>
     SizeGrip = False
-    OnDblClick = StatusBarDblClick
   end
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 611
+    Width = 554
     AutoSize = True
     BorderWidth = 1
-    ButtonWidth = 27
+    ButtonWidth = 24
     Color = clBtnFace
     EdgeBorders = [ebTop, ebBottom]
     Images = ImageList1
@@ -71,17 +70,17 @@ object MainForm: TMainForm
       Action = FileNew1
     end
     object ToolButton1: TToolButton
-      Left = 27
+      Left = 24
       Top = 2
       Action = FileOpen1
     end
     object ToolButton2: TToolButton
-      Left = 54
+      Left = 48
       Top = 2
       Action = FileSave1
     end
     object ToolButton3: TToolButton
-      Left = 81
+      Left = 72
       Top = 2
       Width = 5
       Caption = 'ToolButton3'
@@ -89,17 +88,17 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object ToolButton6: TToolButton
-      Left = 86
+      Left = 77
       Top = 2
       Action = Undo
     end
     object ToolButton7: TToolButton
-      Left = 113
+      Left = 101
       Top = 2
       Action = Redo
     end
     object ToolButton8: TToolButton
-      Left = 140
+      Left = 125
       Top = 2
       Width = 5
       Caption = 'ToolButton8'
@@ -107,18 +106,18 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object PlayStopBtn: TToolButton
-      Left = 145
+      Left = 130
       Top = 2
       Hint = 'Play/Stop'
       Action = PlayStop
     end
     object ToolButton13: TToolButton
-      Left = 172
+      Left = 154
       Top = 2
       Action = Play1
     end
     object ToolButton20: TToolButton
-      Left = 199
+      Left = 178
       Top = 2
       Hint = 
         'Play current pattern only from the current line|Play current pat' +
@@ -127,7 +126,7 @@ object MainForm: TMainForm
       Caption = 'Play pattern from current line'
     end
     object ToolButton21: TToolButton
-      Left = 226
+      Left = 202
       Top = 2
       Hint = 
         'Play current pattern only from start|Play current pattern only f' +
@@ -135,7 +134,7 @@ object MainForm: TMainForm
       Action = PlayPat
     end
     object ToolButton15: TToolButton
-      Left = 253
+      Left = 226
       Top = 2
       Hint = 'Loop at one track|One module is playing again and again.'
       Action = ToggleLooping
@@ -144,7 +143,7 @@ object MainForm: TMainForm
       Style = tbsCheck
     end
     object ToolButton17: TToolButton
-      Left = 280
+      Left = 250
       Top = 2
       Hint = 'Loop for all tracks|Toggle looping in all opened files'
       Action = ToggleLoopingAll
@@ -154,7 +153,7 @@ object MainForm: TMainForm
       Style = tbsCheck
     end
     object ToolButton4: TToolButton
-      Left = 307
+      Left = 274
       Top = 2
       Width = 5
       Caption = 'ToolButton4'
@@ -162,22 +161,22 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object ToolButton25: TToolButton
-      Left = 312
+      Left = 279
       Top = 2
       Action = ToggleSamplesAct
     end
     object ToolButton26: TToolButton
-      Left = 339
+      Left = 303
       Top = 2
       Action = TracksManagerAct
     end
     object ToolButton27: TToolButton
-      Left = 366
+      Left = 327
       Top = 2
       Action = GlobalTranspositionAct
     end
     object ToolButton5: TToolButton
-      Left = 393
+      Left = 351
       Top = 2
       Width = 5
       Caption = 'ToolButton5'
@@ -185,7 +184,7 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object SpeedButton1: TSpeedButton
-      Left = 398
+      Left = 356
       Top = 2
       Width = 23
       Height = 22
@@ -198,7 +197,7 @@ object MainForm: TMainForm
       ParentFont = False
     end
     object SpeedButton2: TSpeedButton
-      Left = 421
+      Left = 379
       Top = 2
       Width = 33
       Height = 22
@@ -212,7 +211,7 @@ object MainForm: TMainForm
       ParentFont = False
     end
     object ToolButton29: TToolButton
-      Left = 454
+      Left = 412
       Top = 2
       Hint = 'Options'
       Caption = 'Options'
@@ -220,9 +219,9 @@ object MainForm: TMainForm
       OnClick = Options1Click
     end
     object TrackBar1: TTrackBar
-      Left = 481
+      Left = 436
       Top = 2
-      Width = 73
+      Width = 84
       Height = 22
       Hint = 'Volume control'
       Max = 64
@@ -242,11 +241,17 @@ object MainForm: TMainForm
     object File1: TMenuItem
       AutoLineReduction = maManual
       Caption = 'File'
+      OnClick = File1Click
       object FileNewItem: TMenuItem
         Action = FileNew1
       end
       object Newturbosoudtrack1: TMenuItem
         Action = NewTurbosound
+      end
+      object Newturbosoudtrack3: TMenuItem
+        Caption = 'New Turbosound 3'
+        ImageIndex = 6
+        OnClick = NewTurbosoundExecute
       end
       object JoinTracks1: TMenuItem
         Action = JoinTracks
@@ -548,7 +553,6 @@ object MainForm: TMainForm
       Category = 'File'
       Caption = 'TS'
       OnExecute = JoinTracksExecute
-      OnUpdate = JoinTracksUpdate
     end
     object FileExit1: TAction
       Category = 'File'
@@ -835,7 +839,6 @@ object MainForm: TMainForm
       Category = 'File'
       Caption = 'Join Tracks...'
       OnExecute = JoinTracksExecute
-      OnUpdate = JoinTracksUpdate
     end
     object SaveAsTemplate: TAction
       Category = 'File'

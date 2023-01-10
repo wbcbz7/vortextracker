@@ -133,7 +133,7 @@ var
 
  //Sound chip parameters
   SoundChip: array[1..MaxNumberOfSoundChips] of TSoundChip;
-  AyumiChip1, AyumiChip2: TAyumi;
+  AyumiChip1, AyumiChip2, AyumiChip3: TAyumi;
 
  //Parameters for all sound chips
   Index_AL, Index_AR, Index_BL, Index_BR, Index_CL, Index_CR: byte;
@@ -670,9 +670,13 @@ begin
   with PlVars[1] do
     PlayingGrid[MkVisPos].M1 := packPosPatLine(CurrentPosition, CurrentPattern, CurrentLine - 1);
 
-  if NumberOfSoundChips > 1 then
+  if NumberOfSoundChips >= 2 then
     with PlVars[2] do
       PlayingGrid[MkVisPos].M2 := packPosPatLine(CurrentPosition, CurrentPattern, CurrentLine - 1);
+
+  if NumberOfSoundChips = 3 then
+    with PlVars[3] do
+      PlayingGrid[MkVisPos].M3 := packPosPatLine(CurrentPosition, CurrentPattern, CurrentLine - 1);
 end;
 
 
@@ -872,8 +876,10 @@ begin
     r := @SoundChip[Chip].AYRegisters;
     if Chip = 1 then
       SetAyumiRegisters(AyumiChip1, r)
+    else if Chip = 2 then
+      SetAyumiRegisters(AyumiChip2, r)
     else
-      SetAyumiRegisters(AyumiChip2, r);
+      SetAyumiRegisters(AyumiChip3, r);
 
   end;
 
@@ -892,12 +898,19 @@ begin
       Left  := AyumiChip1.left;
       Right := AyumiChip1.right;
 
-      if NumberOfSoundChips = 2 then begin
+      if NumberOfSoundChips >= 2 then begin
         AyumiChip2.Process;
         AyumiChip2.RemoveDC;
         Left  := Left + AyumiChip2.left;
         Right := Right + AyumiChip2.right;
       end;
+      if NumberOfSoundChips >= 3 then begin
+        AyumiChip3.Process;
+        AyumiChip3.RemoveDC;
+        Left  := Left + AyumiChip3.left;
+        Right := Right + AyumiChip3.right;
+      end;
+
 
       if MainForm.GlobalVolume <> Volume then begin
         Volume := MainForm.GlobalVolume;
@@ -1406,13 +1419,16 @@ begin
   Calculate_Level_Tables;
 
   // Ayumi render
-  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) then begin
+  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) and (AyumiChip3 <> nil) then begin
     AyumiChip1.SetPan(0, Panoram[0]/255, False);
     AyumiChip1.SetPan(1, Panoram[1]/255, False);
     AyumiChip1.SetPan(2, Panoram[2]/255, False);
     AyumiChip2.SetPan(0, Panoram[0]/255, False);
     AyumiChip2.SetPan(1, Panoram[1]/255, False);
     AyumiChip2.SetPan(2, Panoram[2]/255, False);
+    AyumiChip3.SetPan(0, Panoram[0]/255, False);
+    AyumiChip3.SetPan(1, Panoram[1]/255, False);
+    AyumiChip3.SetPan(2, Panoram[2]/255, False);
     Exit;
   end;
 
@@ -1918,9 +1934,10 @@ begin
   AY_Tiks_In_Interrupt := round(AY_Freq / (Interrupt_Freq / 1000 * 8));
   CalcFiltKoefs;
 
-  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) then begin
+  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) and (AyumiChip3 <> nil) then begin
     AyumiChip1.SetChipFreq(AY_Freq);
     AyumiChip2.SetChipFreq(AY_Freq);
+    AyumiChip3.SetChipFreq(AY_Freq);
   end;
 
   if R then

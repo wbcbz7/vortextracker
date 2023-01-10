@@ -51,7 +51,7 @@ var
   Interrupt_Freq, NumberOfChannels, SampleRate, SampleBit: integer;
 
   PlayingGrid: array of record
-    M1, M2: Integer;
+    M1, M2, M3: Integer;
   end;
   PlayGridLen: Cardinal;
   MkVisPos: Cardinal;
@@ -119,7 +119,7 @@ function TSThreadFunc(a: pointer): dword; stdcall;
 var
   CurVisPos, k: DWORD;
   MMTIME1: MMTime;
-  PW1Changed, PW2Changed: Boolean;
+  PWChanged: Boolean;
 
 begin
 
@@ -139,25 +139,40 @@ begin
       k := MMTIME1.Sample div PlayGridLen;
       CurVisPos := MMTIME1.Sample - (PlayGridLen * k);
 
-      PW1Changed := (
+      PWChanged := (
         ((PlayingGrid[CurVisPos].M1 shr 17) and $1FF <> PlayingWindow[1].Tracks.ShownFrom) or
         ((PlayingGrid[CurVisPos].M1 shr 9) and $FF  <> PlayingWindow[1].PatNum) or
         (PlayingGrid[CurVisPos].M1 and $1FF <> PlayingWindow[1].PositionNumber)
       );
+      if PWChanged then
+        PostMessage(MainForm.Handle, UM_REDRAWTRACKS, PlayingGrid[CurVisPos].M1, 1);
 
-      if PlayingWindow[2] = nil then
-        PW2Changed := False
-      else
-        PW2Changed := (
+      if (PlayingWindow[2] <> nil) and (PlayingWindow[2].Tracks<>nil) then
+      begin
+        PWChanged := (
           ((PlayingGrid[CurVisPos].M2 shr 17) and $1FF <> PlayingWindow[2].Tracks.ShownFrom) or
           ((PlayingGrid[CurVisPos].M2 shr 9) and $FF  <> PlayingWindow[2].PatNum) or
           (PlayingGrid[CurVisPos].M2 and $1FF <> PlayingWindow[2].PositionNumber)
         );
+        if PWChanged then
+          PostMessage(MainForm.Handle, UM_REDRAWTRACKS, PlayingGrid[CurVisPos].M2, 2);
+      end;
+
+      if (PlayingWindow[3] <> nil) and (PlayingWindow[3].Tracks<>nil) then
+      begin
+        PWChanged := (
+          ((PlayingGrid[CurVisPos].M3 shr 17) and $1FF <> PlayingWindow[3].Tracks.ShownFrom) or
+          ((PlayingGrid[CurVisPos].M3 shr 9) and $FF  <> PlayingWindow[3].PatNum) or
+          (PlayingGrid[CurVisPos].M3 and $1FF <> PlayingWindow[3].PositionNumber)
+        );
+        if PWChanged then
+          PostMessage(MainForm.Handle, UM_REDRAWTRACKS, PlayingGrid[CurVisPos].M3, 3);
+      end;
 
       //Main.Logger.Add(IntToStr((PlayingGrid[CurVisPos].M1 shr 17) and $1FF));
 
-      if PW1Changed or PW2Changed then
-        PostMessage(MainForm.Handle, UM_REDRAWTRACKS, PlayingGrid[CurVisPos].M1, PlayingGrid[CurVisPos].M2);
+//      if PW1Changed or PW2Changed or PW3Changed then
+//        PostMessage(MainForm.Handle, UM_REDRAWTRACKS, PlayingGrid[CurVisPos].M1, PlayingGrid[CurVisPos].M2);
 
       Sleep(2);
     end
@@ -226,7 +241,7 @@ begin
     WaitForWOThreadExit;
     while not PeekMessage(msg, MainForm.Handle,
       UM_FINALIZEWO, UM_FINALIZEWO, PM_REMOVE) do Sleep(0);
-    WOThreadFinalization
+    WOThreadFinalization;
   end
 end;
 
@@ -383,6 +398,12 @@ begin
   AyumiChip2.SetPan(0, Panoram[0]/255, False);
   AyumiChip2.SetPan(1, Panoram[1]/255, False);
   AyumiChip2.SetPan(2, Panoram[2]/255, False);
+  AyumiChip3 := TAyumi.Create;
+  AyumiChip3.Configure(Emulating_Chip = YM_Chip, AY_Freq, SampleRate, DCType);
+  AyumiChip3.SetDCCutoff(DCCutOff);
+  AyumiChip3.SetPan(0, Panoram[0]/255, False);
+  AyumiChip3.SetPan(1, Panoram[1]/255, False);
+  AyumiChip3.SetPan(2, Panoram[2]/255, False);
 
   IsPlaying := True;
   Reseted := False;
@@ -400,8 +421,10 @@ begin
 
   AyumiChip1.Free;
   AyumiChip2.Free;
+  AyumiChip3.Free;
   AyumiChip1 := nil;
   AyumiChip2 := nil;
+  AyumiChip3 := nil;
 
 
   try
@@ -418,7 +441,7 @@ begin
   except
     if AudioProblem then
     begin
-      Application.MessageBox('Audio device settings were changed. Check audio options and try again.', 
+      Application.MessageBox('Audio device settings were changed. Check audio options and try again.',
         'Vortex Tracker', MB_OK + MB_ICONWARNING + MB_TOPMOST);
     end
     else
@@ -431,7 +454,7 @@ begin
 
 end;
 
-procedure ResetAYChipEmulation;
+procedure ResetAYChipEmulation(chip: integer);
 begin
   with SoundChip[chip] do
   begin
@@ -465,6 +488,9 @@ begin
 
   if (chip = 2) and (AyumiChip2 <> nil) then
     AyumiChip2.ResetChip;
+
+  if (chip = 3) and (AyumiChip3 <> nil) then
+    AyumiChip3.ResetChip;
 
 end;
 
@@ -783,9 +809,10 @@ var
   PlayAll: Boolean;
   LeadWindow: TMDIChild;
   PrevPosNum1, PrevPosNum2, PrevPatNum1, PrevPatNum2: Integer;
+  PrevPosNum3, PrevPatNum3: Integer;
 
   TMPFileName: string;
-  ayumi1, ayumi2: TAyumi;
+  ayumi1, ayumi2, ayumi3: TAyumi;
 
   AudioBuff8Stereo: array of array[0..1] of Byte;
   AudioBuff16Stereo: array of array[0..1] of Word;
@@ -819,7 +846,7 @@ var
     ayumi.SetVolume(1, r[9] and $0f);
     ayumi.SetVolume(2, r[10] and $0f);
     ayumi.SetEnvelope((r[12] shl 8) or r[11]);
-    
+
     if (r[13] <> 255) then
       ayumi.setEnvelopeShape(r[13]);
     SoundChip[Chip].AYRegisters.Index[13] := 255;
@@ -881,7 +908,7 @@ var
         end;
         SetAyumiParams(ayumi1, 1);
 
-        if ayumi2 <> nil then begin
+        if (ayumi2 <> nil) and (PlayingWindow[2]<>nil) then begin
           Module_SetPointer(PlayingWindow[2].VTMP, 2);
           if Pattern_PlayCurrentLine = 2 then begin
             ChangePositions(PlayingWindow[2]);
@@ -891,21 +918,41 @@ var
           SetAyumiParams(ayumi2, 2);
         end;
 
+        if (ayumi3 <> nil) and (PlayingWindow[3]<>nil) then begin
+          Module_SetPointer(PlayingWindow[3].VTMP, 3);
+          if Pattern_PlayCurrentLine = 2 then begin
+            ChangePositions(PlayingWindow[3]);
+            if not ExportFinished then
+              Pattern_PlayCurrentLine;
+          end;
+          SetAyumiParams(ayumi3, 3);
+        end;
+
       end;
 
       ayumi1.Process;
       ayumi1.RemoveDC;
 
-      if ayumi2 <> nil then begin
+      if (ayumi2 <> nil) and (PlayingWindow[2]<>nil) then begin
         ayumi2.Process;
         ayumi2.RemoveDC;
       end;
 
+      if (ayumi3 <> nil) and (PlayingWindow[3]<>nil) then begin
+        ayumi3.Process;
+        ayumi3.RemoveDC;
+      end;
+
       Left  := ayumi1.left;
       Right := ayumi1.right;
-      if ayumi2 <> nil then begin
+      if (ayumi2 <> nil) and (PlayingWindow[2]<>nil)  then begin
         Left  := Left + ayumi2.left;
         Right := Right + ayumi2.right;
+      end;
+
+      if (ayumi3 <> nil) and (PlayingWindow[3]<>nil)  then begin
+        Left  := Left + ayumi3.left;
+        Right := Right + ayumi3.right;
       end;
 
       if Left > MaxPeak then Left := MaxPeak;
@@ -913,7 +960,7 @@ var
       if Right > MaxPeak then Right := MaxPeak;
       if Right < MinPeak then Right := MinPeak;
 
-      
+
       case NumChannels of
 
         // MONO
@@ -979,6 +1026,8 @@ begin
   MainForm.DisableControlsForExport;
   PrevPatNum2 := 0;
   PrevPosNum2 := 0;
+  PrevPatNum3 := 0;
+  PrevPosNum3 := 0;
 
   isrCounter := 1;
   isrStep := (PlayingWindow[1].VTMP.IntFreq / 1000) / ExportOptions.GetSampleRate;
@@ -1000,12 +1049,14 @@ begin
 
 
   // Set chip & audio params for export
+  if ayumi1<>nil then ayumi1.Free;
   ayumi1 := TAyumi.Create;
   ayumi1.Configure(ExportOptions.GetChip = YM_Chip, AY_Freq, ExportOptions.GetSampleRate, DCType);
   ayumi1.SetPan(0, Panoram[0]/255, False);
   ayumi1.SetPan(1, Panoram[1]/255, False);
   ayumi1.SetPan(2, Panoram[2]/255, False);
 
+  if ayumi2<>nil then ayumi2.Free;
   ayumi2 := nil;
   if PlayingWindow[2] <> nil then begin
     ayumi2 := TAyumi.Create;
@@ -1013,6 +1064,16 @@ begin
     ayumi2.SetPan(0, Panoram[0]/255, False);
     ayumi2.SetPan(1, Panoram[1]/255, False);
     ayumi2.SetPan(2, Panoram[2]/255, False);
+  end;
+
+  if ayumi3<>nil then ayumi3.Free;
+  ayumi3 := nil;
+  if PlayingWindow[3] <> nil then begin
+    ayumi3 := TAyumi.Create;
+    ayumi3.Configure(ExportOptions.GetChip = YM_Chip, AY_Freq, ExportOptions.GetSampleRate, DCType);
+    ayumi3.SetPan(0, Panoram[0]/255, False);
+    ayumi3.SetPan(1, Panoram[1]/255, False);
+    ayumi3.SetPan(2, Panoram[2]/255, False);
   end;
 
 
@@ -1036,6 +1097,12 @@ begin
     LeadWindow   := PlayingWindow[2];
   end
 
+  else if (PlayingWindow[3] <> nil) and (PlayingWindow[3].StringGrid1.Selection.Right > PlayingWindow[3].StringGrid1.Selection.Left) then begin
+    FromPosition := PlayingWindow[3].StringGrid1.Selection.Left;
+    ToPosition   := PlayingWindow[3].StringGrid1.Selection.Right;
+    LeadWindow   := PlayingWindow[3];
+  end
+
   else begin
     FromPosition := PlayingWindow[1].PositionNumber;
     ToPosition   := PlayingWindow[1].PositionNumber;
@@ -1046,13 +1113,17 @@ begin
 
   PrevPosNum1 := LeadWindow.PositionNumber;
   PrevPatNum1 := LeadWindow.PatNum;
-  if LeadWindow.TSWindow <> nil then begin
-    PrevPosNum2 := LeadWindow.TSWindow.PositionNumber;
-    PrevPatNum2 := LeadWindow.TSWindow.PatNum;
+  if LeadWindow.TSWindow[0] <> nil then begin
+    PrevPosNum2 := LeadWindow.TSWindow[0].PositionNumber;
+    PrevPatNum2 := LeadWindow.TSWindow[0].PatNum;
+  end;
+  if LeadWindow.TSWindow[1] <> nil then begin
+    PrevPosNum3 := LeadWindow.TSWindow[1].PositionNumber;
+    PrevPatNum3 := LeadWindow.TSWindow[1].PatNum;
   end;
 
 
-  
+
   // Init pointer, position, delay
   InitForAllTypes(True);
   for i := 1 to NumberOfSoundChips do
@@ -1084,7 +1155,7 @@ begin
   ExportModal.ExportProgress.Position := 0;
   ExportModal.Show;
 
-  
+
   // Prepare memory stream and buffer
   TMPFileName := FileName+'.tmp';
   TMPFileStream := TFileStream.Create(TMPFileName, fmCreate);
@@ -1103,7 +1174,8 @@ begin
       ExportModal.Free;
       ayumi1.Free;
       ayumi2.Free;
-      
+      ayumi3.Free;
+
       DeleteFile(TMPFileName);
 
       ExportStarted := False;
@@ -1113,8 +1185,10 @@ begin
       LoopAllowed := PrevLoopAllowed;
 
       RestorePositionAndPattern(LeadWindow, PrevPosNum1, PrevPatNum1);
-      if LeadWindow.TSWindow <> nil then
-        RestorePositionAndPattern(LeadWindow.TSWindow, PrevPosNum2, PrevPatNum2);
+      if LeadWindow.TSWindow[0] <> nil then
+        RestorePositionAndPattern(LeadWindow.TSWindow[0], PrevPosNum2, PrevPatNum2);
+      if LeadWindow.TSWindow[1] <> nil then
+        RestorePositionAndPattern(LeadWindow.TSWindow[1], PrevPosNum3, PrevPatNum3);
 
       MainForm.SetChannelsAllocation(PrevChanAlloc);
       MainForm.EnableControlsForExport;
@@ -1172,7 +1246,7 @@ begin
       CurPosition := PlVars[1].CurrentPosition;
     end;
 
-    
+
     // Process messages each 3 loops
     Inc(i);
     if i = 2 then
@@ -1187,6 +1261,7 @@ begin
   ExportModal.Free;
   ayumi1.Free;
   ayumi2.Free;
+  ayumi3.Free;
 
   // Save wav
   CreateWaveHeader(TMPFileStream.Size, ExportOptions.GetSampleRate, BitRate, NumChannels, WaveHeader);
@@ -1203,8 +1278,10 @@ begin
 
   // Set child positions
   RestorePositionAndPattern(LeadWindow, PrevPosNum1, PrevPatNum1);
-  if LeadWindow.TSWindow <> nil then
-    RestorePositionAndPattern(LeadWindow.TSWindow, PrevPosNum2, PrevPatNum2);
+  if LeadWindow.TSWindow[0] <> nil then
+    RestorePositionAndPattern(LeadWindow.TSWindow[0], PrevPosNum2, PrevPatNum2);
+  if LeadWindow.TSWindow[1] <> nil then
+    RestorePositionAndPattern(LeadWindow.TSWindow[1], PrevPosNum3, PrevPatNum3);
 
   // Restore controls
   MainForm.EnableControlsForExport;
