@@ -12513,10 +12513,11 @@ var
   Andsix: byte;
   ZXAddr: word;
   AuthN, SongN: string;
+  msg: string;
 
   function Convert(FType: Available_Types; VTMP: PModule; var VTMP2, VTMP3: PModule): Boolean;
   var
-    j: Integer;
+    j, k: Integer;
   begin
     Result := True;
     case FType of
@@ -12571,28 +12572,32 @@ var
       end;
     end;
 
-    
+    msg:='';
+
     // Validate loaded module
     for j := 0 to High(VTMP.Patterns) do
       // Check for incorrect pattern length
       if (VTMP.Patterns[j] <> nil) and ((VTMP.Patterns[j].Length <= 0) or (VTMP.Patterns[j].Length > MaxPatLen)) then begin
         Result := False;
+        msg:='Incorrect pattern['+inttostr(j)+'] length: '+inttostr(VTMP.Patterns[j].Length);
         Break;
       end;
 
-      
+
     if Result then
       for j := 0 to VTMP.Positions.Length-1 do begin
 
         // Check for incorrect position value
         if (VTMP.Positions.Value[j] > MaxPatNum) or (VTMP.Positions.Value[j] < 0) then begin
           Result := False;
+          msg:='Incorrect position['+inttostr(j)+'] pattern number: '+inttostr(VTMP.Positions.Value[j]);
           Break;
         end;
 
         // Check if pattern exists
         if VTMP.Patterns[VTMP.Positions.Value[j]] = nil then begin
           Result := False;
+          msg:='Position['+inttostr(j)+'] refers to non-existent pattern';
           Break;
         end;
       end;
@@ -12601,38 +12606,48 @@ var
     // Check for incorrect sample length
     if Result then
       for j := Low(VTMP.Samples) to High(VTMP.Samples) do
-        if (VTMP.Samples[j] <> nil) and ((VTMP.Samples[j].Length <= 0) or (VTMP.Samples[j].Length > MaxSamLen)) then begin
+        if (VTMP.Samples[j] <> nil) and ((VTMP.Samples[j].Length < 0) or (VTMP.Samples[j].Length > MaxSamLen)) then begin
           Result := False;
+          msg:='Incorrect sample['+inttostr(j)+'] length: '+inttostr(VTMP.Samples[j].Length);
           Break;
         end;
 
-        
+
     // Check for incorrect ornament length
     if Result then
       for j := Low(VTMP.Ornaments) to High(VTMP.Ornaments) do
-        if (VTMP.Ornaments[j] <> nil) and ((VTMP.Ornaments[j].Length <= 0) or (VTMP.Ornaments[j].Length > MaxOrnLen)) then begin
+        if (VTMP.Ornaments[j] <> nil) and ((VTMP.Ornaments[j].Length < 0) or (VTMP.Ornaments[j].Length > MaxOrnLen)) then begin
           Result := False;
+          msg:='Incorrect ornament['+inttostr(j)+'] length: '+inttostr(VTMP.Ornaments[j].Length);
           Break;
         end;
 
-    // Check for incorrect sample tone value
-    {if Result then
+    // Fix incorrect sample tone values
+    if Result then
       for j := Low(VTMP.Samples) to High(VTMP.Samples) do
         for k := 0 to MaxSamLen-1 do
-          if (VTMP.Samples[j] <> nil) and ((VTMP.Samples[j].Items[k].Add_to_Ton > $FFF) or (VTMP.Samples[j].Items[k].Add_to_Ton < -$FFF)) then begin
-            Result := False;
-            Break;
-          end; }
+          if (VTMP.Samples[j] <> nil) then begin
+            if (VTMP.Samples[j].Items[k].Add_to_Ton > $FFF) then
+              VTMP.Samples[j].Items[k].Add_to_Ton := $FFF
+            else if(VTMP.Samples[j].Items[k].Add_to_Ton < -$FFF) then
+              VTMP.Samples[j].Items[k].Add_to_Ton := -$FFF
+            end;
 
     // Check for incorrect speed
-    if VTMP.Initial_Delay = 0 then Result := False;
+    if VTMP.Initial_Delay = 0 then begin
+      Result := False;
+      msg:='Initial delay = 0';
+    end;
 
 
     // Check for incorrect tone table
-    if VTMP.Ton_Table > 4 then Result := False;
+    if VTMP.Ton_Table > 4 then begin
+      Result := False;
+      msg:='Invalid Ton table (>4) = '+inttostr(VTMP.Ton_Table);
+    end;
 
     if not Result then
-      Application.MessageBox('Module loading error', 'Vortex Tracker', MB_OK + MB_ICONSTOP + MB_TOPMOST);
+      Application.MessageBox(pansichar('Module loading error'+#13#10+msg), 'Vortex Tracker', MB_OK + MB_ICONSTOP + MB_TOPMOST);
 
   end;
 

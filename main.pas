@@ -2540,7 +2540,8 @@ var
     f: Double;
     ChanAllocChanged, PanoramChanged: Boolean;
     NewSize: TSize;
-    
+    NewLeft, NewTop: integer;
+
 begin
   DisableUpdateChilds := True;
   InitOptionsHotKeys;
@@ -2744,6 +2745,10 @@ begin
   Form1.DCCutOffBar.Position := DCCutOff;
 
   DisableUpdateChilds := False;
+
+  NewLeft := MainForm.Left + MainForm.Width div 2 - Form1.Width div 2;
+  NewTop := MainForm.Top + MainForm.Height div 2 - Form1.Height div 2;
+  Form1.SetBounds(NewLeft, NewTop, Form1.Width, Form1.Height);
 
   // Apply Options - user press OK button
   if Form1.ShowModal = mrOk then
