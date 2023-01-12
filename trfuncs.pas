@@ -4197,7 +4197,7 @@ begin
     if IsSample[i] then
     begin
       j := WordPtr(@STP.Index[STP.STP_SamplesPointer + (i - 1) * 2])^;
-      if (STP.Index[j] > MaxSamLen-1) or (STP.Index[j+1] > MaxSamLen) then
+      if ((STP.Index[j] <> 255) and (STP.Index[j] > MaxSamLen-1)) or (STP.Index[j+1] > MaxSamLen) then 
         Continue;
 
       New(VTM.Samples[i]);
