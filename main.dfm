@@ -5469,4 +5469,11 @@ object MainForm: TMainForm
     Left = 168
     Top = 240
   end
+  object CenteringTimer: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = CenteringTimerTimer
+    Left = 200
+    Top = 240
+  end
 end

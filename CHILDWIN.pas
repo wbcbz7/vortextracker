@@ -17540,6 +17540,10 @@ begin
   SaveTextDlg.FileName := 'Ornament ' + IntToStr(OrnamentNumUpDown.Position) + '.vto';
   SaveTextDlg.InitialDir := OrnamentsDir;
 
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @SaveTextDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
+
   if SaveTextDlg.Execute then
   begin
     OrnamentsDir := ExtractFilePath(SaveTextDlg.FileName);
@@ -17557,6 +17561,10 @@ begin
   LoadTextDlg.DefaultExt := 'vto';
   LoadTextDlg.FileName   := '';
   LoadTextDlg.InitialDir := OrnamentsDir;
+
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @LoadTextDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
 
   if LoadTextDlg.Execute then
   begin
@@ -17795,6 +17803,10 @@ begin
   SaveTextDlg.FileName   := 'Sample ' + IntToStr(SampleNumUpDown.Position) + '.vts';
   SaveTextDlg.InitialDir := SamplesDir;
 
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @SaveTextDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
+
   if SaveTextDlg.Execute then
   begin
     SamplesDir := ExtractFilePath(SaveTextDlg.FileName);
@@ -17812,6 +17824,10 @@ begin
   LoadTextDlg.DefaultExt := 'vts';
   LoadTextDlg.FileName   := '';
   LoadTextDlg.InitialDir := SamplesDir;
+
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @LoadTextDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
 
   if LoadTextDlg.Execute then
   begin
@@ -17893,6 +17909,10 @@ begin
   LoadTextDlg.Filter := 'Pattern files|*.vtp|Text files|*.txt|All files|*.*';
   LoadTextDlg.DefaultExt := 'vtp';
 
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @LoadTextDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
+
   if LoadTextDlg.Execute then
   begin
     LoadTextDlg.InitialDir := ExtractFilePath(LoadTextDlg.FileName);
@@ -17965,6 +17985,11 @@ begin
   SaveTextDlg.Filter := 'Pattern files|*.vtp|Text files|*.txt|All files|*.*';
   SaveTextDlg.DefaultExt := 'vtp';
   SaveTextDlg.FileName := 'Pattern ' + IntToStr(p) + '.vtp';
+
+
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @SaveTextDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
 
   if SaveTextDlg.Execute then
   begin
@@ -20183,6 +20208,10 @@ begin
       SaveDialog1.FileName := SaveDialog1.InitialDir + ExtractFileName(SaveDialog1.FileName);
 
 
+    CenterWinHandle := self.handle;
+    DialogWinHandle := @SaveDialog1.Handle;
+    MainForm.CenteringTimer.Enabled := True;
+
     Result := False;
     if SaveDialog1.Execute then
     begin
@@ -21345,6 +21374,11 @@ begin
 
 
   PrepareExportDialog(ExportWavDialog, '.wav', ExportPath);
+
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @ExportWavDialog.Handle;
+  MainForm.CenteringTimer.Enabled := True;
+
   if ExportWavDialog.Execute then
   begin
 
@@ -21632,6 +21666,11 @@ var
 begin
 
   PrepareExportDialog(ExportPSGDlg, '.psg');
+
+  CenterWinHandle := self.handle;
+  DialogWinHandle := @ExportPSGDlg.Handle;
+  MainForm.CenteringTimer.Enabled := True;
+
   if ExportPSGDlg.Execute then
   begin
     ExportPSGDlg.InitialDir := ExtractFilePath(ExportPSGDlg.FileName);

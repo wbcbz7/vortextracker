@@ -327,6 +327,7 @@ type
     TracksManagerAct: TAction;
     GlobalTranspositionAct: TAction;
     Newturbosoudtrack3: TMenuItem;
+    CenteringTimer: TTimer;
     function IsFileWritable(FilePath: String): Boolean;
     function VScrollVisible(NewHeight: Integer): Boolean;
     function HScrollVisible(NewLeft: Integer): Boolean;
@@ -598,6 +599,7 @@ type
     procedure ExportPSGActUpdate(Sender: TObject);
     procedure StatusBarDblClick(Sender: TObject);
     procedure File1Click(Sender: TObject);
+    procedure CenteringTimerTimer(Sender: TObject);
 
   private
     { Private declarations }
@@ -762,6 +764,9 @@ var
   OrnamentCopySrcWindow: TMDIChild;
 
   SamplesQuickDir, OrnamentsQuickDir: String;
+
+  DialogWinHandle: ^integer;
+  CenterWinHandle: integer;
 
   {$IFDEF LOGGER}Logger: TLogger;{$ENDIF}
 
@@ -1956,6 +1961,10 @@ begin
       OpenDialog.InitialDir := OpenPath;
   end;
 
+  CenterWinHandle := MainForm.handle;
+  DialogWinHandle := @OpenDialog.Handle;
+  CenteringTimer.Enabled := True;
+
   if OpenDialog.Execute then
   begin
     RedrawOff;
@@ -2161,6 +2170,9 @@ begin
   ToolBar2.DoubleBuffered := True;
   TrackBar1.DoubleBuffered := True;
   PrevTop := 0;
+  DialogWinHandle := nil;
+  CenterWinHandle := 0;
+
 
   Application.OnException := AppException;
   Caption := AppName +' '+ VersionString;
@@ -2174,7 +2186,7 @@ begin
   // Save system colors for window decoration
   SaveSystemColors;
 
-  
+
   // Set VortexDir variable
   if GetEnvironmentVariable('APPDATA') = '' then begin
     VortexDir := 'C:\' + VortexDirName;
@@ -7490,6 +7502,32 @@ begin
   // Copy ints info to clipboard
   Clipboard.AsText := StatusBar.Panels[1].Text;
 
+end;
+
+procedure TMainForm.CenteringTimerTimer(Sender: TObject);
+var
+  FormRect, DialogRect: TRect;
+  NewLeft, NewTop: integer;
+  DialogHandle: integer;
+begin
+  if DialogWinHandle = nil then exit;
+  DialogHandle := getparent(DialogWinHandle^);
+
+  if (DialogHandle <> 0) and IsWindowVisible(DialogHandle) then begin
+    GetWindowRect(CenterWinHandle, FormRect);
+    GetWindowRect(DialogHandle, DialogRect);
+
+    NewLeft := FormRect.Left
+      + (FormRect.Right - FormRect.Left) div 2
+      - (DialogRect.Right - DialogRect.Left) div 2;
+    NewTop := FormRect.Top
+      + (FormRect.Bottom - FormRect.Top) div 2
+      - (DialogRect.Bottom - DialogRect.Top) div 2;
+
+    SetWindowPos(DialogHandle, 0, NewLeft, NewTop, 0, 0, swp_NoSize);
+    CenteringTimer.Enabled := False;
+    DialogWinHandle := nil;
+  end;
 end;
 
 end.
