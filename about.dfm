@@ -432,7 +432,7 @@ object AboutBox: TAboutBox
           'Version 1.5 - 2.6'
           'TS3 test version  by Dexus (Volutar)'
           ''
-          'Date of build: 10 Jan 2023')
+          'Date of build: %datetime%')
         ReadOnly = True
         TabOrder = 0
       end

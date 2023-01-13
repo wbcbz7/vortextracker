@@ -14,7 +14,8 @@ unit About;
 interface
 
 uses Windows, Classes, Graphics, Forms, Controls, StdCtrls,
-  Buttons, ExtCtrls;
+  Buttons, ExtCtrls, SysUtils,
+  ComCtrls;
 
 type
   TAboutBox = class(TForm)
@@ -23,16 +24,11 @@ type
     ProgramIcon: TImage;
     ProductName: TLabel;
     Version: TLabel;
-    Copyright: TLabel;
-    Comments: TLabel;
-    Label1: TLabel;
-    Label3: TLabel;
-    Label5: TLabel;
-    Label4: TLabel;
-    Label2: TLabel;
     line1: TGroupBox;
     line2: TGroupBox;
-    Label6: TLabel;
+    Memo1: TMemo;
+    Panel2: TPanel;
+    GroupBox1: TGroupBox;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
@@ -49,9 +45,16 @@ implementation
 
 uses Main;
 
+{$INCLUDE buildts.inc}
+
 procedure TAboutBox.FormCreate(Sender: TObject);
+var
+  i: integer;
 begin
-  Version.Caption := HalfVersString
+  Version.Caption := HalfVersString;
+  for i := 0 to Memo1.Lines.Count-1 do begin
+    Memo1.Lines[i] := StringReplace(Memo1.Lines[i], '%datetime%', buildts, []);
+  end;
 end;
 
 end.
