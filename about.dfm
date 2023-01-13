@@ -378,11 +378,17 @@ object AboutBox: TAboutBox
       IsControl = True
     end
     object ProductName: TLabel
-      Left = 101
-      Top = 64
-      Width = 79
-      Height = 13
+      Left = 98
+      Top = 62
+      Width = 87
+      Height = 15
       Caption = 'Vortex Tracker II'
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clBlack
+      Font.Height = -12
+      Font.Name = 'Microsoft Sans Serif'
+      Font.Style = []
+      ParentFont = False
       IsControl = True
     end
     object Version: TLabel
@@ -392,6 +398,12 @@ object AboutBox: TAboutBox
       Height = 13
       Alignment = taCenter
       AutoSize = False
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Microsoft Sans Serif'
+      Font.Style = []
+      ParentFont = False
       IsControl = True
     end
     object Panel2: TPanel
@@ -412,6 +424,11 @@ object AboutBox: TAboutBox
         BevelOuter = bvNone
         BorderStyle = bsNone
         Color = clSilver
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Microsoft Sans Serif'
+        Font.Style = []
         Lines.Strings = (
           'Copyright (c) 2000-2009 S.V. Bulba'
           'Thanks to Roman Scherbakov for idea and graphics'
@@ -433,6 +450,7 @@ object AboutBox: TAboutBox
           'TS3 test version  by Dexus (Volutar)'
           ''
           'Date of build: %datetime%')
+        ParentFont = False
         ReadOnly = True
         TabOrder = 0
       end
@@ -466,7 +484,7 @@ object AboutBox: TAboutBox
       TabOrder = 1
     end
     object GroupBox1: TGroupBox
-      Left = 9
+      Left = 8
       Top = 256
       Width = 265
       Height = 1
