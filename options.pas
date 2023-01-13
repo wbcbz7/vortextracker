@@ -501,9 +501,10 @@ begin
 
   MainForm.SetEmulatingChip(ChTypes(ChipSel.ItemIndex + 1));
   // Ayumi render
-  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) then begin
+  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) and (AyumiChip3 <> nil) then begin
     AyumiChip1.SetChipType(Emulating_Chip = YM_Chip);
     AyumiChip2.SetChipType(Emulating_Chip = YM_Chip);
+    AyumiChip3.SetChipType(Emulating_Chip = YM_Chip);
   end
   else
     StopAndStart;
@@ -1795,9 +1796,10 @@ procedure TForm1.DCOffMouseUp(Sender: TObject; Button: TMouseButton;
 begin
   DCType := 0;
   UpdateAudioSettings;
-  if (AyumiChip1 = nil) and (AyumiChip2 = nil) then Exit;
+  if (AyumiChip1 = nil) and (AyumiChip2 = nil) and (AyumiChip3 = nil) then Exit;
   AyumiChip1.SetDCType(DCType);
   AyumiChip2.SetDCType(DCType);
+  AyumiChip3.SetDCType(DCType);
 end;
 
 procedure TForm1.DCAyumiMouseUp(Sender: TObject; Button: TMouseButton;
@@ -1805,9 +1807,10 @@ procedure TForm1.DCAyumiMouseUp(Sender: TObject; Button: TMouseButton;
 begin
   DCType := 1;
   UpdateAudioSettings;
-  if (AyumiChip1 = nil) and (AyumiChip2 = nil) then Exit;
+  if (AyumiChip1 = nil) and (AyumiChip2 = nil) and (AyumiChip3 = nil) then Exit;
   AyumiChip1.SetDCType(DCType);
   AyumiChip2.SetDCType(DCType);
+  AyumiChip3.SetDCType(DCType);
 end;
 
 procedure TForm1.DCWbcbz7MouseUp(Sender: TObject; Button: TMouseButton;
@@ -1815,17 +1818,19 @@ procedure TForm1.DCWbcbz7MouseUp(Sender: TObject; Button: TMouseButton;
 begin
   DCType := 2;
   UpdateAudioSettings;
-  if (AyumiChip1 = nil) and (AyumiChip2 = nil) then Exit;
+  if (AyumiChip1 = nil) and (AyumiChip2 = nil) and (AyumiChip3 = nil) then Exit;
   AyumiChip1.SetDCType(DCType);
   AyumiChip2.SetDCType(DCType);
+  AyumiChip3.SetDCType(DCType);
 end;
 
 procedure TForm1.DCCutOffBarChange(Sender: TObject);
 begin
   DCCutOff := DCCutOffBar.Position;
-  if (AyumiChip1 = nil) and (AyumiChip2 = nil) then Exit; 
+  if (AyumiChip1 = nil) and (AyumiChip2 = nil) and (AyumiChip3 = nil) then Exit;
   AyumiChip1.SetDCCutoff(DCCutOff);
   AyumiChip2.SetDCCutoff(DCCutOff);
+  AyumiChip3.SetDCCutoff(DCCutOff);
 end;
 
 procedure TForm1.DisableInfoWinOptMouseUp(Sender: TObject;

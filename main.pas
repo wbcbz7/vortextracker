@@ -2884,11 +2884,13 @@ begin
 
     DCType := Saved_DCType;
     DCCutOff := Saved_DCCutOff;
-    if (AyumiChip1 <> nil) and (AyumiChip2 <> nil) then begin
+    if (AyumiChip1 <> nil) and (AyumiChip2 <> nil) and (AyumiChip3 <> nil) then begin
       AyumiChip1.SetDCType(DCType);
       AyumiChip2.SetDCType(DCType);
+      AyumiChip3.SetDCType(DCType);
       AyumiChip1.SetDCCutoff(DCCutOff);
       AyumiChip2.SetDCCutoff(DCCutOff);
+      AyumiChip3.SetDCCutoff(DCCutOff);
     end;
 
     FeaturesLevel := Saved_FeaturesLevel;
