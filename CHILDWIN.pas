@@ -6939,102 +6939,24 @@ begin
 
   if (NumChansSelected = 1) then begin
 
-    // Channel 0 to right
-    if (FromChan = 0) and RightDirect then
-    begin
-      AllocMap[0] := 1;
-      AllocMap[1] := 0;
-      AllocMap[2] := 2;
-      if Tracks.IsSelected then begin
-        Tracks.SelX    := 22;
-        Tracks.CursorX := 34;
-      end
-      else begin
-        Inc(Tracks.CursorX, 14);
-        Tracks.SelX := Tracks.CursorX;
-      end;
-    end;
+    If RightDirect then ToChan := FromChan + 1
+    else ToChan := FromChan - 1;
+    If ToChan = 3 then ToChan := 0
+    else if ToChan = -1 then ToChan := 2;
 
-    // Channel 0 to left
-    if (FromChan = 0) and not RightDirect then
-    begin
-      AllocMap[0] := 2;
-      AllocMap[1] := 1;
-      AllocMap[2] := 0;
-      if Tracks.IsSelected then begin
-        Tracks.SelX    := 36;
-        Tracks.CursorX := 48;
-      end
-      else begin
-        Tracks.CursorX := 36 + (Tracks.CursorX - 8);
-        Tracks.SelX := Tracks.CursorX;
-      end;
+    for i := 0 to 2 do AllocMap[i] := i;
+    i := AllocMap[ToChan];
+    AllocMap[ToChan] := AllocMap[FromChan];
+    AllocMap[FromChan] := i;
+    if Tracks.IsSelected then begin
+      Tracks.SelX    := 8 + ToChan * 14;
+      Tracks.CursorX := 20 + ToChan * 14;
+    end
+    else begin
+      if Tracks.CursorX < 8 then Tracks.CursorX := 8;
+      Tracks.CursorX := 8 + (Tracks.CursorX-8) mod 14 + ToChan * 14;
+      Tracks.SelX := Tracks.CursorX;
     end;
-
-    // Channel 1 to right
-    if (FromChan = 1) and RightDirect then
-    begin
-      AllocMap[0] := 0;
-      AllocMap[1] := 2;
-      AllocMap[2] := 1;
-      if Tracks.IsSelected then begin
-        Tracks.SelX    := 36;
-        Tracks.CursorX := 48;
-      end
-      else begin
-        Inc(Tracks.CursorX, 14);
-        Tracks.SelX := Tracks.CursorX;
-      end;
-    end;
-
-    // Channel 1 to left
-    if (FromChan = 1) and not RightDirect then
-    begin
-      AllocMap[0] := 1;
-      AllocMap[1] := 0;
-      AllocMap[2] := 2;
-      if Tracks.IsSelected then begin
-        Tracks.SelX    := 8;
-        Tracks.CursorX := 20;
-      end
-      else begin
-        Dec(Tracks.CursorX, 14);
-        Tracks.SelX := Tracks.CursorX;
-      end;
-    end;
-
-    // Channel 2 to right
-    if (FromChan = 2) and RightDirect then
-    begin
-      AllocMap[0] := 2;
-      AllocMap[1] := 1;
-      AllocMap[2] := 0;
-      if Tracks.IsSelected then begin
-        Tracks.SelX    := 8;
-        Tracks.CursorX := 20;
-      end
-      else begin
-        Tracks.CursorX := 8 + (Tracks.CursorX - 36);
-        Tracks.SelX := Tracks.CursorX;
-      end;
-    end;
-
-    // Channel 2 to left
-    if (FromChan = 2) and not RightDirect then
-    begin
-      AllocMap[0] := 0;
-      AllocMap[1] := 2;
-      AllocMap[2] := 1;
-      if Tracks.IsSelected then begin
-        Tracks.SelX    := 22;
-        Tracks.CursorX := 34;
-      end
-      else begin
-        Dec(Tracks.CursorX, 14);
-        Tracks.SelX := Tracks.CursorX;
-      end;
-    end;
-
   end;
 
 
@@ -7143,19 +7065,19 @@ var
   PLen, i, j: Integer;
   Incr, Decr: Boolean;
 
-  procedure GoToNextWindow(Right: Boolean);
+  procedure GoToNextWindow(Right: Boolean; Tab: Boolean);
   var
     CurWinCurY, PLen: Integer;
     dir:integer;
   begin
 
-    if (TSWindow[0] = nil) or (TSWindow[0] = Self) or (TSWindow[1] = Self) or Tracks.IsSelected then
-      Exit;
+//    if (TSWindow[0] = nil) or (TSWindow[0] = Self) or (TSWindow[1] = Self) or Tracks.IsSelected then
+//      Exit;
 
     CurWinCurY := Tracks.CursorY;
 
     dir:=-1;
-    if ((TSWindow[1]=nil) or not Right) and (TSWindow[0].Tracks.Enabled) then
+    if ((TSWindow[1]=nil) or not Right) and (TSWindow[0]<>nil) and (TSWindow[0].Tracks.Enabled) then
       dir:=0 //2ts or 3ts =>
     else
     if (TSWindow[1]<>nil) and (TSWindow[1].Tracks.Enabled) and Right then //3ts <=
@@ -7166,8 +7088,10 @@ var
       with TSWindow[dir] do
       begin
         // Set cursor X
-        if Right then
-          Tracks.CursorX := 48
+        if Right then begin
+          if Tab then Tracks.CursorX := 36
+          else   Tracks.CursorX := 48
+        end
         else
           Tracks.CursorX := 0;
 
@@ -7191,7 +7115,21 @@ var
         if Tracks.CanFocus then
           Tracks.SetFocus;
       end;
-
+    end
+    else
+    begin
+      if Right then begin
+        if Tab then Tracks.CursorX := 36
+        else   Tracks.CursorX := 48;
+      end
+      else
+        Tracks.CursorX := 0;
+      Tracks.HideMyCaret;
+      Tracks.RecreateCaret;
+      Tracks.SetCaretPosition;
+      Tracks.RemoveSelection;
+      Tracks.RedrawTracks(0);
+      Tracks.ShowMyCaret;
     end;
   end;
 
@@ -7638,7 +7576,7 @@ var
       Tracks.ShowMyCaret;
     end
     else
-      GoToNextWindow(True);
+      GoToNextWindow(True, False);
   end;
 
   procedure DoCursorRight;
@@ -7679,7 +7617,7 @@ var
       Tracks.ShowMyCaret;
     end
     else
-      GoToNextWindow(False);
+      GoToNextWindow(False, False);
   end;
 
 
@@ -7764,14 +7702,14 @@ type
     if (Tracks.CursorX in [36..48]) and not (ssShift in Shift) then
     begin
       Tracks.Refresh;
-      GoToNextWindow(False);
+      GoToNextWindow(False, True);
       Exit;
     end;
 
     if (Tracks.CursorX in [0..6]) and (ssShift in Shift) then
     begin
       Tracks.Refresh;
-      GoToNextWindow(True);
+      GoToNextWindow(True, True);
       Exit;
     end;
 
