@@ -1049,14 +1049,12 @@ begin
 
 
   // Set chip & audio params for export
-  if ayumi1<>nil then ayumi1.Free;
   ayumi1 := TAyumi.Create;
   ayumi1.Configure(ExportOptions.GetChip = YM_Chip, AY_Freq, ExportOptions.GetSampleRate, DCType);
   ayumi1.SetPan(0, Panoram[0]/255, False);
   ayumi1.SetPan(1, Panoram[1]/255, False);
   ayumi1.SetPan(2, Panoram[2]/255, False);
 
-  if ayumi2<>nil then ayumi2.Free;
   ayumi2 := nil;
   if PlayingWindow[2] <> nil then begin
     ayumi2 := TAyumi.Create;
@@ -1066,7 +1064,6 @@ begin
     ayumi2.SetPan(2, Panoram[2]/255, False);
   end;
 
-  if ayumi3<>nil then ayumi3.Free;
   ayumi3 := nil;
   if PlayingWindow[3] <> nil then begin
     ayumi3 := TAyumi.Create;
