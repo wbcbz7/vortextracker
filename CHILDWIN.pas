@@ -389,6 +389,7 @@ type
   TChangeOrnaments = array of TChangeOrnament;
 
 
+  PMDIChild = ^TMDIChild;
   TChangeListItem = record
     Action: TChangeAction;
     Line, Channel: Integer;
@@ -416,6 +417,7 @@ type
           (EntireOrnament: PChangeOrnament);
     end;
     OldParams, NewParams: TChangeParameters;
+    OtherMDI: Integer;
   end;
 
   TIntegersArray = array of Integer;
@@ -642,6 +644,7 @@ type
     procedure DoSwapChannels(RightDirect: Boolean);
     procedure BetweenPatternsUp;
     procedure BetweenPatternsDown;
+    procedure SwitchToNextWindow(Right: Boolean; Tab: Boolean);
     procedure TracksKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure SamplesKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure SaveSyncSample;
@@ -6868,6 +6871,9 @@ procedure TMDIChild.DoSwapChannels(RightDirect: Boolean);
 var
   FromX, ToX, NumChansSelected, i: Integer;
   FromChan, ToChan: Integer;
+  CrossModule: Integer;
+  OtherModule: TMDIChild;
+  OtherTracks: TTracks;
   FromLine, ToLine, Line: Integer;
   AllocMap: Array[0..2] of Integer;
   CopyFromChannel, CopyToChannel: Integer;
@@ -6937,25 +6943,50 @@ begin
   end;
 
 
+  CrossModule := 0;
+  OtherModule := self;
+  OtherTracks := Tracks;
+  // Single track selection swaps into left/right
   if (NumChansSelected = 1) then begin
 
     If RightDirect then ToChan := FromChan + 1
     else ToChan := FromChan - 1;
-    If ToChan = 3 then ToChan := 0
-    else if ToChan = -1 then ToChan := 2;
+    If ToChan = 3 then begin
+      ToChan := 0;
+      if TSWindow[0] = nil then CrossModule := 0 //same
+      else CrossModule := 1; //second
+    end
+    else if ToChan = -1 then begin
+      ToChan := 2;
+      if TSWindow[0] = nil then CrossModule := 0 //same
+      else if TSWindow[1] = nil then CrossModule := 1
+      else CrossModule := -1; //third
+    end;
 
+    // swap from<->to
     for i := 0 to 2 do AllocMap[i] := i;
     i := AllocMap[ToChan];
     AllocMap[ToChan] := AllocMap[FromChan];
     AllocMap[FromChan] := i;
+
+    if CrossModule = -1 then OtherModule := TSWindow[1]
+    else if CrossModule = 1 then OtherModule := TSWindow[0];
+
+    OtherTracks := OtherModule.Tracks;
+
+    // transfer selection to target module
+    OtherTracks.SelY := Tracks.SelY;
+    OtherTracks.ShowSel := Tracks.ShowSel;
+    OtherTracks.CursorY := Tracks.CurrentPatLine - Tracks.ShownFrom + Tracks.N1OfLines;
+
     if Tracks.IsSelected then begin
-      Tracks.SelX    := 8 + ToChan * 14;
-      Tracks.CursorX := 20 + ToChan * 14;
+      OtherTracks.SelX    := 8 + ToChan * 14;
+      OtherTracks.CursorX := 20 + ToChan * 14;
     end
     else begin
-      if Tracks.CursorX < 8 then Tracks.CursorX := 8;
-      Tracks.CursorX := 8 + (Tracks.CursorX-8) mod 14 + ToChan * 14;
-      Tracks.SelX := Tracks.CursorX;
+      if OtherTracks.CursorX < 8 then OtherTracks.CursorX := 8;
+      OtherTracks.CursorX := 8 + (OtherTracks.CursorX-8) mod 14 + ToChan * 14;
+      OtherTracks.SelX := OtherTracks.CursorX;
     end;
   end;
 
@@ -6976,24 +7007,38 @@ begin
 
 
   // Swap channels
-  for Line := FromLine to ToLine do with Tracks.ShownPattern.Items[Line] do
-  begin
 
-    // Remember original channels before swap
-    OriginalChannel[0] := Channel[0];
-    OriginalChannel[1] := Channel[1];
-    OriginalChannel[2] := Channel[2];
+  if OtherTracks = Tracks then
+    for Line := FromLine to ToLine do
+      with Tracks.ShownPattern.Items[Line] do begin
+        // Remember original channels before swap
+        OriginalChannel[0] := Channel[0];
+        OriginalChannel[1] := Channel[1];
+        OriginalChannel[2] := Channel[2];
 
-    for i := 0 to 2 do
-    begin
-      // Don't swap channel
-      if AllocMap[i] = i then Continue;
+        for i := 0 to 2 do
+        begin
+          // Don't swap channel
+          if AllocMap[i] = i then Continue;
 
-      CopyFromChannel := ChanAlloc[i];
-      CopyToChannel   := ChanAlloc[AllocMap[i]];
-      Channel[CopyToChannel] := OriginalChannel[CopyFromChannel];
+          CopyFromChannel := ChanAlloc[i];
+          CopyToChannel   := ChanAlloc[AllocMap[i]];
+          Channel[CopyToChannel] := OriginalChannel[CopyFromChannel];
+        end;
+
+      end
+  else begin//crossmodule swap
+    // Save "paired" undo flag
+    ChangeList[ChangeCount - 1].OtherMDI := 1;
+    OtherModule.SavePatternUndo;
+    OtherModule.ChangeList[OtherModule.ChangeCount - 1].OtherMDI := 2;
+    for Line := FromLine to ToLine do begin
+      OriginalChannel[0] := Tracks.ShownPattern.Items[Line].Channel[FromChan];
+      OriginalChannel[1] := OtherTracks.ShownPattern.Items[Line].Channel[ToChan];
+      Tracks.ShownPattern.Items[Line].Channel[FromChan] := OriginalChannel[1];
+      OtherTracks.ShownPattern.Items[Line].Channel[ToChan] := OriginalChannel[0];
     end;
-
+    OtherModule.SavePatternRedo;
   end;
 
   // Save redo
@@ -7001,11 +7046,20 @@ begin
   SongChanged := True;
   BackupSongChanged := True;
 
-  Tracks.HideMyCaret;
-  Tracks.RecreateCaret;
-  Tracks.SetCaretPosition;
-  Tracks.RedrawTracks(0);
-  Tracks.ShowMyCaret;
+  if OtherTracks <> Tracks then begin
+    OtherModule.PageControl1.ActivePageIndex := 0;
+    OtherModule.Show;
+    OtherModule.SetFocus;
+    if OtherTracks.CanFocus then
+      OtherTracks.SetFocus;
+    Tracks.HideMyCaret;
+    Tracks.RedrawTracks(0);
+  end;
+  OtherTracks.HideMyCaret;
+  OtherTracks.RecreateCaret;
+  OtherTracks.SetCaretPosition;
+  OtherTracks.RedrawTracks(0);
+  OtherTracks.ShowMyCaret;
 
 end;
 
@@ -7060,79 +7114,78 @@ begin
 end;
 
 
+procedure TMDIChild.SwitchToNextWindow(Right: Boolean; Tab: Boolean);
+var
+  CurWinCurY, PLen: Integer;
+  dir:integer;
+begin
+
+//  if (TSWindow[0] = nil) or (TSWindow[0] = Self) or (TSWindow[1] = Self) or Tracks.IsSelected then
+//    Exit;
+
+  CurWinCurY := Tracks.CursorY;
+
+  dir:=-1;
+  if ((TSWindow[1]=nil) or not Right) and (TSWindow[0]<>nil) and (TSWindow[0].Tracks.Enabled) then
+    dir:=0 //2ts or 3ts =>
+  else
+  if (TSWindow[1]<>nil) and (TSWindow[1].Tracks.Enabled) and Right then //3ts <=
+    dir:=1;
+
+  if dir>=0 then
+  begin
+    with TSWindow[dir] do
+    begin
+      // Set cursor X
+      if Right then begin
+        if Tab then Tracks.CursorX := 36
+        else   Tracks.CursorX := 48
+      end
+      else
+        Tracks.CursorX := 0;
+
+      // Set cursor Y
+      Tracks.CursorY := CurWinCurY;
+
+      // Is CursorY < ShownFrom?
+      if Tracks.CurrentPatLine < 0 then
+        Tracks.CursorY := Tracks.N1OfLines - Tracks.ShownFrom;
+
+      // Is CursorY > ShownFrom?
+      PLen := Tracks.ShownPattern.Length;
+      if Tracks.CurrentPatLine >= PLen then
+        Tracks.CursorY := PLen - Tracks.ShownFrom + Tracks.N1OfLines - 1;
+
+      Tracks.RemoveSelection;
+      Tracks.RedrawTracks(0);
+      PageControl1.ActivePageIndex := 0;
+      Show;
+      SetFocus;
+      if Tracks.CanFocus then
+        Tracks.SetFocus;
+    end;
+  end
+  else
+  begin
+    if Right then begin
+      if Tab then Tracks.CursorX := 36
+      else   Tracks.CursorX := 48;
+    end
+    else
+      Tracks.CursorX := 0;
+    Tracks.HideMyCaret;
+    Tracks.RecreateCaret;
+    Tracks.SetCaretPosition;
+    Tracks.RemoveSelection;
+    Tracks.RedrawTracks(0);
+    Tracks.ShowMyCaret;
+  end;
+end;
+
 procedure TMDIChild.TracksKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var
   PLen, i, j: Integer;
   Incr, Decr: Boolean;
-
-  procedure GoToNextWindow(Right: Boolean; Tab: Boolean);
-  var
-    CurWinCurY, PLen: Integer;
-    dir:integer;
-  begin
-
-//    if (TSWindow[0] = nil) or (TSWindow[0] = Self) or (TSWindow[1] = Self) or Tracks.IsSelected then
-//      Exit;
-
-    CurWinCurY := Tracks.CursorY;
-
-    dir:=-1;
-    if ((TSWindow[1]=nil) or not Right) and (TSWindow[0]<>nil) and (TSWindow[0].Tracks.Enabled) then
-      dir:=0 //2ts or 3ts =>
-    else
-    if (TSWindow[1]<>nil) and (TSWindow[1].Tracks.Enabled) and Right then //3ts <=
-      dir:=1;
-
-    if dir>=0 then
-    begin
-      with TSWindow[dir] do
-      begin
-        // Set cursor X
-        if Right then begin
-          if Tab then Tracks.CursorX := 36
-          else   Tracks.CursorX := 48
-        end
-        else
-          Tracks.CursorX := 0;
-
-        // Set cursor Y
-        Tracks.CursorY := CurWinCurY;
-
-        // Is CursorY < ShownFrom?
-        if Tracks.CurrentPatLine < 0 then
-          Tracks.CursorY := Tracks.N1OfLines - Tracks.ShownFrom;
-
-        // Is CursorY > ShownFrom?
-        PLen := Tracks.ShownPattern.Length;
-        if Tracks.CurrentPatLine >= PLen then
-          Tracks.CursorY := PLen - Tracks.ShownFrom + Tracks.N1OfLines - 1;
-
-        Tracks.RemoveSelection;
-        Tracks.RedrawTracks(0);
-        PageControl1.ActivePageIndex := 0;
-        Show;
-        SetFocus;
-        if Tracks.CanFocus then
-          Tracks.SetFocus;
-      end;
-    end
-    else
-    begin
-      if Right then begin
-        if Tab then Tracks.CursorX := 36
-        else   Tracks.CursorX := 48;
-      end
-      else
-        Tracks.CursorX := 0;
-      Tracks.HideMyCaret;
-      Tracks.RecreateCaret;
-      Tracks.SetCaretPosition;
-      Tracks.RemoveSelection;
-      Tracks.RedrawTracks(0);
-      Tracks.ShowMyCaret;
-    end;
-  end;
-
   procedure RemSel;
   begin
     if not (ssShift in Shift) then
@@ -7576,7 +7629,7 @@ var
       Tracks.ShowMyCaret;
     end
     else
-      GoToNextWindow(True, False);
+      SwitchToNextWindow(True, False);
   end;
 
   procedure DoCursorRight;
@@ -7617,7 +7670,7 @@ var
       Tracks.ShowMyCaret;
     end
     else
-      GoToNextWindow(False, False);
+      SwitchToNextWindow(False, False);
   end;
 
 
@@ -7702,14 +7755,14 @@ type
     if (Tracks.CursorX in [36..48]) and not (ssShift in Shift) then
     begin
       Tracks.Refresh;
-      GoToNextWindow(False, True);
+      SwitchToNextWindow(False, True);
       Exit;
     end;
 
     if (Tracks.CursorX in [0..6]) and (ssShift in Shift) then
     begin
       Tracks.Refresh;
-      GoToNextWindow(True, True);
+      SwitchToNextWindow(True, True);
       Exit;
     end;
 
@@ -19447,6 +19500,7 @@ begin
   with ChangeList[ChangeCount - 1] do
   begin
     Action := CA;
+    OtherMDI := 0;
     case CA of
       CAChangeSpeed, CAChangeToneTable, CAChangePositionListLoop, CAChangeFeatures, CAChangeHeader:
         begin
@@ -19660,6 +19714,8 @@ var
   PatternState: TChangeOnePattern;
   SampleState: TChangeSample;
   OrnamentState: TChangeOrnament;
+  TMPOtherMDI: TMDIChild;
+  TMPi, TMPj, TMPund: Integer;
   
 begin
   UndoWorking := True;
@@ -19923,20 +19979,52 @@ begin
                 Tracks.ShownPattern.Items  := PatternState.NewPattern.Items;
                 PatternLenUpDown.Position  := Tracks.ShownPattern.Length;
                 PatternNumUpDown.Position  := PatNum;
-                
+
                 SelectPositions(NewGridSelection);
               end;
 
-              Tracks.HideMyCaret;
-              Tracks.SetCaretPosition;
-              Tracks.RemoveSelection;
-              Tracks.RedrawTracks(0);
-              Tracks.RecreateCaret;
-              Tracks.ShowMyCaret;
-              Tracks.KeyPressed := 0;
+              if OtherMDI <> 0 then begin
+                if Undo then TMPund := 1 else TMPund := 0;
+                if (TSWindow[0] <> nil) and (TSWindow[0].ChangeList[TSWindow[0].ChangeCount-TMPund].OtherMDI<>0) then
+                  TMPOtherMDI := TSWindow[0]
+                else
+                if (TSWindow[1] <> nil) and (TSWindow[1].ChangeList[TSWindow[1].ChangeCount-TMPund].OtherMDI<>0) then
+                  TMPOtherMDI := TSWindow[1]
+                else TMPOtherMDI := nil;
 
-              CalcTotLen;
-              SetF(0, Tracks);
+                if TMPOtherMDI <> nil then begin
+                  TMPi := TMPOtherMDI.ChangeCount-TMPund;
+                  TMPj := TMPOtherMDI.ChangeList[TMPi].OtherMDI;
+                  TMPOtherMDI.ChangeList[TMPi].OtherMDI := 0;
+                  TMPOtherMDI.DoUndo(1, Undo);
+                  TMPOtherMDI.ChangeList[TMPi].OtherMDI := TMPj;
+
+                  if (ChangeList[index].OtherMDI = 2) and (TMPund = 1)
+                  or (ChangeList[index].OtherMDI = 1) and (TMPund = 0) then begin
+                    TMPOtherMDI.Show;
+                    TMPOtherMDI.SetFocus;
+                    if TMPOtherMDI.Tracks.CanFocus then
+                      TMPOtherMDI.Tracks.SetFocus;
+                  end
+                  else begin //2-1 1-0 / 1-1 2-0
+                    TMPOtherMDI.Show;
+                    Show;
+                  end;
+                end;
+              end
+              else
+              begin
+                Tracks.HideMyCaret;
+                Tracks.SetCaretPosition;
+                Tracks.RemoveSelection;
+                Tracks.RedrawTracks(0);
+                Tracks.RecreateCaret;
+                Tracks.ShowMyCaret;
+                Tracks.KeyPressed := 0;
+
+                CalcTotLen;
+                SetF(0, Tracks);
+              end;
             end;
 
           CAChangeEntireSample:
@@ -19964,7 +20052,7 @@ begin
               // REDO sample
               begin
                 SampleNumUpDown.Position := SampleState.Number;
-                
+
                 Samples.ShownFrom := NewParams.prm.SampleShownFrom;
                 Samples.CursorX   := NewParams.prm.SampleCursorX;
                 Samples.CursorY   := NewParams.prm.SampleCursorY;
