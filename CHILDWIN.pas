@@ -8150,8 +8150,8 @@ begin
       begin
       //next pattern
 //      ChangePattern(PatNum+1);
-        if PatNum <= 83 then
-          PatternNumEdit.Text := IntToStr(PatNum + 1);
+//        if PatNum <= 83 then
+//          PatternNumEdit.Text := IntToStr(PatNum + 1);
       end;
 
     VK_SUBTRACT:
@@ -8175,8 +8175,8 @@ begin
       begin
       //prev pattern
       //ChangePattern(PatNum-1);
-        if PatNum >= 1 then
-          PatternNumEdit.Text := IntToStr(PatNum - 1);
+//        if PatNum >= 1 then
+//          PatternNumEdit.Text := IntToStr(PatNum - 1);
       end;
 
 
