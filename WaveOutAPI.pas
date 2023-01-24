@@ -953,6 +953,13 @@ var
       if (ayumi3 <> nil) and (PlayingWindow[3]<>nil)  then begin
         Left  := Left + ayumi3.left;
         Right := Right + ayumi3.right;
+        Left := Left / 1.2;
+        Right := Right / 1.2;
+      end;
+
+      if (ayumi2 <> nil) then begin
+        Left := Left / 1.2;
+        Right := Right / 1.2;
       end;
 
       if Left > MaxPeak then Left := MaxPeak;
