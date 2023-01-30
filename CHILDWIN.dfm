@@ -1972,4 +1972,8 @@ object MDIChild: TMDIChild
       OnClick = FileBrowserSetFavorite
     end
   end
+  object EurekaLog1: TEurekaLog
+    Left = 340
+    Top = 673
+  end
 end

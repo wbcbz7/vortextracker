@@ -19,8 +19,8 @@ object TSSel: TTSSel
   object ListBox1: TListBox
     Left = 0
     Top = 0
-    Width = 380
-    Height = 246
+    Width = 388
+    Height = 254
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText

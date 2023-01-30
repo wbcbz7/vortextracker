@@ -219,6 +219,9 @@ type
     Label1: TLabel;
     DecPositionsSize: TButton;
     IncPositionsSize: TButton;
+    Label3: TLabel;
+    CenterOff: TEdit;
+    CenterOffInt: TUpDown;
     procedure StopAndStart;
     procedure ChipSelClick(Sender: TObject);
     procedure IntSelClick(Sender: TObject);
@@ -392,6 +395,7 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure DecPositionsSizeClick(Sender: TObject);
     procedure IncPositionsSizeClick(Sender: TObject);
+    procedure CenterOffChange(Sender: TObject);
 
 
 
@@ -1856,5 +1860,19 @@ begin
   Inc(PositionSize);
   RepaintChilds(True);
 end;
+
+procedure TForm1.CenterOffChange(Sender: TObject);
+var NewValue: Integer;
+begin
+  NewValue := GetValue(CenterOff.Text);
+  if (NewValue < CenterOffInt.Min) or (NewValue > CenterOffInt.Max) then Exit;
+  if CenterOffset<>NewValue then begin
+    MainForm.SetChildsTab(1);
+    EditorFontChanged := True;
+    CenterOffset := NewValue;
+    RepaintChilds(True);
+  end;
+end;
+
 
 end.

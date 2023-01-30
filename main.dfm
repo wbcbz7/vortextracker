@@ -222,7 +222,7 @@ object MainForm: TMainForm
     object TrackBar1: TTrackBar
       Left = 436
       Top = 2
-      Width = 84
+      Width = 93
       Height = 22
       Hint = 'Volume control'
       Max = 64

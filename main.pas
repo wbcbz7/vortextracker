@@ -728,6 +728,7 @@ var
   SamToneShiftAsNote: Boolean;
   OrnToneShiftAsNote: Boolean;
 
+  CenterOffset: Integer;
   PositionSize: Integer;
   DecBaseLinesOn: Boolean;
   DecBaseNoiseOn: Boolean;
@@ -2533,6 +2534,7 @@ var
     Saved_DisableInfoWin: Boolean;    
     Saved_ManualChipFreq: Integer;
     Saved_ManualIntFreq: Integer;
+    Saved_CenterOffset: Integer;
     Saved_PositionSize: Integer;
     Saved_DCType: Integer;
     Saved_DCCutOff: Integer;
@@ -2550,7 +2552,7 @@ begin
   FillColorThemesList;
 
   Saved_PositionSize := PositionSize;
-  
+
   Saved_EnvelopeAsNote := EnvelopeAsNote;
   Saved_DupNoteParams := DupNoteParams;
   Saved_MoveBetweenPatrns := MoveBetweenPatrns;
@@ -2590,6 +2592,9 @@ begin
 
   Saved_ThemeName := ColorThemeName;
   Saved_TrackFont := EditorFont;
+
+  Form1.CenterOffInt.Position := CenterOffset;
+  Saved_CenterOffset := CenterOffset;
 
   Form1.ChipSel.ItemIndex := Ord(Emulating_Chip) - 1;
   Saved_ChipType := Emulating_Chip;
@@ -2769,6 +2774,7 @@ begin
     DisableInfoWin := Saved_DisableInfoWin;
 
     PositionSize := Saved_PositionSize;
+    CenterOffset := Saved_CenterOffset;
 
     if Saved_StartupAction <> StartupAction then
       StartupAction := Saved_StartupAction;
@@ -3958,7 +3964,8 @@ begin
     SetStrParam('FileAssoc', FileAssocToText);
     SetStrParam('ShortCuts', AllHotKeysToText);
     SetIntParam('TrackFontSize', EditorFont.Size);
-    SetIntParam('PositionSize', PositionSize);    
+    SetIntParam('PositionSize', PositionSize);
+    SetIntParam('CenterOffset', CenterOffset);
     SetBoolParam('TrackFontBold', fsBold in EditorFont.Style);
     SetBoolParam('WindowMaximized', WindowState = wsMaximized);
     SetIntParam('DefaultTable', DefaultTable);
@@ -4239,7 +4246,8 @@ begin
         defFont := 20;
 
     PositionSize := GetIntParam('PositionSize', 2);
-    
+
+    CenterOffset := GetIntParam('CenterOffset', 0);
 
     if not SyncVTInstanses then
     begin

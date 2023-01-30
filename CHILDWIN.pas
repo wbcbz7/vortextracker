@@ -19,7 +19,8 @@ interface
 uses
   Windows, Messages, Types, Classes, Graphics, Forms, Controls, StdCtrls, Menus,
   SysUtils, trfuncs, ComCtrls, WaveOutAPI, Grids, AY, Buttons, ExtCtrls, Dialogs,
-  Math, ColorThemes, ExportWavOpts, StrUtils, RegExpr, RichEdit, ShellApi;
+  Math, ColorThemes, ExportWavOpts, StrUtils, RegExpr, RichEdit, ShellApi,
+  ExceptionLog;
 
 
 const
@@ -603,6 +604,7 @@ type
     FBSaveInstrument: TMenuItem;
     N1: TMenuItem;
     Label4: TLabel;
+    EurekaLog1: TEurekaLog;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -3983,8 +3985,8 @@ end;
 
 procedure TTracks.FitNumberOfLines;
 begin
-  NOfLines  := (Height div CelH) + 1;
-  N1OfLines := NOfLines div 2;
+  NOfLines  := (Height div CelH) ;
+  N1OfLines := (NOfLines div 2) - 1 - CenterOffset;
   CursorY   := N1OfLines;
 end;
 

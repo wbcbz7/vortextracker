@@ -1,13 +1,13 @@
 object Form1: TForm1
-  Left = 1043
-  Top = 118
+  Left = 333
+  Top = 168
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Options'
-  ClientHeight = 568
+  ClientHeight = 598
   ClientWidth = 545
   Color = clBtnFace
-  Constraints.MaxHeight = 607
+  Constraints.MaxHeight = 647
   Constraints.MaxWidth = 561
   Constraints.MinHeight = 598
   Constraints.MinWidth = 530
@@ -28,8 +28,8 @@ object Form1: TForm1
     Left = 0
     Top = 0
     Width = 545
-    Height = 529
-    ActivePage = CurWinds
+    Height = 561
+    ActivePage = ColorThemesTab
     Align = alTop
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -45,7 +45,7 @@ object Form1: TForm1
         Left = 8
         Top = 8
         Width = 521
-        Height = 209
+        Height = 217
         Caption = ' Interface Options '
         TabOrder = 0
         object DecNumbersLines: TCheckBox
@@ -115,7 +115,7 @@ object Form1: TForm1
         end
       end
       object BackupOpts: TGroupBox
-        Left = 277
+        Left = 269
         Top = 232
         Width = 252
         Height = 137
@@ -182,7 +182,7 @@ object Form1: TForm1
         end
       end
       object PriorGrp: TRadioGroup
-        Left = 277
+        Left = 269
         Top = 384
         Width = 252
         Height = 105
@@ -195,7 +195,7 @@ object Form1: TForm1
         OnClick = PriorGrpClick
       end
       object StartupBox: TGroupBox
-        Left = 8
+        Left = 0
         Top = 232
         Width = 252
         Height = 137
@@ -247,7 +247,7 @@ object Form1: TForm1
         end
       end
       object FreqTableBox: TGroupBox
-        Left = 8
+        Left = 0
         Top = 384
         Width = 252
         Height = 105
@@ -310,14 +310,14 @@ object Form1: TForm1
         Left = 8
         Top = 8
         Width = 257
-        Height = 145
+        Height = 161
         Caption = ' Color Themes '
         TabOrder = 0
         object ColorThemesList: TListBox
           Left = 8
           Top = 24
           Width = 177
-          Height = 112
+          Height = 129
           ItemHeight = 13
           TabOrder = 0
           OnClick = ColorThemesListClick
@@ -370,7 +370,7 @@ object Form1: TForm1
       end
       object GroupBox4: TGroupBox
         Left = 8
-        Top = 160
+        Top = 176
         Width = 521
         Height = 337
         Caption = ' Color Theme Options  '
@@ -1201,12 +1201,12 @@ object Form1: TForm1
         Left = 272
         Top = 8
         Width = 257
-        Height = 145
+        Height = 161
         Caption = ' Font Settings '
         TabOrder = 1
         object FontBold: TSpeedButton
           Left = 192
-          Top = 52
+          Top = 47
           Width = 45
           Height = 21
           AllowAllUp = True
@@ -1222,16 +1222,23 @@ object Form1: TForm1
         end
         object Label1: TLabel
           Left = 192
-          Top = 96
+          Top = 73
           Width = 45
           Height = 13
           Caption = 'Positions:'
+        end
+        object Label3: TLabel
+          Left = 192
+          Top = 113
+          Width = 60
+          Height = 13
+          Caption = 'Center offset'
         end
         object FontsList: TListBox
           Left = 8
           Top = 24
           Width = 177
-          Height = 113
+          Height = 129
           ItemHeight = 13
           TabOrder = 0
           OnClick = FontsListClick
@@ -1259,7 +1266,7 @@ object Form1: TForm1
         end
         object DecPositionsSize: TButton
           Left = 192
-          Top = 115
+          Top = 88
           Width = 21
           Height = 21
           Caption = '-'
@@ -1274,7 +1281,7 @@ object Form1: TForm1
         end
         object IncPositionsSize: TButton
           Left = 216
-          Top = 115
+          Top = 88
           Width = 21
           Height = 21
           Caption = '+'
@@ -1287,6 +1294,26 @@ object Form1: TForm1
           TabOrder = 4
           OnClick = IncPositionsSizeClick
         end
+        object CenterOff: TEdit
+          Left = 192
+          Top = 128
+          Width = 31
+          Height = 21
+          MaxLength = 3
+          TabOrder = 5
+          Text = '0'
+          OnChange = CenterOffChange
+        end
+        object CenterOffInt: TUpDown
+          Left = 223
+          Top = 128
+          Width = 16
+          Height = 21
+          Associate = CenterOff
+          Min = -10
+          Max = 10
+          TabOrder = 6
+        end
       end
     end
     object AYEmu: TTabSheet
@@ -1294,7 +1321,7 @@ object Form1: TForm1
       ImageIndex = 1
       object Label7: TLabel
         Left = 16
-        Top = 485
+        Top = 509
         Width = 166
         Height = 13
         Caption = 'Some changes will be heared after:'
@@ -1302,7 +1329,7 @@ object Form1: TForm1
       end
       object LBChg: TLabel
         Left = 186
-        Top = 485
+        Top = 509
         Width = 40
         Height = 13
         Caption = '2178 ms'
@@ -1323,9 +1350,9 @@ object Form1: TForm1
       end
       object IntSel: TRadioGroup
         Left = 8
-        Top = 288
+        Top = 296
         Width = 272
-        Height = 193
+        Height = 201
         Hint = 
           'Want to change track interrupt frequency?'#13#10'Check the track optio' +
           'ns tab.'
@@ -1348,7 +1375,7 @@ object Form1: TForm1
         Left = 8
         Top = 200
         Width = 113
-        Height = 81
+        Height = 89
         Hint = 
           'Ayumi Render has the best quality and performance.'#13#10'STRONGLY rec' +
           'ommended!'
@@ -1367,7 +1394,7 @@ object Form1: TForm1
         Left = 288
         Top = 8
         Width = 241
-        Height = 473
+        Height = 489
         Hint = 'Want to change track frequency?'#13#10'Check the track options tab.'
         Caption = ' Default Chip Frequency '
         ItemIndex = 0
@@ -1403,7 +1430,7 @@ object Form1: TForm1
         Left = 128
         Top = 200
         Width = 152
-        Height = 81
+        Height = 89
         Caption = ' Downsampling '
         TabOrder = 5
         object Label9: TLabel
@@ -1447,8 +1474,8 @@ object Form1: TForm1
       end
       object EdChipFrq: TEdit
         Left = 378
-        Top = 451
-        Width = 52
+        Top = 468
+        Width = 55
         Height = 17
         AutoSize = False
         MaxLength = 7
@@ -1458,7 +1485,7 @@ object Form1: TForm1
       end
       object EdIntFrq: TEdit
         Left = 100
-        Top = 456
+        Top = 470
         Width = 52
         Height = 17
         AutoSize = False
@@ -1582,16 +1609,16 @@ object Form1: TForm1
         OnClick = ChanVisAllocClick
       end
       object AyumiDCFiltBox: TGroupBox
-        Left = 184
-        Top = 280
+        Left = 160
+        Top = 224
         Width = 152
-        Height = 81
+        Height = 89
         Caption = ' Ayumi DC Filter '
         TabOrder = 6
         Visible = False
         object DCCutOffLab: TLabel
-          Left = 74
-          Top = 38
+          Left = 82
+          Top = 42
           Width = 49
           Height = 13
           Caption = 'DC Cutoff:'
@@ -1610,7 +1637,7 @@ object Form1: TForm1
         end
         object DCOff: TRadioButton
           Left = 8
-          Top = 20
+          Top = 17
           Width = 41
           Height = 17
           Caption = 'Off'
@@ -1628,7 +1655,7 @@ object Form1: TForm1
         end
         object DCWbcbz7: TRadioButton
           Left = 8
-          Top = 56
+          Top = 59
           Width = 65
           Height = 17
           Caption = 'Wbcbz7'
@@ -1894,13 +1921,13 @@ object Form1: TForm1
         Left = 8
         Top = 8
         Width = 521
-        Height = 481
+        Height = 521
         TabOrder = 0
         object HotKeyList: TListView
           Left = 8
           Top = 14
           Width = 505
-          Height = 459
+          Height = 499
           BiDiMode = bdLeftToRight
           Columns = <
             item
@@ -2029,7 +2056,7 @@ object Form1: TForm1
   end
   object Button1: TButton
     Left = 368
-    Top = 536
+    Top = 568
     Width = 75
     Height = 25
     Caption = 'OK'
@@ -2038,7 +2065,7 @@ object Form1: TForm1
   end
   object Button2: TButton
     Left = 456
-    Top = 536
+    Top = 568
     Width = 75
     Height = 25
     Caption = 'Cancel'
