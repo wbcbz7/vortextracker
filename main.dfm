@@ -187,7 +187,7 @@ object MainForm: TMainForm
     object SpeedButton1: TSpeedButton
       Left = 356
       Top = 2
-      Width = 23
+      Width = 26
       Height = 22
       Action = ToggleChip
       Font.Charset = DEFAULT_CHARSET
@@ -196,9 +196,10 @@ object MainForm: TMainForm
       Font.Name = 'MS Sans Serif'
       Font.Style = [fsBold]
       ParentFont = False
+      Spacing = 2
     end
     object SpeedButton2: TSpeedButton
-      Left = 379
+      Left = 382
       Top = 2
       Width = 33
       Height = 22
@@ -210,9 +211,10 @@ object MainForm: TMainForm
       Font.Name = 'MS Sans Serif'
       Font.Style = [fsBold]
       ParentFont = False
+      Spacing = 2
     end
     object ToolButton29: TToolButton
-      Left = 412
+      Left = 415
       Top = 2
       Hint = 'Options'
       Caption = 'Options'
@@ -220,7 +222,7 @@ object MainForm: TMainForm
       OnClick = Options1Click
     end
     object TrackBar1: TTrackBar
-      Left = 436
+      Left = 439
       Top = 2
       Width = 93
       Height = 22

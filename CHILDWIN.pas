@@ -2385,12 +2385,14 @@ end;
 
 function TMDIChild.ModuleInPlayingWindow: Boolean;
 begin
+  Result := False;
   if PlayingWindow[3] <> nil then
     Result := (PlayingWindow[3] = Self) or (PlayingWindow[3].TSWindow[0] = Self) or (PlayingWindow[3].TSWindow[1] = Self)
   else
   if PlayingWindow[2] <> nil then
     Result := (PlayingWindow[2] = Self) or (PlayingWindow[2].TSWindow[0] = Self) or (PlayingWindow[2].TSWindow[1] = Self)
   else
+  if PlayingWindow[1] <> nil then
     Result := (PlayingWindow[1] = Self) or (PlayingWindow[1].TSWindow[0] = Self) or (PlayingWindow[1].TSWindow[1] = Self);
 end;
 
@@ -3144,7 +3146,7 @@ begin
     TrackChipFreq.Width := TrackOptsScrollBox.ClientWidth - TrackChipFreq.Left - VScrollbarSize - 3;
     TrackIntSel.Width := TrackOptsScrollBox.ClientWidth - TrackIntSel.Left - VScrollbarSize - 3;
 
-    VtmFeaturesGrp.Width := (TrackOptsScrollBox.ClientWidth div 2) - 9 - VtmFeaturesGrp.Left;
+    VtmFeaturesGrp.Width := (round(TrackOptsScrollBox.ClientWidth * 0.4)) - VtmFeaturesGrp.Left;
     SaveHead.Left := VtmFeaturesGrp.Left + VtmFeaturesGrp.Left + VtmFeaturesGrp.Width + 9;
 
     SaveHead.Width := TrackOptsScrollBox.ClientWidth - SaveHead.Left - VScrollbarSize - 3;

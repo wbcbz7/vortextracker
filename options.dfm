@@ -14,7 +14,7 @@ object Form1: TForm1
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Name = 'Microsoft Sans Serif'
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = False
@@ -34,7 +34,7 @@ object Form1: TForm1
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 0
@@ -145,7 +145,7 @@ object Form1: TForm1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clTeal
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = []
           ParentColor = False
           ParentFont = False
@@ -457,14 +457,14 @@ object Form1: TForm1
         object LBackgr: TLabel
           Left = 20
           Top = 61
-          Width = 69
+          Width = 68
           Height = 13
           Caption = 'Background'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -480,14 +480,14 @@ object Form1: TForm1
         object LText: TLabel
           Left = 20
           Top = 85
-          Width = 26
+          Width = 25
           Height = 13
           Caption = 'Text'
           Color = 14737632
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -539,14 +539,14 @@ object Form1: TForm1
         object LLineNumbs: TLabel
           Left = 20
           Top = 109
-          Width = 76
+          Width = 75
           Height = 13
           Caption = 'Line numbers'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -554,14 +554,14 @@ object Form1: TForm1
         object LEnvelope: TLabel
           Left = 20
           Top = 133
-          Width = 54
+          Width = 53
           Height = 13
           Caption = 'Envelope'
           Color = 14737632
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -569,14 +569,14 @@ object Form1: TForm1
         object LNoise: TLabel
           Left = 20
           Top = 157
-          Width = 33
+          Width = 32
           Height = 13
           Caption = 'Noise'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -584,14 +584,14 @@ object Form1: TForm1
         object LNote: TLabel
           Left = 20
           Top = 181
-          Width = 28
+          Width = 27
           Height = 13
           Caption = 'Note'
           Color = 14737632
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -623,14 +623,14 @@ object Form1: TForm1
         object LNoteParams: TLabel
           Left = 20
           Top = 205
-          Width = 72
+          Width = 71
           Height = 13
           Caption = 'Note params'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -638,14 +638,14 @@ object Form1: TForm1
         object LNoteCommands: TLabel
           Left = 20
           Top = 229
-          Width = 91
+          Width = 90
           Height = 13
           Caption = 'Note commands'
           Color = 14737632
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -788,14 +788,14 @@ object Form1: TForm1
         object LSeparators: TLabel
           Left = 20
           Top = 253
-          Width = 62
+          Width = 61
           Height = 13
           Caption = 'Separators'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -1024,14 +1024,14 @@ object Form1: TForm1
         object LToneShift: TLabel
           Left = 20
           Top = 277
-          Width = 58
+          Width = 57
           Height = 13
           Caption = 'Tone shift'
           Color = 14737632
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -1050,14 +1050,14 @@ object Form1: TForm1
         object LFullScrBackground: TLabel
           Left = 20
           Top = 310
-          Width = 141
+          Width = 140
           Height = 13
           Caption = 'Full Screen Background:'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -1145,14 +1145,14 @@ object Form1: TForm1
         object Label2: TLabel
           Left = 288
           Top = 310
-          Width = 92
+          Width = 91
           Height = 13
           Caption = 'Window Theme:'
           Color = 15461355
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentColor = False
           ParentFont = False
@@ -1215,7 +1215,7 @@ object Form1: TForm1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentFont = False
           OnClick = FontBoldClick
@@ -1273,7 +1273,7 @@ object Form1: TForm1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           ParentFont = False
           TabOrder = 3
@@ -1288,7 +1288,7 @@ object Form1: TForm1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = []
           ParentFont = False
           TabOrder = 4
@@ -1946,7 +1946,7 @@ object Form1: TForm1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
-          Font.Name = 'MS Sans Serif'
+          Font.Name = 'Microsoft Sans Serif'
           Font.Style = []
           GridLines = True
           IconOptions.Arrangement = iaLeft
@@ -2035,18 +2035,18 @@ object Form1: TForm1
         end
         object AllFileAssoc: TButton
           Left = 16
-          Top = 24
+          Top = 18
           Width = 73
-          Height = 17
+          Height = 23
           Caption = 'Check All'
           TabOrder = 0
           OnClick = AllFileAssocClick
         end
         object NoneFileAssoc: TButton
           Left = 96
-          Top = 24
+          Top = 18
           Width = 73
-          Height = 17
+          Height = 23
           Caption = 'Uncheck All'
           TabOrder = 1
           OnClick = NoneFileAssocClick
