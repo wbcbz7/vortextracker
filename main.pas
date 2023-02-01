@@ -1639,30 +1639,22 @@ end;
 procedure TMainForm.AutoToolBarPosition(NewSize: TSize);
 const MaxTrackBarWidth = 250;
 var
-  ToolBarWidth, TrackBarWidth: Integer;
+  ToolBarWidth: Integer;
   c: TMDIChild;
 begin
 
-  // Volume trackbar width
   if (MDIChildCount < 2) and (WindowState <> wsMaximized) then begin
     ToolBar2.Indent := 0;
-    TrackBarWidth := NewSize.Width - TrackBar1.Left;
-    if TrackBarWidth > MaxTrackBarWidth then TrackBarWidth := MaxTrackBarWidth;
-//    TrackBar1.Width := TrackBarWidth;
     Exit;
   end;
 
   if MDIChildCount = 1 then begin
     c := TMDIChild(MDIChildren[0]);
     ToolBar2.Indent := c.PageControl1.Left - 2;
-    TrackBarWidth := c.PageControl1.Left + c.PageControl1.Width - TrackBar1.Left + 3;
-    if TrackBarWidth > MaxTrackBarWidth then TrackBarWidth := MaxTrackBarWidth;
-//    TrackBar1.Width := TrackBarWidth;
     Exit;
   end;
 
   // Set toolbar to main window center
-//  TrackBar1.Width := MaxTrackBarWidth;
   ToolBarWidth := TrackBar1.Left + TrackBar1.Width - ToolBar2.Indent;
   ToolBar2.Indent := (NewSize.Width div 2) - (ToolBarWidth div 2);
 
@@ -6731,7 +6723,6 @@ begin
     Window1 := ChildsTable[High(ChildsTable)-1];
     Window2 := Window1.TSWindow[0];
     Window2.Caption  := 'Right TS ' + IntToStr(WinCount);
-    Window3 := nil;
   end;
   Window1.Caption  := 'Left TS ' + IntToStr(WinCount);
   Window1.NumModule := 1;
@@ -7160,11 +7151,11 @@ begin
   end;
 
   // Calculate number of non-turbotrack childs
-  count := 0;
+{  count := 0;
   for i := 0 to MDIChildCount-1 do
     if TMDIChild(MDIChildren[i]).TSWindow[0] = nil then
       Inc(count);
-
+}
   MultitrackReorder;
 
   for i := 0 to MDIChildCount-1 do

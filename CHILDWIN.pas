@@ -19960,7 +19960,6 @@ procedure TMDIChild.JoinChild(Child: TMDIChild);
 var Childs: array[1..3] of TMDIChild;
   n:integer;
   name,filename:string;
-  x1,x2,x3:integer;
 begin
   n := 0;
   if (TSWindow[0]<>nil) and (TSWindow[1]=nil) then n := 1
