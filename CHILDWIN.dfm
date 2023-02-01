@@ -114,64 +114,60 @@ object MDIChild: TMDIChild
         Width = 142
         Height = 33
         TabOrder = 11
-        object SpeedButton1: TSpeedButton
+        object Panel1: TPanel
           Left = 5
           Top = 9
           Width = 50
           Height = 20
           Hint = 'Mute Channel'
-          AllowAllUp = True
-          GroupIndex = 10
           Caption = 'Chan A'
-          OnClick = SpeedButton1Click
+          TabOrder = 0
+          OnClick = MuteOnClick
+          OnDblClick = MuteOnClick
         end
-        object SpeedButton2: TSpeedButton
+        object Panel2: TPanel
           Left = 76
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Tone'
-          AllowAllUp = True
-          GroupIndex = 1
           Caption = 'T'
-          Margin = 4
-          OnClick = SpeedButton2Click
+          TabOrder = 1
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton3: TSpeedButton
+        object Panel3: TPanel
           Left = 96
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Noise'
-          AllowAllUp = True
-          GroupIndex = 2
           Caption = 'N'
-          Margin = 4
-          OnClick = SpeedButton3Click
+          TabOrder = 2
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton4: TSpeedButton
+        object Panel4: TPanel
           Left = 117
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Envelope'
-          AllowAllUp = True
-          GroupIndex = 3
           Caption = 'E'
-          Margin = 4
-          OnClick = SpeedButton4Click
+          TabOrder = 3
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton13: TSpeedButton
+        object Panel13: TPanel
           Left = 55
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Solo Channel'
-          AllowAllUp = True
-          GroupIndex = 13
           Caption = 'S'
-          Margin = 4
-          OnClick = SpeedButton13Click
+          TabOrder = 4
+          OnClick = SoloOnClick
+          OnDblClick = SoloOnClick
         end
       end
       object PatEmptyBox: TGroupBox
@@ -189,133 +185,125 @@ object MDIChild: TMDIChild
       object Channel2Box: TGroupBox
         Left = 240
         Top = 120
-        Width = 145
+        Width = 142
         Height = 33
         TabOrder = 12
-        object SpeedButton5: TSpeedButton
+        object Panel5: TPanel
           Left = 5
           Top = 9
           Width = 50
           Height = 20
           Hint = 'Mute Channel'
-          AllowAllUp = True
-          GroupIndex = 11
           Caption = 'Chan B'
-          OnClick = SpeedButton5Click
+          TabOrder = 0
+          OnClick = MuteOnClick
+          OnDblClick = MuteOnClick
         end
-        object SpeedButton6: TSpeedButton
-          Left = 77
+        object Panel6: TPanel
+          Left = 76
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Tone'
-          AllowAllUp = True
-          GroupIndex = 4
           Caption = 'T'
-          Margin = 4
-          OnClick = SpeedButton6Click
+          TabOrder = 1
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton7: TSpeedButton
-          Left = 97
+        object Panel7: TPanel
+          Left = 96
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Noise'
-          AllowAllUp = True
-          GroupIndex = 5
           Caption = 'N'
-          Margin = 4
-          OnClick = SpeedButton7Click
+          TabOrder = 2
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton8: TSpeedButton
+        object Panel8: TPanel
           Left = 117
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Envelope'
-          AllowAllUp = True
-          GroupIndex = 6
           Caption = 'E'
-          Margin = 4
-          OnClick = SpeedButton8Click
+          TabOrder = 3
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton14: TSpeedButton
-          Left = 57
+        object Panel14: TPanel
+          Left = 55
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Solo Channel'
-          AllowAllUp = True
-          GroupIndex = 14
           Caption = 'S'
-          Margin = 4
-          OnClick = SpeedButton14Click
+          TabOrder = 4
+          OnClick = SoloOnClick
+          OnDblClick = SoloOnClick
         end
       end
       object Channel3Box: TGroupBox
         Left = 384
         Top = 120
-        Width = 145
+        Width = 142
         Height = 33
         TabOrder = 13
-        object SpeedButton9: TSpeedButton
-          Left = 7
+        object Panel9: TPanel
+          Left = 5
           Top = 9
           Width = 50
           Height = 20
           Hint = 'Mute Channel'
-          AllowAllUp = True
-          GroupIndex = 12
           Caption = 'Chan C'
-          OnClick = SpeedButton9Click
+          TabOrder = 0
+          OnClick = MuteOnClick
+          OnDblClick = MuteOnClick
         end
-        object SpeedButton10: TSpeedButton
-          Left = 79
+        object Panel10: TPanel
+          Left = 76
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Tone'
-          AllowAllUp = True
-          GroupIndex = 7
           Caption = 'T'
-          Margin = 4
-          OnClick = SpeedButton10Click
+          TabOrder = 1
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton11: TSpeedButton
-          Left = 99
+        object Panel11: TPanel
+          Left = 96
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Noise'
-          AllowAllUp = True
-          GroupIndex = 8
           Caption = 'N'
-          Margin = 4
-          OnClick = SpeedButton11Click
+          TabOrder = 2
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton12: TSpeedButton
-          Left = 121
+        object Panel12: TPanel
+          Left = 117
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Mute Envelope'
-          AllowAllUp = True
-          GroupIndex = 9
           Caption = 'E'
-          Margin = 4
-          OnClick = SpeedButton12Click
+          TabOrder = 3
+          OnClick = TNEOnClick
+          OnDblClick = TNEOnClick
         end
-        object SpeedButton15: TSpeedButton
-          Left = 59
+        object Panel15: TPanel
+          Left = 55
           Top = 9
           Width = 20
           Height = 20
           Hint = 'Solo Channel'
-          AllowAllUp = True
-          GroupIndex = 15
           Caption = 'S'
-          Margin = 4
-          OnClick = SpeedButton15Click
+          TabOrder = 4
+          OnClick = SoloOnClick
+          OnDblClick = SoloOnClick
         end
       end
       object TrackInfoBox: TGroupBox

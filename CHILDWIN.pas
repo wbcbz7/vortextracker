@@ -110,7 +110,8 @@ type
     LastNoteParams: TLastNoteParams;
     CaretVisible: Boolean;
     ParentWin: TForm;
-    Sep1X, Sep2X, Sep3X, Sep4X, Sep5X, Shift: Smallint;
+    Sep1X, Sep2X, Shift: Smallint;
+    SepCX: array[0..3] of Smallint;
     PatNumChars, PatWidth: Smallint;
     ChannelState: array[0..2] of TChannelState;
     RedrawDisabled: Boolean;
@@ -435,6 +436,19 @@ type
     SoloLeft: Integer;
   end;
 
+  TChannelButtons = record
+    Box:        TGroupBox;
+    Mute_But:   TPanel;
+    Mute_But_s: Integer;
+    Solo_But:   TPanel;
+    Solo_But_s: Integer;
+    T_But:      TPanel;
+    T_But_s:    Integer;
+    N_But:      TPanel;
+    N_But_s:    Integer;
+    E_But:      TPanel;
+    E_But_s:    Integer;
+  end;
 
   TMDIChild = class(TForm)
     PatternsSheet: TTabSheet;
@@ -447,18 +461,6 @@ type
     OctaveEdit: TEdit;
     Label1: TLabel;
     OctaveUpDown: TUpDown;
-    SpeedButton3: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-    SpeedButton1: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton7: TSpeedButton;
-    SpeedButton8: TSpeedButton;
-    SpeedButton9: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    SpeedButton11: TSpeedButton;
-    SpeedButton12: TSpeedButton;
     OptTab: TTabSheet;
     VtmFeaturesGrp: TRadioGroup;
     SaveHead: TRadioGroup;
@@ -541,9 +543,6 @@ type
     Channel2Box: TGroupBox;
     Channel3Box: TGroupBox;
     AutoEnvBox: TGroupBox;
-    SpeedButton13: TSpeedButton;
-    SpeedButton14: TSpeedButton;
-    SpeedButton15: TSpeedButton;
     ClearSample: TButton;
     ExportPSGDlg: TSaveDialog;
     NextPrevSampleBox: TGroupBox;
@@ -605,6 +604,21 @@ type
     N1: TMenuItem;
     Label4: TLabel;
     EurekaLog1: TEurekaLog;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    Panel4: TPanel;
+    Panel5: TPanel;
+    Panel6: TPanel;
+    Panel7: TPanel;
+    Panel8: TPanel;
+    Panel9: TPanel;
+    Panel10: TPanel;
+    Panel11: TPanel;
+    Panel12: TPanel;
+    Panel13: TPanel;
+    Panel14: TPanel;
+    Panel15: TPanel;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -771,43 +785,16 @@ type
     procedure CheckTracksAfterSizeChanged(NL: Integer);
     procedure ChangePatternLength(NL: Integer);
     procedure OctaveEditExit(Sender: TObject);
-    procedure SetChannelAMutedState(Muted: Boolean);
-    procedure SetChannelBMutedState(Muted: Boolean);
-    procedure SetChannelCMutedState(Muted: Boolean);
-    procedure UpdateChannelsMutedState;
-    //procedure CheckSoloButtons;
-    procedure CheckButtonStateChanA;
-    procedure CheckButtonStateChanB;
-    procedure CheckButtonStateChanC;
+
     procedure UpdateHintsForChannelButtons;
     procedure UpdateChannelsState;
-    function AnotherSoloPressed: Boolean;
-    procedure MuteChannelA(Force: Boolean);
-    procedure MuteChannelB(Force: Boolean);
-    procedure MuteChannelC(Force: Boolean);
-    procedure DismuteChannelA;
-    procedure DismuteChannelB;
-    procedure DismuteChannelC;
-    procedure DismuteAllChannels(Force: Boolean);
-    procedure MuteSecondWidnowChannels;
-    procedure SoloChannelA(Force: Boolean);
-    procedure SoloChannelB(Force: Boolean);
-    procedure SoloChannelC(Force: Boolean);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
-    procedure SpeedButton13Click(Sender: TObject);
-    procedure SpeedButton5Click(Sender: TObject);
-    procedure SpeedButton6Click(Sender: TObject);
-    procedure SpeedButton7Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
-    procedure SpeedButton14Click(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton10Click(Sender: TObject);
-    procedure SpeedButton11Click(Sender: TObject);
-    procedure SpeedButton12Click(Sender: TObject);
-    procedure SpeedButton15Click(Sender: TObject);
+    function CheckSolo: Boolean;
+    procedure ApplyChannelsButtons;
+    procedure ApplySolo;
+    procedure MuteOnClick(Sender: TObject);
+    procedure SoloOnClick(Sender: TObject);
+    procedure TNEOnClick(Sender: TObject);
+
     procedure VtmFeaturesGrpClick(Sender: TObject);
     procedure SaveHeadClick(Sender: TObject);
     procedure SampleNumEditChange(Sender: TObject);
@@ -1099,6 +1086,7 @@ type
     // Precalculated values for controls
     ToolBoxesWidth: Integer;
     SamplesDir, OrnamentsDir: String;
+    ChanButtons: array[0..2] of TChannelButtons;
 
   published
      //    destructor Destroy; override;
@@ -2326,39 +2314,18 @@ end;
 
 
 procedure TMDIChild.RememberChannelsPosition;
+var
+  i: Integer;
 begin
-
-  with xc[0] do
+  for i := 0 to 2 do with xc[i], ChanButtons[i] do
   begin
-    BoxLeft      := Channel1Box.Left;
-    BoxWidth     := Channel1Box.Width;
-    ButtonWidth  := SpeedButton1.Width;
-    ToneLeft     := SpeedButton2.Left;
-    NoiseLeft    := SpeedButton3.Left;
-    EnvelopeLeft := SpeedButton4.Left;
-    SoloLeft     := SpeedButton13.Left;
-  end;
-
-  with xc[1] do
-  begin
-    BoxLeft      := Channel2Box.Left;
-    BoxWidth     := Channel2Box.Width;
-    ButtonWidth  := SpeedButton5.Width;
-    ToneLeft     := SpeedButton6.Left;
-    NoiseLeft    := SpeedButton7.Left;
-    EnvelopeLeft := SpeedButton8.Left;
-    SoloLeft     := SpeedButton14.Left;
-  end;
-
-  with xc[2] do
-  begin
-    BoxLeft      := Channel3Box.Left;
-    BoxWidth     := Channel3Box.Width;
-    ButtonWidth  := SpeedButton9.Width;
-    ToneLeft     := SpeedButton10.Left;
-    NoiseLeft    := SpeedButton11.Left;
-    EnvelopeLeft := SpeedButton12.Left;
-    SoloLeft     := SpeedButton15.Left;
+    BoxLeft      := Box.Left;
+    BoxWidth     := Box.Width;
+    ButtonWidth  := Mute_But.Width;
+    ToneLeft     := T_But.Left;
+    NoiseLeft    := N_But.Left;
+    EnvelopeLeft := E_But.Left;
+    SoloLeft     := Solo_But.Left;
   end;
 
 end;
@@ -2450,6 +2417,26 @@ begin
     BorderStyle := bsSizeable
   else
     BorderStyle := bsSingle;
+
+  ChanButtons[0].Box := Channel1Box;
+  ChanButtons[1].Box := Channel2Box;
+  ChanButtons[2].Box := Channel3Box;
+
+  ChanButtons[0].Mute_But := Panel1;
+  ChanButtons[0].T_But := Panel2;
+  ChanButtons[0].N_But := Panel3;
+  ChanButtons[0].E_But := Panel4;
+  ChanButtons[1].Mute_But := Panel5;
+  ChanButtons[1].T_But := Panel6;
+  ChanButtons[1].N_But := Panel7;
+  ChanButtons[1].E_But := Panel8;
+  ChanButtons[2].Mute_But := Panel9;
+  ChanButtons[2].T_But := Panel10;
+  ChanButtons[2].N_But := Panel11;
+  ChanButtons[2].E_But := Panel12;
+  ChanButtons[0].Solo_But := Panel13;
+  ChanButtons[1].Solo_But := Panel14;
+  ChanButtons[2].Solo_But := Panel15;
 
   PageControl1.ActivePageIndex := 0;
   NumModule := 1;
@@ -2673,77 +2660,37 @@ begin
 end;
 
 procedure TMDIChild.ResizeChannelsBox;
+var i:integer;
+   ch:char;
 begin
 
-  AutoHLBox.Width := Tracks.Sep3X - AutoHLBox.Left + 3;
+  AutoHLBox.Width := Tracks.SepCX[0] - AutoHLBox.Left + 3;
   UpDown15.Left := AutoHLBox.Width - UpDown15.Width - 5;
   Edit17.Left   := UpDown15.Left - Edit17.Width;
   AutoHL.Left  := 5;
   AutoHL.Width := Edit17.Left - AutoHL.Left - 2 ;
 
+  // Channels
 
-  // Channel A
-  Channel1Box.Left := Tracks.Sep3X + 4;
-  Channel1Box.Width := Tracks.Sep4X - Tracks.Sep3X - 1; 
+  for i := 0 to 2 do begin
+    ChanButtons[i].Box.Left := Tracks.SepCX[i] + 4;
+    ChanButtons[i].Box.Width := Tracks.SepCX[i+1] - Tracks.SepCX[i] - 1;
 
-  SpeedButton13.Left := Channel1Box.Width - SpeedButton13.Width - 5;   // Channel A: Solo button
-  SpeedButton4.Left  := SpeedButton13.Left - SpeedButton4.Width + 1;   // Channel A: Envelope button
-  SpeedButton3.Left  := SpeedButton4.Left - SpeedButton3.Width + 1;    // Channel A: Noise button
-  SpeedButton2.Left  := SpeedButton3.Left - SpeedButton2.Width + 1;    // Channel A: Tone button
+    ChanButtons[i].Solo_But.Left := Channel1Box.Width - Panel13.Width - 5;   // Channel A: Solo button
+    ChanButtons[i].E_But.Left  := ChanButtons[i].Solo_But.Left - ChanButtons[i].E_But.Width + 1;   // Channel A: Envelope button
+    ChanButtons[i].N_But.Left  := ChanButtons[i].E_But.Left - ChanButtons[i].N_But.Width + 1;    // Channel A: Noise button
+    ChanButtons[i].T_But.Left  := ChanButtons[i].N_But.Left - ChanButtons[i].T_But.Width + 1;    // Channel A: Tone button
 
-  // Channel A Button
-  SpeedButton1.Left := 4;
-  SpeedButton1.Width := SpeedButton2.Left - SpeedButton1.Left + 1;
-  if SpeedButton1.Width > 67 then
-    SpeedButton1.Caption := 'Channel A'
-  else if SpeedButton1.Width < 43 then
-    SpeedButton1.Caption := 'A'
-  else
-    SpeedButton1.Caption := 'Chan A';
-
-
-
-  // Channel B Box
-  Channel2Box.Left := Tracks.Sep4X + 4;
-  Channel2Box.Width := Tracks.Sep5X - Tracks.Sep4X - 1;
-
-
-  SpeedButton14.Left := Channel2Box.Width - SpeedButton14.Width - 5;   // Channel B: Solo button
-  SpeedButton8.Left := SpeedButton14.Left - SpeedButton8.Width + 1;    // Channel B: Envelope button
-  SpeedButton7.Left := SpeedButton8.Left - SpeedButton7.Width + 1;     // Channel B: Noise button
-  SpeedButton6.Left := SpeedButton7.Left - SpeedButton6.Width + 1;     // Channel B: Tone button
-
-  // Channel B Button
-  SpeedButton5.Left := 4;
-  SpeedButton5.Width := SpeedButton6.Left - SpeedButton5.Left + 1;
-  if SpeedButton5.Width > 67 then
-    SpeedButton5.Caption := 'Channel B'
-  else if SpeedButton5.Width < 43 then
-    SpeedButton5.Caption := 'B'
-  else
-    SpeedButton5.Caption := 'Chan B';
-
-
-  // Channel C Box
-  Channel3Box.Left := Tracks.Sep5X + 4;
-  Channel3Box.Width := Tracks.PatWidth - Tracks.Sep5X;
-
-
-  SpeedButton15.Left := Channel3Box.Width - SpeedButton15.Width - 5;    // Channel C: Solo button
-  SpeedButton12.Left := SpeedButton15.Left - SpeedButton12.Width + 1;   // Channel C: Envelope button
-  SpeedButton11.Left := SpeedButton12.Left - SpeedButton11.Width + 1;   // Channel C: Noise button
-  SpeedButton10.Left := SpeedButton11.Left - SpeedButton10.Width + 1;   // Channel C: Tone button
-
-  // Channel C Button
-  SpeedButton9.Left := 4;
-  SpeedButton9.Width := SpeedButton10.Left - SpeedButton9.Left + 1;
-  if SpeedButton9.Width >= 67 then
-    SpeedButton9.Caption := 'Channel C'
-  else if SpeedButton9.Width < 43 then
-    SpeedButton9.Caption := 'C'
-  else
-    SpeedButton9.Caption := 'Chan C';
-
+    ChanButtons[i].Mute_But.Left := 4;
+    ChanButtons[i].Mute_But.Width := ChanButtons[i].T_But.Left - ChanButtons[i].Mute_But.Left + 1;
+    ch := chr(ord('A')+i);
+    if ChanButtons[i].Mute_But.Width > 67 then
+      ChanButtons[i].Mute_But.Caption := 'Channel '+ch
+    else if ChanButtons[i].Mute_But.Width < 43 then
+      ChanButtons[i].Mute_But.Caption := ch
+    else
+      ChanButtons[i].Mute_But.Caption := 'Chan '+ch;
+  end;
 end;
 
 procedure TMDIChild.ResizeAutoStepEnvBox;
@@ -3263,6 +3210,8 @@ function WhereIsChannel(Num: Integer): Integer;
 
 
 procedure TMDIChild.ResetChanAlloc;
+var
+  i: Integer;
 begin
   if Tracks.Focused then
     Tracks.HideMyCaret;
@@ -3274,37 +3223,15 @@ begin
     Tracks.ShowMyCaret
   end;
 
-  with xc[WhereIsChannel(0)] do
+  for i := 0 to 2 do with ChanButtons[i], xc[WhereIsChannel(i)] do
   begin
-    Channel1Box.Left   := BoxLeft;
-    Channel1Box.Width  := BoxWidth;
-    SpeedButton1.Width := ButtonWidth;
-    SpeedButton2.Left  := ToneLeft;
-    SpeedButton3.Left  := NoiseLeft;
-    SpeedButton4.Left  := EnvelopeLeft;
-    SpeedButton13.Left := SoloLeft;
-  end;
-
-  with xc[WhereIsChannel(1)] do
-  begin
-    Channel2Box.Left   := BoxLeft;
-    Channel2Box.Width  := BoxWidth;
-    SpeedButton5.Width := ButtonWidth;
-    SpeedButton6.Left  := ToneLeft;
-    SpeedButton7.Left  := NoiseLeft;
-    SpeedButton8.Left  := EnvelopeLeft;
-    SpeedButton14.Left := SoloLeft;
-  end;
-
-  with xc[WhereIsChannel(2)] do
-  begin
-    Channel3Box.Left   := BoxLeft;
-    Channel3Box.Width  := BoxWidth;
-    SpeedButton9.Width := ButtonWidth;
-    SpeedButton10.Left := ToneLeft;
-    SpeedButton11.Left := NoiseLeft;
-    SpeedButton12.Left := EnvelopeLeft;
-    SpeedButton15.Left := SoloLeft;
+    Box.Left   := BoxLeft;
+    Box.Width  := BoxWidth;
+    Mute_But.Width := ButtonWidth;
+    T_But.Left  := ToneLeft;
+    N_But.Left  := NoiseLeft;
+    E_But.Left  := EnvelopeLeft;
+    Solo_But.Left := SoloLeft;
   end;
 
 end;
@@ -4185,7 +4112,7 @@ var
   DC: HDC;
   sz: tagSIZE;
   p: HFONT;
-
+  i: Integer;
 begin
 
   // Font
@@ -4215,10 +4142,9 @@ begin
   CharHalfWidth := (CelW div 2);
   Sep1X := (2+Shift)*CelW + CharHalfWidth;
   Sep2X := (7+Shift) *CelW + CharHalfWidth;
-  Sep3X := (10+Shift)*CelW + CharHalfWidth - 1;
-  Sep4X := (24+Shift)*CelW + CharHalfWidth - 1;
-  Sep5X := (38+Shift)*CelW + CharHalfWidth - 1;
 
+  for i:=0 to 3 do //extra 1 for line end
+    SepCX[i]:= (10+(14*i)+Shift)*CelW + CharHalfWidth - 1;
 
   // Pattern box size
   ClientWidth := PatWidth;
@@ -4878,17 +4804,15 @@ begin
 
       BgColor(COutSeparators);
       fBitmap.Canvas.FillRect(Rect(Sep2X, PrevPatSepTop, Sep2X+2, PrevPatSepBottom));
-      fBitmap.Canvas.FillRect(Rect(Sep3X, PrevPatSepTop, Sep3X+2, PrevPatSepBottom));
-      fBitmap.Canvas.FillRect(Rect(Sep4X, PrevPatSepTop, Sep4X+2, PrevPatSepBottom));
-      fBitmap.Canvas.FillRect(Rect(Sep5X, PrevPatSepTop, Sep5X+2, PrevPatSepBottom));
+      for i := 0 to 2 do
+        fBitmap.Canvas.FillRect(Rect(SepCX[i], PrevPatSepTop, SepCX[i]+2, PrevPatSepBottom));
     end;
 
     // Current pattern separators
     BgColor(CSeparators);
     fBitmap.Canvas.FillRect(Rect(Sep2X, CurPatSepTop, Sep2X+2, CurPatSepBottom));
-    fBitmap.Canvas.FillRect(Rect(Sep3X, CurPatSepTop, Sep3X+2, CurPatSepBottom));
-    fBitmap.Canvas.FillRect(Rect(Sep4X, CurPatSepTop, Sep4X+2, CurPatSepBottom));
-    fBitmap.Canvas.FillRect(Rect(Sep5X, CurPatSepTop, Sep5X+2, CurPatSepBottom));
+    for i := 0 to 2 do
+      fBitmap.Canvas.FillRect(Rect(SepCX[i], CurPatSepTop, SepCX[i]+2, CurPatSepBottom));
 
     // Next pattern separators
     if NextPatNum <> -1 then
@@ -4900,9 +4824,8 @@ begin
         fBitmap.Canvas.FillRect(Rect(0, NextPatSepBottom, PatWidth+2, NextPatSepBottom+1));
 
       fBitmap.Canvas.FillRect(Rect(Sep2X, NextPatSepTop, Sep2X+2, NextPatSepBottom));
-      fBitmap.Canvas.FillRect(Rect(Sep3X, NextPatSepTop, Sep3X+2, NextPatSepBottom));
-      fBitmap.Canvas.FillRect(Rect(Sep4X, NextPatSepTop, Sep4X+2, NextPatSepBottom));
-      fBitmap.Canvas.FillRect(Rect(Sep5X, NextPatSepTop, Sep5X+2, NextPatSepBottom));
+      for i := 0 to 2 do
+        fBitmap.Canvas.FillRect(Rect(SepCX[i], NextPatSepTop, SepCX[i]+2, NextPatSepBottom));
     end;
 
   end;
@@ -7790,41 +7713,41 @@ type
     Tracks.Refresh;
   end;
 
-
   procedure DoMuteDismuteChannels;
   var
-    State: Boolean;
+    i, j: Integer;
     ChanNum: Integer;
+    CurWin: TMDIChild;
+    ifSolo: Boolean;
   begin
-
     if Tracks.CursorX >= 36 then ChanNum := ChanAlloc[2] else
     if Tracks.CursorX >= 22 then ChanNum := ChanAlloc[1] else
     if Tracks.CursorX >= 8  then ChanNum := ChanAlloc[0]
-    else
+    else begin
       ChanNum := -1;
+      exit;
+    end;
+    ifSolo := CheckSolo;
 
-    // Channel A
-    if ChanNum = 0 then
-      if not Tracks.ChannelState[1].Muted and not Tracks.ChannelState[2].Muted then
-        SoloChannelA(True)
-      else
-        DismuteAllChannels(True)
+    for j := 0 to 2 do begin
+      if j = 1 then CurWin := TSWindow[0]
+      else if j = 2 then CurWin := TSWindow[1]
+      else CurWin := self;
+      if CurWin = nil then continue;
 
-
-    // Channel B
-    else if ChanNum = 1 then
-      if not Tracks.ChannelState[0].Muted and not Tracks.ChannelState[2].Muted then
-        SoloChannelB(True)
-      else
-        DismuteAllChannels(True)
-
-    // Channel C
-    else if ChanNum = 2 then
-      if not Tracks.ChannelState[0].Muted and not Tracks.ChannelState[1].Muted then
-          SoloChannelC(True)
+      for i := 0 to 2 do begin
+        if ifSolo then
+          CurWin.ChanButtons[i].Solo_But_s := 0
         else
-          DismuteAllChannels(True)
+          ChanButtons[ChanNum].Solo_But_s := 1;
+      end;
 
+    end;
+    ApplySolo;
+    UpdateChannelsState;
+  end;
+
+{
     // Noise
     else if Tracks.CursorX >= 5 then
     begin
@@ -7860,10 +7783,7 @@ type
       SpeedButton8.Down  := State;
       SpeedButton12.Down := State;
     end;
-
-    UpdateChannelsState;
-  end;
-
+}
   procedure DoRemoveLine;
   var
     i, j, c: Integer;
@@ -7969,7 +7889,7 @@ begin
   begin
     OctaveUpDown.Position := Key - 48;
     Exit;
-  end;   
+  end;
 
 
   // Jump to first line
@@ -8958,7 +8878,7 @@ begin
             TMDIChild(MainForm.ActiveMDIChild).SamplesKeyDown(Sender, Key, Shift);
 
         end;
-        
+
       VK_RETURN:
         if CursorX = 12 then
           OpenSample
@@ -15928,270 +15848,231 @@ begin
   OctaveEdit.Text := IntToStr(OctaveUpDown.Position)
 end;
 
-procedure TMDIChild.SetChannelAMutedState(Muted: Boolean);
+
+function IntToBool(i:Integer):Boolean;
 begin
-  Tracks.ChannelState[0].Muted := Muted;
+  if i=0 then Result := False
+  else Result := True
 end;
 
-procedure TMDIChild.SetChannelBMutedState(Muted: Boolean);
+procedure SetButColor(var pan: TPanel; Color: TColor);
 begin
-  Tracks.ChannelState[1].Muted := Muted;
+  pan.Color := Color;
+  if (Color = clBtnFace) or (Color = clYellow) then
+    pan.Font.Color := clWindowText
+  else
+    pan.Font.Color := clCaptionText
 end;
 
-procedure TMDIChild.SetChannelCMutedState(Muted: Boolean);
+procedure TMDIChild.ApplyChannelsButtons;
+var
+  i: Integer;
+const
+clRed2 = $8080ff;
 begin
-  Tracks.ChannelState[2].Muted := Muted;
+  for i := 0 to 2 do with ChanButtons[i] do begin
+    VTMP.IsChans[i].Global_Ton := not IntToBool(T_But_s);
+    if T_But_s = 1 then SetButColor(T_But, clRed)
+    else if T_But_s = 2 then SetButColor(T_But, clRed2)
+    else SetButColor(T_But, clBtnFace);
+
+    VTMP.IsChans[i].Global_Noise := not IntToBool(N_But_s);
+    if N_But_s = 1 then SetButColor(N_But, clRed)
+    else if N_But_s = 2 then SetButColor(N_But, clRed2)
+    else SetButColor(N_But, clBtnFace);
+
+    VTMP.IsChans[i].Global_Envelope := not IntToBool(E_But_s);
+    if E_But_s = 1 then SetButColor(E_But, clRed)
+    else if E_But_s = 2 then SetButColor(E_But, clRed2)
+    else SetButColor(E_But, clBtnFace);
+
+    Tracks.ChannelState[i].Muted := IntToBool(Mute_But_s);
+
+    if Mute_But_s = 1 then SetButColor(Mute_But, clRed)
+    else if Mute_But_s = 2 then SetButColor(Mute_But, clRed2)
+    else SetButColor(Mute_But, clBtnFace);
+
+    if IntToBool(Solo_But_s) then
+      SetButColor(Solo_But, clYellow)
+    else SetButColor(Solo_But, clBtnFace);
+  end;
+
+  UpdateHintsForChannelButtons;
 end;
 
-procedure TMDIChild.UpdateChannelsMutedState;
+function TMDIChild.CheckSolo;
+var
+  i, j: Integer;
+  CurWin: TMDIChild;
 begin
-  SetChannelAMutedState(SpeedButton2.Down and SpeedButton3.Down and SpeedButton4.Down);
-  SetChannelBMutedState(SpeedButton6.Down and SpeedButton7.Down and SpeedButton8.Down);
-  SetChannelCMutedState(SpeedButton10.Down and SpeedButton11.Down and SpeedButton12.Down);
+  Result := false;
+  for j := 0 to 2 do begin
+    if j = 1 then CurWin := TSWindow[0]
+    else if j = 2 then CurWin := TSWindow[1]
+    else CurWin := self;
+    if CurWin = nil then continue;
+    for i := 0 to 2 do begin
+      if IntToBool(CurWin.ChanButtons[i].Solo_But_s) then begin
+        Result := True;
+        exit;
+      end;
+    end;
+  end;
 end;
 
-{procedure TMDIChild.CheckSoloButtons;
+procedure TMDIChild.ApplySolo;
+var
+  i, j: Integer;
+  CurWin: TMDIChild;
 begin
+  if CheckSolo then begin
+    for j := 0 to 2 do begin
+      if j = 1 then CurWin := TSWindow[0]
+      else if j = 2 then CurWin := TSWindow[1]
+      else CurWin := self;
+      if CurWin = nil then continue;
 
-    // Channel A solo button state
-    SpeedButton13.Down :=
-        SpeedButton6.Down and
-        SpeedButton7.Down and
-        SpeedButton8.Down and
-        SpeedButton10.Down and
-        SpeedButton11.Down and
-        SpeedButton12.Down
-        and (
-          not SpeedButton2.Down or
-          not SpeedButton3.Down or
-          not SpeedButton4.Down
-        )
-    ;
+      for i := 0 to 2 do begin
+        with CurWin.ChanButtons[i] do begin
+          if not IntToBool(Mute_But_s) and not IntToBool(Solo_But_s) then
+            Mute_But_s := 2;
+          if not IntToBool(T_But_s) and not IntToBool(Solo_But_s) then
+            T_But_s := 2;
+          if not IntToBool(N_But_s) and not IntToBool(Solo_But_s) then
+            N_But_s := 2;
+          if not IntToBool(E_But_s) and not IntToBool(Solo_But_s) then
+            E_But_s := 2;
+        end;
+      end;
+    end;
+  end
+  else begin //un solo
+    for j := 0 to 2 do begin
+      if j = 1 then CurWin := TSWindow[0]
+      else if j = 2 then CurWin := TSWindow[1]
+      else CurWin := self;
+      if CurWin = nil then continue;
 
-    if TSWindow <> nil then
-      SpeedButton13.Down := SpeedButton13.Down and
-          TSWindow.SpeedButton6.Down and
-          TSWindow.SpeedButton7.Down and
-          TSWindow.SpeedButton8.Down and
-          TSWindow.SpeedButton10.Down and
-          TSWindow.SpeedButton11.Down and
-          TSWindow.SpeedButton12.Down and
-          TSWindow.SpeedButton2.Down and
-          TSWindow.SpeedButton3.Down and
-          TSWindow.SpeedButton4.Down
-      ;
-
-    // Channel B solo button state
-    SpeedButton14.Down :=
-        SpeedButton2.Down and
-        SpeedButton3.Down and
-        SpeedButton4.Down and
-        SpeedButton10.Down and
-        SpeedButton11.Down and
-        SpeedButton12.Down
-        and (
-          not SpeedButton6.Down or
-          not SpeedButton7.Down or
-          not SpeedButton8.Down
-        )
-    ;
-
-    if TSWindow <> nil then
-      SpeedButton14.Down := SpeedButton14.Down and
-          TSWindow.SpeedButton2.Down and
-          TSWindow.SpeedButton3.Down and
-          TSWindow.SpeedButton4.Down and
-          TSWindow.SpeedButton10.Down and
-          TSWindow.SpeedButton11.Down and
-          TSWindow.SpeedButton12.Down and
-          TSWindow.SpeedButton6.Down and
-          TSWindow.SpeedButton7.Down and
-          TSWindow.SpeedButton8.Down
-      ;
-
-    // Channel C solo button state
-    SpeedButton15.Down :=
-        SpeedButton2.Down and
-        SpeedButton3.Down and
-        SpeedButton4.Down and
-        SpeedButton6.Down and
-        SpeedButton7.Down and
-        SpeedButton8.Down
-        and (
-          not SpeedButton10.Down or
-          not SpeedButton11.Down or
-          not SpeedButton12.Down
-        )
-    ;
-
-    if TSWindow <> nil then
-      SpeedButton15.Down := SpeedButton15.Down and
-          TSWindow.SpeedButton2.Down and
-          TSWindow.SpeedButton3.Down and
-          TSWindow.SpeedButton4.Down and
-          TSWindow.SpeedButton6.Down and
-          TSWindow.SpeedButton7.Down and
-          TSWindow.SpeedButton8.Down and
-          TSWindow.SpeedButton10.Down and
-          TSWindow.SpeedButton11.Down and
-          TSWindow.SpeedButton12.Down
-      ;
-
-end;
-}
-
-procedure TMDIChild.CheckButtonStateChanA;
-begin
-  SpeedButton1.Down := SpeedButton2.Down and SpeedButton3.Down and SpeedButton4.Down;
+      for i := 0 to 2 do begin
+        with CurWin.ChanButtons[i] do begin
+          if (Mute_But_s = 2) and IntToBool(Mute_But_s) then
+            Mute_But_s := 0;
+          if (T_But_s = 2) and IntToBool(T_But_s) then
+            T_But_s := 0;
+          if (N_But_s = 2) and IntToBool(N_But_s) then
+            N_But_s := 0;
+          if (E_But_s = 2) and IntToBool(E_But_s) then
+            E_But_s := 0;
+        end;
+      end;
+    end;
+  end;
 end;
 
-procedure TMDIChild.CheckButtonStateChanB;
+procedure TMDIChild.MuteOnClick(Sender: TObject);
+var
+  chan: Integer;
 begin
-  SpeedButton5.Down := SpeedButton6.Down and SpeedButton7.Down and SpeedButton8.Down;
+  if Sender = ChanButtons[0].Mute_But then chan := 0
+  else if Sender = ChanButtons[1].Mute_But then chan := 1
+  else if Sender = ChanButtons[2].Mute_But then chan := 2
+  else exit;
+  with ChanButtons[chan] do begin //make sub-mute as Mute, and un-solo
+    if IntToBool(Mute_But_s) then Mute_But_s := 0 else Mute_But_s := 1;
+    T_But_s := Mute_But_s;
+    N_But_s := Mute_But_s;
+    E_But_s := Mute_But_s;
+    Solo_But_s := 0;
+    // when unmute, should "solo" if there's another solo
+    if (not IntToBool(Mute_But_s)) and CheckSolo then Solo_But_s := 1;
+  end;
+  ApplySolo;
+  UpdateChannelsState;
 end;
 
-procedure TMDIChild.CheckButtonStateChanC;
+procedure TMDIChild.SoloOnClick(Sender: TObject);
+var
+  chan: Integer;
 begin
-  SpeedButton9.Down := SpeedButton10.Down and SpeedButton11.Down and SpeedButton12.Down;
+  if Sender = ChanButtons[0].Solo_But then chan := 0
+  else if Sender = ChanButtons[1].Solo_But then chan := 1
+  else if Sender = ChanButtons[2].Solo_But then chan := 2
+  else exit;
+  if IntToBool(ChanButtons[chan].Solo_But_s) then
+    ChanButtons[chan].Solo_But_s := 0
+  else
+    ChanButtons[chan].Solo_But_s := 1;
+  with ChanButtons[chan] do begin //unmute
+    T_But_s := 0;
+    N_But_s := 0;
+    E_But_s := 0;
+    Mute_But_s := 0;
+  end;
+  ApplySolo;
+  UpdateChannelsState;
 end;
+
+procedure TMDIChild.TNEOnClick(Sender: TObject);
+var
+  chan: Integer;
+  Box: TGroupBox;
+  Pan: TPanel;
+  tval: ^Integer;
+begin
+  Box := TGroupBox(TPanel(Sender).Parent);
+  if Box = ChanButtons[0].Box then chan := 0
+  else if Box = ChanButtons[1].Box then chan := 1
+  else if Box = ChanButtons[2].Box then chan := 2
+  else exit;
+
+  Pan := TPanel(Sender);
+  if Pan.Caption='T' then tval := @ChanButtons[chan].T_But_s
+  else if Pan.Caption='N' then tval := @ChanButtons[chan].N_But_s
+  else if Pan.Caption='E' then tval := @ChanButtons[chan].E_But_s
+  else exit;
+
+  if IntToBool(tval^) then tval^ := 0 else tval^ := 1;
+  with ChanButtons[chan] do begin
+    if IntToBool(T_But_s) and IntToBool(N_But_s) and IntToBool(E_But_s) then
+      Mute_But_s := T_But_s
+    else
+      Mute_But_s := 0;
+
+    if IntToBool(Mute_But_s) then Solo_But_s := 0;
+    if (not IntToBool(Mute_But_s)) and CheckSolo then Solo_But_s := 1;
+  end;
+  ApplySolo;
+  UpdateChannelsState;
+end;
+
 
 procedure TMDIChild.UpdateHintsForChannelButtons;
-const
-  MuteChannel    = 'Mute Channel';
-  MuteTone       = 'Mute Tone';
-  MuteNoise      = 'Mute Noise';
-  MuteEnvelope   = 'Mute Envelope';
-  UnmuteChannel  = 'Unmute Channel';
-  UnmuteTone     = 'Unmute Tone';
-  UnmuteNoise    = 'Unmute Noise';
-  UnmuteEnvelope = 'Unmute Envelope';
-  SoloChannel    = 'Solo Channel';
-  UnsoloChannel  = 'Unsolo Channel';
-
+var
+  i: Integer;
 begin
-  // Channel A button
-  with SpeedButton1 do
-    case Down of
-      True:  Hint := UnmuteChannel;
-      False: Hint := MuteChannel;
+  for i := 0 to 2 do begin
+    with ChanButtons[i] do begin
+      if IntToBool(Mute_But_s) then Mute_But.Hint := 'Unmute Channel'
+      else Mute_But.Hint := 'Mute Channel';
+      if IntToBool(Solo_But_s) then Solo_But.Hint := 'Unsolo Channel'
+      else Solo_But.Hint := 'Solo Channel';
+      if IntToBool(T_But_s) then T_But.Hint := 'Unmute Tone'
+      else T_But.Hint := 'Mute Tone';
+      if IntToBool(N_But_s) then N_But.Hint := 'Unmute Noise'
+      else N_But.Hint := 'Mute Noise';
+      if IntToBool(E_But_s) then E_But.Hint := 'Unmute Envelope'
+      else E_But.Hint := 'Mute Envelope';
     end;
-
-  with SpeedButton2 do
-    case Down of
-      True:  Hint := UnmuteTone;
-      False: Hint := MuteTone;
-    end;
-
-  with SpeedButton3 do
-    case Down of
-      True:  Hint := UnmuteNoise;
-      False: Hint := MuteNoise;
-    end;
-
-  with SpeedButton4 do
-    case Down of
-      True:  Hint := UnmuteEnvelope;
-      False: Hint := MuteEnvelope;
-    end;
-
-  with SpeedButton13 do
-    case Down of
-      True:  Hint := UnsoloChannel;
-      False: Hint := SoloChannel;
-    end;
-
-  // Channel B buttons
-  with SpeedButton5 do
-    case Down of
-      True:  Hint := UnmuteChannel;
-      False: Hint := MuteChannel;
-    end;
-
-  with SpeedButton6 do
-    case Down of
-      True:  Hint := UnmuteTone;
-      False: Hint := MuteTone;
-    end;
-
-  with SpeedButton7 do
-    case Down of
-      True:  Hint := UnmuteNoise;
-      False: Hint := MuteNoise;
-    end;
-
-  with SpeedButton8 do
-    case Down of
-      True:  Hint := UnmuteEnvelope;
-      False: Hint := MuteEnvelope;
-    end;
-
-  with SpeedButton14 do
-    case Down of
-      True:  Hint := UnsoloChannel;
-      False: Hint := SoloChannel;
-    end;
-
-
-  // Channel C buttons
-  with SpeedButton9 do
-    case Down of
-      True:  Hint := UnmuteChannel;
-      False: Hint := MuteChannel;
-    end;
-
-  with SpeedButton10 do
-    case Down of
-      True:  Hint := UnmuteTone;
-      False: Hint := MuteTone;
-    end;
-
-  with SpeedButton11 do
-    case Down of
-      True:  Hint := UnmuteNoise;
-      False: Hint := MuteNoise;
-    end;
-
-  with SpeedButton12 do
-    case Down of
-      True:  Hint := UnmuteEnvelope;
-      False: Hint := MuteEnvelope;
-    end;
-
-  with SpeedButton15 do
-    case Down of
-      True:  Hint := UnsoloChannel;
-      False: Hint := SoloChannel;
-    end;
-
-
+  end;
 end;
 
 procedure TMDIChild.UpdateChannelsState;
 begin
-  CheckButtonStateChanA;
-  CheckButtonStateChanB;
-  CheckButtonStateChanC;
-  if TSWindow[0] <> nil then
-    with TSWindow[0] do
-    begin
-      CheckButtonStateChanA;
-      CheckButtonStateChanB;
-      CheckButtonStateChanC;
-    end;
-  if TSWindow[1] <> nil then
-    with TSWindow[1] do
-    begin
-      CheckButtonStateChanA;
-      CheckButtonStateChanB;
-      CheckButtonStateChanC;
-    end;
-
   {CheckSoloButtons;
   if TSWindow <> nil then
     TSWindow.CheckSoloButtons;  }
 
-  UpdateHintsForChannelButtons;
-  UpdateChannelsMutedState;
+  ApplyChannelsButtons;
   Tracks.HideMyCaret;
   Tracks.RedrawTracks(0);
   Tracks.ShowMyCaret;
@@ -16199,8 +16080,7 @@ begin
   if TSWindow[0] <> nil then
     with TSWindow[0] do
     begin
-      UpdateHintsForChannelButtons;
-      UpdateChannelsMutedState;
+      ApplyChannelsButtons;
       Tracks.HideMyCaret;
       Tracks.RedrawTracks(0);
       Tracks.ShowMyCaret;
@@ -16208,299 +16088,13 @@ begin
   if TSWindow[1] <> nil then
     with TSWindow[1] do
     begin
-      UpdateHintsForChannelButtons;
-      UpdateChannelsMutedState;
+      ApplyChannelsButtons;
       Tracks.HideMyCaret;
       Tracks.RedrawTracks(0);
       Tracks.ShowMyCaret;
     end;
 
-  StopAndRestart;
-end;
-
-function TMDIChild.AnotherSoloPressed: Boolean;
-begin
-  Result := SpeedButton13.Down or SpeedButton14.Down or SpeedButton15.Down;
-  if TSWindow[0] = nil then Exit;
-  Result := Result or TSWindow[0].SpeedButton13.Down or TSWindow[0].SpeedButton14.Down or TSWindow[0].SpeedButton15.Down;
-  if TSWindow[1] = nil then Exit;
-  Result := Result or TSWindow[1].SpeedButton13.Down or TSWindow[1].SpeedButton14.Down or TSWindow[1].SpeedButton15.Down;
-end;
-
-procedure TMDIChild.MuteChannelA(Force: Boolean);
-begin
-  if SpeedButton13.Down and not Force then Exit;
-  VTMP.IsChans[0].Global_Ton      := False;
-  VTMP.IsChans[0].Global_Noise    := False;
-  VTMP.IsChans[0].Global_Envelope := False;
-  SpeedButton1.Down := True;
-  SpeedButton2.Down := True;
-  SpeedButton3.Down := True;
-  SpeedButton4.Down := True;
-  SpeedButton13.Down := False;
-end;
-
-procedure TMDIChild.MuteChannelB(Force: Boolean);
-begin
-  if SpeedButton14.Down and not Force then Exit;
-  VTMP.IsChans[1].Global_Ton      := False;
-  VTMP.IsChans[1].Global_Noise    := False;
-  VTMP.IsChans[1].Global_Envelope := False;
-  SpeedButton5.Down := True;
-  SpeedButton6.Down := True;
-  SpeedButton7.Down := True;
-  SpeedButton8.Down := True;
-  SpeedButton14.Down := False;
-end;
-
-procedure TMDIChild.MuteChannelC(Force: Boolean);
-begin
-  if SpeedButton15.Down and not Force then Exit;
-  VTMP.IsChans[2].Global_Ton      := False;
-  VTMP.IsChans[2].Global_Noise    := False;
-  VTMP.IsChans[2].Global_Envelope := False;
-  SpeedButton9.Down := True;
-  SpeedButton10.Down := True;
-  SpeedButton11.Down := True;
-  SpeedButton12.Down := True;
-  SpeedButton15.Down := False;
-end;
-
-procedure TMDIChild.DismuteChannelA;
-begin
-  VTMP.IsChans[0].Global_Ton      := True;
-  VTMP.IsChans[0].Global_Noise    := True;
-  VTMP.IsChans[0].Global_Envelope := True;
-  SpeedButton1.Down := False;
-  SpeedButton2.Down := False;
-  SpeedButton3.Down := False;
-  SpeedButton4.Down := False;
-end;
-
-procedure TMDIChild.DismuteChannelB;
-begin
-  VTMP.IsChans[1].Global_Ton      := True;
-  VTMP.IsChans[1].Global_Noise    := True;
-  VTMP.IsChans[1].Global_Envelope := True;
-  SpeedButton5.Down := False;
-  SpeedButton6.Down := False;
-  SpeedButton7.Down := False;
-  SpeedButton8.Down := False;
-end;
-
-procedure TMDIChild.DismuteChannelC;
-begin
-  VTMP.IsChans[2].Global_Ton      := True;
-  VTMP.IsChans[2].Global_Noise    := True;
-  VTMP.IsChans[2].Global_Envelope := True;
-  SpeedButton9.Down := False;
-  SpeedButton10.Down := False;
-  SpeedButton11.Down := False;
-  SpeedButton12.Down := False;
-end;
-
-procedure TMDIChild.DismuteAllChannels(Force: Boolean);
-begin
-
-  if Force then begin
-    DismuteChannelA;
-    DismuteChannelB;
-    DismuteChannelC;
-    SpeedButton13.Down := False;
-    SpeedButton14.Down := False;
-    SpeedButton15.Down := False;
-    if TSWindow[0] <> nil then with TSWindow[0] do
-    begin
-      DismuteChannelA;
-      DismuteChannelB;
-      DismuteChannelC;
-      SpeedButton13.Down := False;
-      SpeedButton14.Down := False;
-      SpeedButton15.Down := False;
-    end;
-    if TSWindow[1] <> nil then with TSWindow[1] do
-    begin
-      DismuteChannelA;
-      DismuteChannelB;
-      DismuteChannelC;
-      SpeedButton13.Down := False;
-      SpeedButton14.Down := False;
-      SpeedButton15.Down := False;
-    end;
-    Exit;
-  end;
-
-  if AnotherSoloPressed then MuteChannelA(False) else DismuteChannelA;
-  if AnotherSoloPressed then MuteChannelB(False) else DismuteChannelB;
-  if AnotherSoloPressed then MuteChannelC(False) else DismuteChannelC;
-  if TSWindow[0] <> nil then
-    with TSWindow[0] do
-    begin
-      if AnotherSoloPressed then MuteChannelA(False) else DismuteChannelA;
-      if AnotherSoloPressed then MuteChannelB(False) else DismuteChannelB;
-      if AnotherSoloPressed then MuteChannelC(False) else DismuteChannelC;
-    end;
-  if TSWindow[1] <> nil then
-    with TSWindow[1] do
-    begin
-      if AnotherSoloPressed then MuteChannelA(False) else DismuteChannelA;
-      if AnotherSoloPressed then MuteChannelB(False) else DismuteChannelB;
-      if AnotherSoloPressed then MuteChannelC(False) else DismuteChannelC;
-    end;
-end;
-
-procedure TMDIChild.MuteSecondWidnowChannels;
-begin
-  if TSWindow[0] <> nil then
-    with TSWindow[0] do
-    begin
-      MuteChannelA(False);
-      MuteChannelB(False);
-      MuteChannelC(False);
-    end;
-  if TSWindow[1] <> nil then
-    with TSWindow[1] do
-    begin
-      MuteChannelA(False);
-      MuteChannelB(False);
-      MuteChannelC(False);
-    end;
-end;
-
-procedure TMDIChild.SoloChannelA(Force: Boolean);
-begin
-  DismuteChannelA;
-  SpeedButton13.Down := True;
-  MuteChannelB(Force);
-  MuteChannelC(Force);
-  MuteSecondWidnowChannels;
-end;
-
-procedure TMDIChild.SoloChannelB(Force: Boolean);
-begin
-  DismuteChannelB;
-  SpeedButton14.Down := True;
-  MuteChannelA(Force);
-  MuteChannelC(Force);
-  MuteSecondWidnowChannels;
-end;
-
-procedure TMDIChild.SoloChannelC(Force: Boolean);
-begin
-  DismuteChannelC;
-  SpeedButton15.Down := True;
-  MuteChannelA(Force);
-  MuteChannelB(Force);
-  MuteSecondWidnowChannels;
-end;
-
-procedure TMDIChild.SpeedButton1Click(Sender: TObject);
-begin
-  if SpeedButton1.Down then
-    MuteChannelA(False)
-  else
-    DismuteChannelA;
-  UpdateChannelsState;
-end;
-
-
-procedure TMDIChild.SpeedButton2Click(Sender: TObject);
-begin
-  VTMP.IsChans[0].Global_Ton := not SpeedButton2.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton3Click(Sender: TObject);
-begin
-  VTMP.IsChans[0].Global_Noise := not SpeedButton3.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton4Click(Sender: TObject);
-begin
-  VTMP.IsChans[0].Global_Envelope := not SpeedButton4.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton13Click(Sender: TObject);
-begin
-  if SpeedButton13.Down then
-    SoloChannelA(False)
-  else
-    DismuteAllChannels(False);
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton5Click(Sender: TObject);
-begin
-  if SpeedButton5.Down then
-    MuteChannelB(False)
-  else
-    DismuteChannelB;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton6Click(Sender: TObject);
-begin
-  VTMP.IsChans[1].Global_Ton := not SpeedButton6.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton7Click(Sender: TObject);
-begin
-  VTMP.IsChans[1].Global_Noise := not SpeedButton7.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton8Click(Sender: TObject);
-begin
-  VTMP.IsChans[1].Global_Envelope := not SpeedButton8.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton14Click(Sender: TObject);
-begin
-  if SpeedButton14.Down then
-    SoloChannelB(False)
-  else
-    DismuteAllChannels(False);
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton9Click(Sender: TObject);
-begin
-  if SpeedButton9.Down then
-    MuteChannelC(False)
-  else
-    DismuteChannelC;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton10Click(Sender: TObject);
-begin
-  VTMP.IsChans[2].Global_Ton := not SpeedButton10.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton11Click(Sender: TObject);
-begin
-  VTMP.IsChans[2].Global_Noise := not SpeedButton11.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton12Click(Sender: TObject);
-begin
-  VTMP.IsChans[2].Global_Envelope := not SpeedButton12.Down;
-  UpdateChannelsState;
-end;
-
-procedure TMDIChild.SpeedButton15Click(Sender: TObject);
-begin
-  if SpeedButton15.Down then
-    SoloChannelC(False)
-  else
-    DismuteAllChannels(False);
-  UpdateChannelsState;
+//  StopAndRestart;
 end;
 
 procedure TMDIChild.VtmFeaturesGrpClick(Sender: TObject);
@@ -17464,7 +17058,7 @@ begin
     SelectPosition(Sel.Left);
     Key := 0;
   end;
-    
+
 end;
 
 procedure TMDIChild.TracksExit(Sender: TObject);
@@ -17534,7 +17128,7 @@ begin
   finally
     CloseFile(TxtFile);
   end;
-  
+
 end;
 
 
@@ -20824,7 +20418,7 @@ begin
 
   // If next line goes beyond the sample, then there is nowhere to unloop
   if NextLine > LastLine then begin
-    MessageDlg('Unloop is not possible because the sample has a maximum length.' 
+    MessageDlg('Unloop is not possible because the sample has a maximum length.'
       + #13#10 + 'There is nowhere to unloop.',  mtWarning, [mbOK], 0);
     Exit;
   end;
