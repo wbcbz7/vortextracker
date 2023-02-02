@@ -450,6 +450,14 @@ type
     E_But_s:    Integer;
   end;
 
+  TChannelButtonsState = record
+    Mute_But_s: Integer;
+    Solo_But_s: Integer;
+    T_But_s:    Integer;
+    N_But_s:    Integer;
+    E_But_s:    Integer;
+  end;
+
   TMDIChild = class(TForm)
     PatternsSheet: TTabSheet;
     Edit3: TEdit;
@@ -619,6 +627,8 @@ type
     Panel13: TPanel;
     Panel14: TPanel;
     Panel15: TPanel;
+    Panel16: TPanel;
+    Panel17: TPanel;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -788,9 +798,12 @@ type
 
     procedure UpdateHintsForChannelButtons;
     procedure UpdateChannelsState;
+    function CheckMute: Boolean;
     function CheckSolo: Boolean;
     procedure ApplyChannelsButtons;
     procedure ApplySolo;
+    procedure AllMute(Sender: TObject);
+    procedure AllSolo(Sender: TObject);
     procedure MuteOnClick(Sender: TObject);
     procedure SoloOnClick(Sender: TObject);
     procedure TNEOnClick(Sender: TObject);
@@ -1087,6 +1100,7 @@ type
     ToolBoxesWidth: Integer;
     SamplesDir, OrnamentsDir: String;
     ChanButtons: array[0..2] of TChannelButtons;
+    ChanButtons_s: array[0..2] of TChannelButtonsState;
 
   published
      //    destructor Destroy; override;
@@ -1156,7 +1170,7 @@ begin
 end;
 
 
-function IsDirectoryWriteable(const AName: string): Boolean; 
+function IsDirectoryWriteable(const AName: string): Boolean;
 var 
   FileName: String; 
   H: THandle; 
@@ -2439,6 +2453,23 @@ begin
   ChanButtons[0].Solo_But := Panel13;
   ChanButtons[1].Solo_But := Panel14;
   ChanButtons[2].Solo_But := Panel15;
+
+  for i := 0 to 2 do begin
+    with ChanButtons[i] do begin
+      Mute_But_s := 0;
+      T_But_s := 0;
+      N_But_s := 0;
+      E_But_s := 0;
+      Solo_But_s := 0;
+    end;
+    with ChanButtons_s[i] do begin
+      Mute_But_s := 0;
+      T_But_s := 0;
+      N_But_s := 0;
+      E_But_s := 0;
+      Solo_But_s := 0;
+    end;
+  end;
 
   PageControl1.ActivePageIndex := 0;
   NumModule := 1;
@@ -15857,10 +15888,14 @@ begin
   else Result := True
 end;
 
+const
+clRed2 = $8080ff;
+clYellow2 = $00e0ff;
+
 procedure SetButColor(var pan: TPanel; Color: TColor);
 begin
   pan.Color := Color;
-  if (Color = clBtnFace) or (Color = clYellow) then
+  if (Color = clBtnFace) or (Color = clYellow2) then
     pan.Font.Color := clWindowText
   else
     pan.Font.Color := clCaptionText
@@ -15869,8 +15904,7 @@ end;
 procedure TMDIChild.ApplyChannelsButtons;
 var
   i: Integer;
-const
-clRed2 = $8080ff;
+  issolo, ismute: Boolean;
 begin
   for i := 0 to 2 do with ChanButtons[i] do begin
     VTMP.IsChans[i].Global_Ton := not IntToBool(T_But_s);
@@ -15895,14 +15929,45 @@ begin
     else SetButColor(Mute_But, clBtnFace);
 
     if IntToBool(Solo_But_s) then
-      SetButColor(Solo_But, clYellow)
+      SetButColor(Solo_But, clYellow2)
     else SetButColor(Solo_But, clBtnFace);
   end;
+
+  issolo := CheckSolo;
+  if issolo then SetButColor(Panel17, clYellow2)
+  else  SetButColor(Panel17, clBtnFace);
+
+  ismute := CheckMute;
+  if ismute then SetButColor(Panel16, clRed)
+  else  SetButColor(Panel16, clBtnFace);
 
   UpdateHintsForChannelButtons;
 end;
 
-function TMDIChild.CheckSolo;
+function TMDIChild.CheckMute:Boolean;
+var
+  i, j: Integer;
+  CurWin: TMDIChild;
+begin
+  Result := false;
+  for j := 0 to 2 do begin
+    if j = 1 then CurWin := TSWindow[0]
+    else if j = 2 then CurWin := TSWindow[1]
+    else CurWin := self;
+    if CurWin = nil then continue;
+    for i := 0 to 2 do begin
+      if (CurWin.ChanButtons[i].Mute_But_s=1)
+      or (CurWin.ChanButtons[i].T_But_s=1)
+      or (CurWin.ChanButtons[i].N_But_s=1)
+      or (CurWin.ChanButtons[i].E_But_s=1) then begin
+        Result := True;
+        exit;
+      end;
+    end;
+  end;
+end;
+
+function TMDIChild.CheckSolo:Boolean;
 var
   i, j: Integer;
   CurWin: TMDIChild;
@@ -15921,6 +15986,70 @@ begin
     end;
   end;
 end;
+
+procedure TMDIChild.AllMute(Sender: TObject);
+var
+  i, j: Integer;
+  CurWin: TMDIChild;
+  ison: Boolean;
+begin
+  ison := not (Panel16.Color = clBtnFace);
+
+  for j := 0 to 2 do begin
+    if j = 1 then CurWin := TSWindow[0]
+    else if j = 2 then CurWin := TSWindow[1]
+    else CurWin := self;
+    if CurWin = nil then continue;
+    for i := 0 to 2 do begin
+      if ison then begin //store + clear
+        CurWin.ChanButtons_s[i].Mute_But_s := CurWin.ChanButtons[i].Mute_But_s;
+        CurWin.ChanButtons_s[i].T_But_s := CurWin.ChanButtons[i].T_But_s;
+        CurWin.ChanButtons_s[i].N_But_s := CurWin.ChanButtons[i].N_But_s;
+        CurWin.ChanButtons_s[i].E_But_s := CurWin.ChanButtons[i].E_But_s;
+        CurWin.ChanButtons[i].Mute_But_s := 0;
+        CurWin.ChanButtons[i].T_But_s := 0;
+        CurWin.ChanButtons[i].N_But_s := 0;
+        CurWin.ChanButtons[i].E_But_s := 0;
+      end
+      else begin //restore
+        CurWin.ChanButtons[i].Mute_But_s := CurWin.ChanButtons_s[i].Mute_But_s;
+        CurWin.ChanButtons[i].T_But_s := CurWin.ChanButtons_s[i].T_But_s;
+        CurWin.ChanButtons[i].N_But_s := CurWin.ChanButtons_s[i].N_But_s;
+        CurWin.ChanButtons[i].E_But_s := CurWin.ChanButtons_s[i].E_But_s;
+      end;
+    end;
+  end;
+  ApplySolo;
+  UpdateChannelsState;
+end;
+
+procedure TMDIChild.AllSolo(Sender: TObject);
+var
+  i, j: Integer;
+  CurWin: TMDIChild;
+  ison: Boolean;
+begin
+  ison := not (Panel17.Color = clBtnFace);
+
+  for j := 0 to 2 do begin
+    if j = 1 then CurWin := TSWindow[0]
+    else if j = 2 then CurWin := TSWindow[1]
+    else CurWin := self;
+    if CurWin = nil then continue;
+    for i := 0 to 2 do begin
+      if ison then begin //store + clear
+        CurWin.ChanButtons_s[i].Solo_But_s := CurWin.ChanButtons[i].Solo_But_s;
+        CurWin.ChanButtons[i].Solo_But_s := 0;
+      end
+      else begin //restore
+        CurWin.ChanButtons[i].Solo_But_s := CurWin.ChanButtons_s[i].Solo_But_s;
+      end;
+    end;
+  end;
+  ApplySolo;
+  UpdateChannelsState;
+end;
+
 
 procedure TMDIChild.ApplySolo;
 var

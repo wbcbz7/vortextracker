@@ -40,7 +40,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = OptTab
+    ActivePage = PatternsSheet
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -1790,8 +1790,8 @@ object MDIChild: TMDIChild
           OnKeyUp = ManualHzKeyUp
         end
         object ManualIntFreq: TEdit
-          Left = 363
-          Top = 383
+          Left = 358
+          Top = 381
           Width = 64
           Height = 20
           AutoSize = False
@@ -1903,6 +1903,38 @@ object MDIChild: TMDIChild
         end
       end
     end
+  end
+  object Panel16: TPanel
+    Left = 456
+    Top = 3
+    Width = 33
+    Height = 20
+    Caption = 'Mute'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Microsoft Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    OnClick = AllMute
+    OnDblClick = AllMute
+  end
+  object Panel17: TPanel
+    Left = 489
+    Top = 3
+    Width = 32
+    Height = 20
+    Caption = 'Solo'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Microsoft Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 2
+    OnClick = AllSolo
+    OnDblClick = AllSolo
   end
   object SaveTextDlg: TSaveDialog
     DefaultExt = 'TXT'
