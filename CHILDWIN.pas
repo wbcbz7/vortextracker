@@ -2119,7 +2119,7 @@ begin
     if FileExt = 'vto' then FBSaveInstrument.Caption := 'Save ornament here';    
   end;
 
-  GetCursorPos(APoint);
+  APoint := GetCursorPos;
   TMDIChild(ParentWin).FileBrowserPopup.Popup(APoint.X, APoint.Y);
 end;
 
@@ -2277,7 +2277,7 @@ var
   MyRect: TRect;
 begin
 
-  MyPoint := Ctrl.ScreenToClient(Mouse.CursorPos);
+  MyPoint := Ctrl.ScreenToClient(GetCursorPos);
   if (Ctrl is TScrollBox) then begin
     MyRect := Ctrl.ClientRect;
     MyRect.Bottom := MyRect.Bottom + HScrollbarSize;
@@ -21018,7 +21018,7 @@ begin
   ShowHintTimer.Enabled := False;
   HideHintTimer.Interval := HideHintDelay;
   HideHintTimer.Enabled := True;
-  aPoint := Mouse.CursorPos;
+  aPoint := GetCursorPos;
   Application.ActivateHint(aPoint);
 end;
 

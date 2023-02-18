@@ -663,6 +663,8 @@ type
 
 function IntelWord(a: word): word;
 
+function GetCursorPos: TPoint;
+
 type
   TLastClipboard = (LCNone, LCTracks, LCSamples, LCOrnaments);
 
@@ -842,6 +844,26 @@ begin
     end;
   IsWine   := Result;
   Detected := True;
+end;
+
+function GetCursorPos: TPoint;
+var
+  CurDesktop: HDESK;
+begin
+  if UnderWine then
+   begin
+    result:=Mouse.CursorPos;
+    exit;
+   end;
+  CurDesktop := OpenInputDesktop(0, false, DESKTOP_READOBJECTS); //wine doesn't support that
+  try
+    if CurDesktop > 0 then
+      Win32Check(Windows.GetCursorPos(Result))
+    else
+      Result := Point(0, 0);
+  finally
+    CloseDesktop(CurDesktop);
+  end;
 end;
 
 
@@ -6972,7 +6994,7 @@ begin
   if WindowUnsnap then Exit;
   if (SysCmd = -1) and not UnderWine then Exit;
 
-  MouseX := Mouse.CursorPos.x;
+  MouseX := GetCursorPos.x;
   ResizeActionBlocked := True;
 
   NewSize.Top    := Top;
