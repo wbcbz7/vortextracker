@@ -3,7 +3,7 @@ object TrMng: TTrMng
   Top = 212
   BorderStyle = bsToolWindow
   Caption = 'Tracks manager'
-  ClientHeight = 379
+  ClientHeight = 393
   ClientWidth = 273
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -61,6 +61,14 @@ object TrMng: TTrMng
     Font.Name = 'Microsoft Sans Serif'
     Font.Style = [fsBold]
     ParentFont = False
+  end
+  object SpeedButton8: TSpeedButton
+    Left = 8
+    Top = 336
+    Width = 124
+    Height = 22
+    Caption = 'Clean all patterns'
+    OnClick = SpeedButton8Click
   end
   object GroupBox1: TGroupBox
     Left = 8
@@ -347,7 +355,7 @@ object TrMng: TTrMng
   end
   object Button1: TButton
     Left = 187
-    Top = 340
+    Top = 356
     Width = 77
     Height = 29
     Cancel = True

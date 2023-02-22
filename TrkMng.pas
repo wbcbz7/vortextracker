@@ -57,6 +57,7 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    SpeedButton8: TSpeedButton;
     procedure SpeedButton2Click(Sender: TObject);
     procedure TracksOp(FPat, FLin, FChn, TPat, TLin, TChn, TrOp: integer; MakeUndo: Boolean);
     procedure SpeedButton1Click(Sender: TObject);
@@ -73,6 +74,7 @@ type
     procedure Edit6_7KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure Edit6_7KeyPress(Sender: TObject; var Key: Char);
+    procedure SpeedButton8Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -282,6 +284,84 @@ end;
 procedure TTrMng.Edit6_7KeyPress(Sender: TObject; var Key: Char);
 begin
   Key := #0;
+end;
+
+procedure TTrMng.SpeedButton8Click(Sender: TObject);
+var
+  ts, i, j, k: integer;
+  CurrentWindow, Iwin: TMDIChild;
+begin
+  if MainForm.MDIChildCount = 0 then exit;
+  CurrentWindow := TMDIChild(MainForm.ActiveMDIChild);
+  if MessageDlg('This operation cannot be undone. Are you sure to continue?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then exit;
+  CurrentWindow.StopAndRestoreControls;
+
+  for ts := 0 to 2 do begin
+    if ts = 0 then Iwin := CurrentWindow
+    else Iwin := CurrentWindow.TSWindow[ts-1];
+    if IWin = nil then continue;
+    with Iwin do begin
+      DisposeUndo(True);
+      for i := 0 to Length(VTMP.Positions.Value)-1 do begin
+        VTMP.Positions.Value[i] := 0;
+        VTMP.Positions.Colors[i] := 0;
+      end;
+      VTMP.Title := '';
+      VTMP.Author := '';
+      VTMP.Info := '';
+      VTMP.ShowInfo := False;
+      VTMP.Ton_Table := 2;
+      VTMP.Initial_Delay := 3;
+      VTMP.Positions.Length := 1;
+      VTMP.Positions.Loop := 0;
+      VTMP.ChipFreq := DefaultChipFreq;
+      VTMP.IntFreq := DefaultIntFreq;
+      VTMP.FeaturesLevel := FeaturesLevel;
+      VTMP.VortexModule_Header := VortexModuleHeader;
+
+      Edit3.Text := '';
+      Edit4.Text := '';
+
+      for i := 0 to 84 do begin
+        if VTMP.Patterns[i]=nil then continue;
+        if i > 0 then begin
+          dispose(VTMP.Patterns[i]);
+          VTMP.Patterns[i] := nil;
+        end
+        else begin
+          for j := 0 to 255 do begin
+            VTMP.Patterns[i].Items[j].Noise := 0;
+            VTMP.Patterns[i].Items[j].Envelope := 0;
+            for k := 0 to 2 do begin
+              VTMP.Patterns[i].Items[j].Channel[k].Note := -1;
+              VTMP.Patterns[i].Items[j].Channel[k].Sample := 0;
+              VTMP.Patterns[i].Items[j].Channel[k].Ornament := 0;
+              VTMP.Patterns[i].Items[j].Channel[k].Volume := 0;
+              VTMP.Patterns[i].Items[j].Channel[k].Envelope := 0;
+              VTMP.Patterns[i].Items[j].Channel[k].Additional_Command.Number := 0;
+              VTMP.Patterns[i].Items[j].Channel[k].Additional_Command.Delay := 0;
+              VTMP.Patterns[i].Items[j].Channel[k].Additional_Command.Parameter := 0;
+            end;
+          end;
+          VTMP.Patterns[i].Length := 64;
+        end;
+      end;
+      validatepattern2(0);
+      RedrawPatternPositions;
+      CalcTotLen;
+      SelectPosition2(0);
+      Tracks.JumpToPatStart([]);
+      Tracks.RedrawTracks(0);
+      UndoWorking := False;
+      SongChanged := False;
+      BackupSongChanged := False;
+      SetFileName('');
+      VtmFeaturesGrp.ItemIndex := VTMP.FeaturesLevel;
+      SaveHead.ItemIndex := Ord(not VTMP.VortexModule_Header);
+      MainForm.AddFileName('');
+    end;
+  end;
+  Hide;
 end;
 
 end.
