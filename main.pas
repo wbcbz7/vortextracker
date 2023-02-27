@@ -1685,15 +1685,26 @@ end;
 
 procedure TMainForm.SetChildsPosition(MainWindowState: TWindowState);
 var
-  i, PrevChildRightCorner: Integer;
+  i, j, PrevChildRightCorner: Integer;
   PrevEventsFlag: Boolean;
+  tmpMDIchild: TMDIChild;
 
 begin
   if MDIChildCount < 2 then Exit;
-  
+
   PrevChildRightCorner := 0;
   PrevEventsFlag := ChildsEventsBlocked;
   ChildsEventsBlocked := True;
+
+  //reorder
+  for i := 0 to High(ChildsTable) do
+    for j := i+1 to High(ChildsTable) do
+      if ChildsTable[i].Left>ChildsTable[j].Left then
+       begin
+        tmpMDIchild := ChildsTable[i];
+        ChildsTable[i] := ChildsTable[j];
+        ChildsTable[j] := tmpMDIchild;
+       end;
 
   if (MainWindowState = wsMaximized) and (ChildsWidth < ClientWidth)  then
     PrevChildRightCorner := (ClientWidth div 2) - (ChildsWidth div 2);
@@ -3094,28 +3105,27 @@ begin
   end;
 end;
 
+function GetMainModule:TMDIChild;
+var
+ curwin: TMDIChild;
+begin
+  curwin := TMDIChild(MainForm.ActiveMDIChild);
+  if (curwin.TSWindow[0] <> nil) and (curwin.TSWindow[0].NumModule = 1) then
+  result := curwin.TSWindow[0]
+  else
+  if (curwin.TSWindow[1] <> nil) and (curwin.TSWindow[1].NumModule = 1) then
+  result := curwin.TSWindow[1]
+  else result := curwin;
+end;
+
 procedure TMainForm.FileSave1Execute(Sender: TObject);
 begin
-  if TMDIChild(ActiveMDIChild).NumModule=1 then
-    TMDIChild(ActiveMDIChild).SaveModule
-  else
-  if TMDIChild(ActiveMDIChild).NumModule=2 then
-    TMDIChild(ActiveMDIChild).TSWindow[0].SaveModule
-  else
-  if TMDIChild(ActiveMDIChild).NumModule=3 then
-    TMDIChild(ActiveMDIChild).TSWindow[1].SaveModule;
+  GetMainModule.SaveModule;
 end;
 
 procedure TMainForm.FileSaveAs1Execute(Sender: TObject);
 begin
-  if TMDIChild(ActiveMDIChild).NumModule=1 then
-    TMDIChild(ActiveMDIChild).SaveModuleAs
-  else
-  if TMDIChild(ActiveMDIChild).NumModule=2 then
-    TMDIChild(ActiveMDIChild).TSWindow[0].SaveModuleAs
-  else
-  if TMDIChild(ActiveMDIChild).NumModule=3 then
-    TMDIChild(ActiveMDIChild).TSWindow[1].SaveModuleAs;
+  GetMainModule.SaveModuleAs;
 end;
 
 procedure TMainForm.FileSave1Update(Sender: TObject);
@@ -3125,9 +3135,14 @@ begin
     Exit;
   end;
   FileSave1.Enabled := not ExportStarted and (MDIChildCount <> 0) and
-    (TMDIChild(ActiveMDIChild).SongChanged or
+    ( (TMDIChild(ActiveMDIChild).SongChanged or
     ((TMDIChild(ActiveMDIChild).TSWindow[0] <> nil) and
-    TMDIChild(ActiveMDIChild).TSWindow[0].SongChanged));
+    TMDIChild(ActiveMDIChild).TSWindow[0].SongChanged))
+    or
+    (TMDIChild(ActiveMDIChild).SongChanged or
+    ((TMDIChild(ActiveMDIChild).TSWindow[1] <> nil) and
+    TMDIChild(ActiveMDIChild).TSWindow[1].SongChanged))
+    );
 end;
 
 procedure TMainForm.FileSaveAs1Update(Sender: TObject);
@@ -6870,8 +6885,8 @@ begin
 
   // Save turbosound windows state
   TSWin1 := TMDIChild(ActiveMDIChild);
-  TSWin2 := TMDIChild(ActiveMDIChild).TSWindow[0];
-  TSWin3 := TMDIChild(ActiveMDIChild).TSWindow[1];
+  TSWin2 := TSWin1.TSWindow[0];
+  TSWin3 := TSWin1.TSWindow[1];
   FileName := TSWin1.WinFileName;
 
   // Split turbotrack
@@ -7173,19 +7188,27 @@ begin
   end;
 
   // Calculate number of non-turbotrack childs
-{  count := 0;
+{
+  count := 0;
   for i := 0 to MDIChildCount-1 do
-    if TMDIChild(MDIChildren[i]).TSWindow[0] = nil then
+    if (TMDIChild(MDIChildren[i]).TSWindow[0] = nil)
+     or (TMDIChild(MDIChildren[i]).TSWindow[1] = nil) then
       Inc(count);
 }
   MultitrackReorder;
 
   for i := 0 to MDIChildCount-1 do
   begin
-    if TMDIChild(MDIChildren[i]).TSWindow[0] <> nil then
-    s1:='T'+inttostr(TMDIChild(MDIChildren[i]).TSWindow[0].WinNumber) else s1:='--';
+    if TMDIChild(MDIChildren[i]).TSWindow[0] <> nil then begin
+      s1:='T'+inttostr(TMDIChild(MDIChildren[i]).TSWindow[0].WinNumber);
+      TMDIChild(MDIChildren[i]).ButtonDisjoin.Visible := True;
+    end else begin
+      s1:='--';
+      TMDIChild(MDIChildren[i]).ButtonDisjoin.Visible := False;
+    end;
     if TMDIChild(MDIChildren[i]).TSWindow[1] <> nil then
-    s2:='T'+inttostr(TMDIChild(MDIChildren[i]).TSWindow[1].WinNumber) else s2:='--';
+      s2:='T'+inttostr(TMDIChild(MDIChildren[i]).TSWindow[1].WinNumber)
+    else s2:='--';
     TMDIChild(MDIChildren[i]).Label4.Caption:=s1+' - '+s2;
   end;
 
@@ -7216,12 +7239,27 @@ begin
     child2:=child1.TSWindow[0];
     child3:=child1.TSWindow[1];
 
+    x1:=child1.Left;
+    if child2<>nil then x2:=child2.Left else x2:=-99999;
+    if child3<>nil then x3:=child3.Left else x3:=-99999;
+
+    //single
+    if (child3=nil) and (child2=nil) then
+      continue;
+
+    //2ts
+    if (child3=nil) and (child2<>nil) then
+    begin
+      if (x1<x2) then
+      begin
+        child2.NumModule:=1;
+        child1.NumModule:=2;
+      end;
+    end;
+
     if (child2=nil) or (child3=nil) then continue;
 
-    x1:=child1.Left;
-    x2:=child2.Left;
-    x3:=child3.Left;
-
+    //3ts
     if ((x1<x3) and (x3<x2)) // 1 3 2 => 1 2 3
     or ((x2<x1) and (x1<x3)) // 2 1 3 => 3 1 2
     or ((x3<x2) and (x2<x1)) // 3 2 1 => 2 3 1
@@ -7229,6 +7267,12 @@ begin
     begin //swap 2 and 3
       child1.TSWindow[0]:=child3;
       child1.TSWindow[1]:=child2;
+    end;
+    if (x1<x2) and (x2<x3) then
+    begin
+      child1.NumModule:=1;
+      child2.NumModule:=2;
+      child3.NumModule:=3;
     end;
   end;
 
@@ -7239,6 +7283,7 @@ var
   i: Integer;
   CurChild, ChildToJoin: TMDIChild;
   NewSize: TSize;
+  s: string;
 begin
   CurChild := TMDIChild(ActiveMDIChild);
 
@@ -7250,11 +7295,14 @@ begin
      or (TMDIChild(MDIChildren[i]).TSWindow[1] = nil))
      and (TMDIChild(MDIChildren[i]).TSWindow[0] <> CurChild)
      and (TMDIChild(MDIChildren[i]).TSWindow[1] <> CurChild)
-     and (TMDIChild(MDIChildren[i]) <> CurChild) then
-      TSSel.ListBox1.AddItem(TMDIChild(MDIChildren[i]).Caption, TMDIChild(MDIChildren[i]));
+     and (TMDIChild(MDIChildren[i]) <> CurChild) then begin
+      s := TMDIChild(MDIChildren[i]).Caption;
+      if s = '' then s := '---';
+      TSSel.ListBox1.AddItem(s, TMDIChild(MDIChildren[i]));
+    end;
   end;
 
-  if (TSSel.ShowModal = mrOk) and (TSSel.ListBox1.ItemIndex >= 0) then
+  if (TSSel.ListBox1.Count > 0) and (TSSel.ShowModal = mrOk) and (TSSel.ListBox1.ItemIndex >= 0) then
   begin
     Dec(WinCount);
 
@@ -7268,9 +7316,10 @@ begin
     end;
     ChildToJoin := TMDIChild(TSSel.ListBox1.Items.Objects[TSSel.ListBox1.ItemIndex]);
     CurChild.JoinChild(ChildToJoin);
+
+    JoinTracksUpdate(self);
+    CurChild.SinchronizeModules;
   end;
-  JoinTracksUpdate(self);
-  CurChild.SinchronizeModules;
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);
@@ -7289,12 +7338,7 @@ begin
   StartupAction := 0;
   TemplateSongPath := VortexDocumentsDir +'\template.vt2';
   DontAddToRecent := True;
-  if TMDIChild(ActiveMDIChild).NumModule=1 then
-    SavePT3(TMDIChild(ActiveMDIChild), TemplateSongPath, True)
-  else if TMDIChild(ActiveMDIChild).NumModule=2 then
-    SavePT3(TMDIChild(ActiveMDIChild).TSWindow[0], TemplateSongPath, True)
-  else if TMDIChild(ActiveMDIChild).NumModule=3 then
-    SavePT3(TMDIChild(ActiveMDIChild).TSWindow[1], TemplateSongPath, True);
+  SavePT3(GetMainModule, TemplateSongPath, True);
   DontAddToRecent := False;
   Application.MessageBox('Done. Song is successfully saved as a startup template.',
     'Save As Template', MB_OK + MB_ICONINFORMATION + MB_TOPMOST);

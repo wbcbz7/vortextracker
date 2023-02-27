@@ -554,7 +554,7 @@ object MainForm: TMainForm
     end
     object JoinTracksBtn: TAction
       Category = 'File'
-      Caption = 'TS'
+      Caption = 'Join'
       OnExecute = JoinTracksExecute
     end
     object FileExit1: TAction

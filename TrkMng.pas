@@ -358,7 +358,7 @@ begin
       SetFileName('');
       VtmFeaturesGrp.ItemIndex := VTMP.FeaturesLevel;
       SaveHead.ItemIndex := Ord(not VTMP.VortexModule_Header);
-      MainForm.AddFileName('');
+//      MainForm.AddFileName('');
     end;
   end;
   Hide;

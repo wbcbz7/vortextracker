@@ -919,6 +919,16 @@ object MDIChild: TMDIChild
           Action = MainForm.JoinTracksBtn
           TabOrder = 0
         end
+        object ButtonDisjoin: TButton
+          Left = 42
+          Top = 6
+          Width = 15
+          Height = 16
+          Caption = 'x'
+          TabOrder = 1
+          Visible = False
+          OnClick = ButtonDisjoinClick
+        end
       end
     end
     object SamplesSheet: TTabSheet

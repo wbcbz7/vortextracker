@@ -629,6 +629,7 @@ type
     Panel15: TPanel;
     Panel16: TPanel;
     Panel17: TPanel;
+    ButtonDisjoin: TButton;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -1015,6 +1016,7 @@ type
     procedure FileBrowserNewFolder(Sender: TObject);
     procedure FileBrowserSetFavorite(Sender: TObject);
     procedure FileBrowserSaveInstrument(Sender: TObject);
+    procedure ButtonDisjoinClick(Sender: TObject);
 
 
 
@@ -2215,6 +2217,7 @@ procedure TMDIChild.WMWindowPosChanged(var Message: TWMWindowPosChanged);
 var
   NewSize: TSize;
 
+  curnum: Integer;
 begin
 
   if ChildsEventsBlocked or ((Left = Message.WindowPos.x) and (Top = Message.WindowPos.y)) then begin
@@ -2227,13 +2230,14 @@ begin
   // Drag turbosound window too
   if TSWindow[0] <> nil then begin
     ChildsEventsBlocked := True;
+    curnum := NumModule;
 
     TSWindow[0].Top  := Top;
-    TSWindow[0].Left := Left + Width;
+    TSWindow[0].Left := Left + Width*(curnum-TSWindow[0].NumModule);
 
     if TSWindow[1] <> nil then begin
       TSWindow[1].Top  := Top;
-      TSWindow[1].Left := Left + Width*2
+      TSWindow[1].Left := Left + Width*(curnum-TSWindow[1].NumModule);
     end;
 
     ChildsEventsBlocked := False;
@@ -13815,9 +13819,9 @@ begin
   if IsSinchronizing or ((TSWindow[0] = nil) and (TSWindow[1] = nil)) then
 //   or (TSWindow[0] = Self) then
     Exit;
-  if (TSWindow[0]<>nil) and (Tracks.ShownFrom = TSWindow[0].Tracks.ShownFrom) and (PositionNumber = TSWindow[0].PositionNumber) then
-    Exit;
-  if (TSWindow[1]<>nil) and (Tracks.ShownFrom = TSWindow[1].Tracks.ShownFrom) and (PositionNumber = TSWindow[1].PositionNumber) then
+  if (TSWindow[0]<>nil) and (Tracks.ShownFrom = TSWindow[0].Tracks.ShownFrom) and (PositionNumber = TSWindow[0].PositionNumber)
+  and ( (TSWindow[1]=nil)
+  or (TSWindow[1]<>nil) and (Tracks.ShownFrom = TSWindow[1].Tracks.ShownFrom) and (PositionNumber = TSWindow[1].PositionNumber) ) then
     Exit;
 
   if not IsPlaying or (PlayMode <> PMPlayModule) then
@@ -22257,10 +22261,46 @@ begin
 end;
 
 
+procedure TMDIChild.ButtonDisjoinClick(Sender: TObject);
+var
+  TSWin1, TSWin2, TSWin3: TMDIChild;
+begin
+  if MessageDlg('Are you sure you want to disjoin the track?',  mtConfirmation, [mbYes, mbNo], 0) = mrNo then Exit;
+  StopAndRestoreControls;
+
+  TSWin1 := TMDIChild(MainForm.ActiveMDIChild);
+  TSWin2 := TMDIChild(MainForm.ActiveMDIChild).TSWindow[0];
+  TSWin3 := TMDIChild(MainForm.ActiveMDIChild).TSWindow[1];
+
+  TSWin1.TSWindow[0] := nil;
+  TSWin1.TSWindow[1] := nil;
+  TSWin1.SongChanged := True;
+  TSWin1.Caption:=TSWin1.WinFileName;
+  if TSWin2 <> nil then begin
+    if TSWin2.TSWindow[0] = MainForm.ActiveMDIChild then TSWin2.TSWindow[0] := nil;
+    if TSWin2.TSWindow[1] = MainForm.ActiveMDIChild then TSWin2.TSWindow[1] := nil;
+    if (TSWin2.TSWindow[0] = nil) and (TSWin2.TSWindow[1] <> nil) then begin
+      TSWin2.TSWindow[0] := TSWin2.TSWindow[1];
+      TSWin2.TSWindow[1] := nil;
+    end;
+    TSWin2.SongChanged := True;
+  end;
+  if TSWin3 <> nil then begin
+    if TSWin3.TSWindow[0] = MainForm.ActiveMDIChild then TSWin3.TSWindow[0] := nil;
+    if TSWin3.TSWindow[1] = MainForm.ActiveMDIChild then TSWin3.TSWindow[1] := nil;
+    if (TSWin3.TSWindow[0] = nil) and (TSWin3.TSWindow[1] <> nil) then begin
+      TSWin3.TSWindow[0] := TSWin3.TSWindow[1];
+      TSWin3.TSWindow[1] := nil;
+    end;
+    TSWin3.SongChanged := True;
+  end;
+  MainForm.MultitrackReorder;
+  MainForm.JoinTracksUpdate(self);
+  SinchronizeModules;
 
 
 
-
+end;
 
 end.
 
