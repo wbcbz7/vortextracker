@@ -4778,7 +4778,7 @@ begin
 
   // Draw next pattern lines
   NextPatSepBottom := 0;
-  if (NextPatNum <> -1) and (Y < CelH * NOfLines) then
+  if (NextPatNum <> -1) and (Y < CelH * NOfLines) and (NextPat<>nil) then
   begin
     Top := Y;
     ToLine := NOfLines - (Y div CelH);

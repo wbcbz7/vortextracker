@@ -2656,7 +2656,8 @@ end;
 
 
 
-function GetOutPatternLineString;
+function GetOutPatternLineString(PatNum: integer; PatPtr: PPattern;
+  LineNum: integer; Chn: TChansArray; Previous:Boolean): string;
 var IsEmpty: Boolean;
 begin
 
