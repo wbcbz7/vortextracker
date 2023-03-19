@@ -1554,7 +1554,7 @@ begin
 
   // Just one child
   if ChildCount = 1 then
-
+    begin
 
     // Just one child & main window in maximized state:
     if MainWindowState = wsMaximized then
@@ -1568,7 +1568,7 @@ begin
       c.PageControl1.Height := WorkAreaHeight(ClientHeight) - c.PageControl1.Top - 7;
 
       c.TopBackgroundBox.Left    := c.PageControl1.Left;
-      c.TopBackgroundBox.Width   := c.PageControl1.Width;   
+      c.TopBackgroundBox.Width   := c.PageControl1.Width;
       c.TopBackgroundBox.Visible := True;
 
       c.HeightChanged := c.LastHeight <> c.PageControl1.Height;
@@ -1594,8 +1594,10 @@ begin
       c.TopBackgroundBox.Visible := True;
       c.EnableAlign;
 
-    end
-
+    end;
+    c.Panel16.Left := 456 + c.PageControl1.Left;
+    c.Panel17.Left := 456 + c.PageControl1.Left + c.Panel16.Width+1;
+  end
   else
 
     // Childs count > 1
@@ -1609,6 +1611,10 @@ begin
       c.DisableAlign;
       c.PageControl1.Left := 0;
       c.PageControl1.Top  := 0;
+
+      c.Panel16.Left := 456 + c.PageControl1.Left;
+      c.Panel17.Left := 456 + c.PageControl1.Left + c.Panel16.Width+1;
+
       c.TopBackgroundBox.Visible := False;
       c.SetWidth(c.PageControl1.Width, True);
 
@@ -2247,8 +2253,8 @@ begin
     try
       midiin1.OpenAndStart;
     except
-      Application.MessageBox('Sorry, MIDI keyboard busy or... something else happened :)',
-        'Vortex Tracker II', MB_OK + MB_ICONWARNING + MB_TOPMOST);
+//      Application.MessageBox('Sorry, MIDI keyboard busy or... something else happened :)',
+//        'Vortex Tracker II', MB_OK + MB_ICONWARNING + MB_TOPMOST);
     end;
   end;
 
