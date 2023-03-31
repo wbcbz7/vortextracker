@@ -814,6 +814,11 @@ var
   TMPFileName: string;
   ayumi1, ayumi2, ayumi3: TAyumi;
 
+  CurChan: Integer;
+  Separate: Boolean;
+  StoredMix: array [0 .. MaxNumberOfSoundChips*3*3-1] of Boolean;
+  fn1,fn2: String;
+
   AudioBuff8Stereo: array of array[0..1] of Byte;
   AudioBuff16Stereo: array of array[0..1] of Word;
   AudioBuff24Stereo: array of array[0..1] of T24Bit;
@@ -1029,8 +1034,64 @@ var
     Child.Tracks.ShowMyCaret;
   end;
 
+  procedure SwapMixer; //StoredMix
+  var
+    tm: Boolean;
+    i, j, k: Integer;
+  begin
+    for i := 1 to MaxNumberOfSoundChips do //chip
+    begin
+      if PlayingWindow[i]=nil then continue; //skip if no chip
+      for j := 0 to 2 do //channel
+      begin
+        k := 3 * ((i-1)*MaxNumberOfSoundChips + j);
+        tm := StoredMix[k];
+        StoredMix[k] := PlayingWindow[i].VTMP.IsChans[j].Global_Ton;
+        PlayingWindow[i].VTMP.IsChans[j].Global_Ton := tm;
+        tm := StoredMix[k+1];
+        StoredMix[k+1] := PlayingWindow[i].VTMP.IsChans[j].Global_Noise;
+        PlayingWindow[i].VTMP.IsChans[j].Global_Noise := tm;
+        tm := StoredMix[k+2];
+        StoredMix[k+2] := PlayingWindow[i].VTMP.IsChans[j].Global_Envelope;
+        PlayingWindow[i].VTMP.IsChans[j].Global_Envelope := tm;
+      end;
+    end;
+  end;
+  procedure SoloMixer(ch:integer);
+  var
+    i: Integer;
+  begin
+    for i := 0 to 3*MaxNumberOfSoundChips-1 do
+    begin
+      StoredMix[i*3] := i=ch;
+      StoredMix[i*3+1] := i=ch;
+      StoredMix[i*3+2] := i=ch;
+    end;
+  end;
+
+Label mainloop;
 begin
   MainForm.DisableControlsForExport;
+
+  BitRate := ExportOptions.GetBitRate;
+  NumChannels := ExportOptions.GetNumChannels;
+  PlayAll := not ExportOptions.ExportSelected.Checked;
+
+  if ExportOptions.ExportSeparate.Checked then
+  begin
+     Separate := True;
+     NumChannels := 1;
+  end
+  else Separate := False;
+  CurChan := 0;
+mainloop:
+//===================
+  if Separate then
+  begin
+    SoloMixer(CurChan);
+    SwapMixer;
+  end;
+
   PrevPatNum2 := 0;
   PrevPosNum2 := 0;
   PrevPatNum3 := 0;
@@ -1039,9 +1100,6 @@ begin
   isrCounter := 1;
   isrStep := (PlayingWindow[1].VTMP.IntFreq / 1000) / ExportOptions.GetSampleRate;
   CurPosition := 0;
-  BitRate := ExportOptions.GetBitRate;
-  NumChannels := ExportOptions.GetNumChannels;
-  PlayAll := not ExportOptions.ExportSelected.Checked;
 
   PrevChanAlloc := ChanAllocIndex;
   PrevLoopAllowed := LoopAllowed;
@@ -1270,7 +1328,15 @@ begin
   // Save wav
   CreateWaveHeader(TMPFileStream.Size, ExportOptions.GetSampleRate, BitRate, NumChannels, WaveHeader);
 
-  FileStream := TFileStream.Create(FileName, fmCreate);
+  if Separate then
+  begin
+    fn2:=ExtractFileExt(Filename);
+    fn1:=ExtractFilePath(Filename)+ExtractFileName(FileName);
+    fn1:=copy(fn1,1,length(fn1)-length(fn2));
+    FileStream := TFileStream.Create(fn1+'('+inttostr(CurChan+1)+')'+fn2, fmCreate)
+  end
+  else
+    FileStream := TFileStream.Create(FileName, fmCreate);
   FileStream.Seek(0, soFromBeginning);
   FileStream.Write(WaveHeader, SizeOf(WaveHeader));
   TMPFileStream.Position := 0;
@@ -1279,6 +1345,17 @@ begin
   FileStream.Free;
   TMPFileStream.Free;
   DeleteFile(TMPFileName);
+
+
+  if Separate then
+  begin
+    SwapMixer; //back
+    inc(CurChan);
+    if (ayumi3<>nil) and (CurChan<9) then goto mainloop;
+    if (ayumi2<>nil) and (CurChan<6) then goto mainloop;
+    if (CurChan<3) then goto mainloop;
+  end;
+//========================
 
   // Set child positions
   RestorePositionAndPattern(LeadWindow, PrevPosNum1, PrevPatNum1);

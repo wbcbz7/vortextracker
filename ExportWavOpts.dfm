@@ -3,7 +3,7 @@ object ExportOptions: TExportOptions
   Top = 299
   BorderStyle = bsDialog
   Caption = 'Export Options'
-  ClientHeight = 350
+  ClientHeight = 367
   ClientWidth = 235
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -45,7 +45,7 @@ object ExportOptions: TExportOptions
     Left = 9
     Top = 222
     Width = 218
-    Height = 86
+    Height = 107
     TabOrder = 4
     object ExportNumLoops: TLabel
       Left = 9
@@ -86,10 +86,18 @@ object ExportOptions: TExportOptions
       Caption = 'Export selected positions'
       TabOrder = 2
     end
+    object ExportSeparate: TCheckBox
+      Left = 9
+      Top = 80
+      Width = 200
+      Height = 17
+      Caption = 'Export each channel to separate file'
+      TabOrder = 3
+    end
   end
   object Button1: TButton
     Left = 151
-    Top = 316
+    Top = 332
     Width = 75
     Height = 25
     Caption = 'Export'
@@ -100,7 +108,7 @@ object ExportOptions: TExportOptions
   end
   object Button2: TButton
     Left = 64
-    Top = 316
+    Top = 332
     Width = 75
     Height = 25
     Cancel = True

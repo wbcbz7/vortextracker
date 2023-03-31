@@ -943,10 +943,16 @@ object MDIChild: TMDIChild
         object SamOctaveLabel: TLabel
           Left = 127
           Top = 12
-          Width = 73
-          Height = 15
+          Width = 66
+          Height = 13
           Hint = 'Alt+1..8, Numpad 1-8'
           Caption = 'Editor octave:'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = []
+          ParentFont = False
           ParentShowHint = False
           ShowHint = True
         end
@@ -983,6 +989,12 @@ object MDIChild: TMDIChild
           AllowAllUp = True
           GroupIndex = 1
           Caption = 'Recalc Tones'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = []
+          ParentFont = False
           ParentShowHint = False
           ShowHint = True
         end
@@ -1000,6 +1012,12 @@ object MDIChild: TMDIChild
           Width = 113
           Height = 17
           Caption = 'Tone Shift as Note'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = []
+          ParentFont = False
           TabOrder = 1
           OnClick = SamToneShiftAsNoteOptClick
         end
@@ -1340,10 +1358,16 @@ object MDIChild: TMDIChild
         object OrnOctaveLabel: TLabel
           Left = 145
           Top = 12
-          Width = 73
-          Height = 15
+          Width = 66
+          Height = 13
           Hint = 'Alt+1..8, Numpad 1-8'
           Caption = 'Editor octave:'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = []
+          ParentFont = False
           ParentShowHint = False
           ShowHint = True
         end
@@ -1377,6 +1401,12 @@ object MDIChild: TMDIChild
           Width = 113
           Height = 17
           Caption = 'Tone Shift as Note'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = []
+          ParentFont = False
           TabOrder = 1
           OnClick = OrnToneShiftAsNoteOptClick
         end
