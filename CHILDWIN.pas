@@ -12545,12 +12545,12 @@ var
         end;
 
         // Check if pattern exists
-        if VTMP.Patterns[VTMP.Positions.Value[j]] = nil then begin
+{        if VTMP.Patterns[VTMP.Positions.Value[j]] = nil then begin
           Result := False;
           msg:='Position['+inttostr(j)+'] refers to non-existent pattern';
           Break;
         end;
-      end;
+}      end;
 
 
     // Check for incorrect sample length
