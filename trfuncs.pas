@@ -511,12 +511,13 @@ const
     'C-', 'C#', 'D-', 'D#', 'E-', 'F-', 'F#', 'G-', 'G#', 'A-', 'A#', 'B-'
   );
 
-  TableNames: array[0..4] of String = (
+  TableNames: array[0..5] of String = (
     'ProTracker 3.3',
     'Sound Tracker',
     'ASM or PSC (1.75 MHz)',
     'RealSound',
-    'IvanRochin NATURAL Cmaj/Am'
+    'IvanRochin NATURAL Cmaj/Am',
+    'Custom'
   );
 
 {Table #0 of Pro Tracker 3.4x - 3.5x}
@@ -595,6 +596,16 @@ const
     ($00, $01, $02, $03, $03, $04, $05, $06, $07, $08, $09, $0A, $0A, $0B, $0C, $0D),
     ($00, $01, $02, $03, $04, $05, $06, $07, $07, $08, $09, $0A, $0B, $0C, $0D, $0E),
     ($00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0A, $0B, $0C, $0D, $0E, $0F));
+var
+  CustomNoteTable: PT3ToneTable = (
+    $0D10, $0C55, $0BA4, $0AFC, $0A5F, $09CA, $093D, $08B8, $083B, $07C5, $0755, $06EC,
+    $0688, $062A, $05D2, $057E, $052F, $04E5, $049E, $045C, $041D, $03E2, $03AB, $0376,
+    $0344, $0315, $02E9, $02BF, $0298, $0272, $024F, $022E, $020F, $01F1, $01D5, $01BB,
+    $01A2, $018B, $0174, $0160, $014C, $0139, $0128, $0117, $0107, $00F9, $00EB, $00DD,
+    $00D1, $00C5, $00BA, $00B0, $00A6, $009D, $0094, $008C, $0084, $007C, $0075, $006F,
+    $0069, $0063, $005D, $0058, $0053, $004E, $004A, $0046, $0042, $003E, $003B, $0037,
+    $0034, $0031, $002F, $002C, $0029, $0027, $0025, $0023, $0021, $001F, $001D, $001C,
+    $001A, $0019, $0017, $0016, $0015, $0014, $0012, $0011, $0010, $000F, $000E, $000D);
 
 implementation
 
@@ -713,8 +724,9 @@ begin
     1: Result := PT3NoteTable_ST[Note];
     2: Result := PT3NoteTable_ASM[Note];
     3: Result := PT3NoteTable_REAL[Note];
+    4: Result := PT3NoteTable_NATURAL[Note];
   else
-    Result := PT3NoteTable_NATURAL[Note]
+    Result :=CustomNoteTable[Note]; //5
   end
 end;
 
@@ -734,8 +746,9 @@ begin
     1: NoteTable := PT3NoteTable_ST;
     2: NoteTable := PT3NoteTable_ASM;
     3: NoteTable := PT3NoteTable_REAL;
+    4: NoteTable := PT3NoteTable_NATURAL;
   else
-    NoteTable := PT3NoteTable_NATURAL;
+    NoteTable := CustomNoteTable; //5
   end;
   Result := -1;
   for i := 0 to Length(NoteTable)-1 do

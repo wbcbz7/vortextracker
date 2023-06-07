@@ -12591,9 +12591,9 @@ var
 
 
     // Check for incorrect tone table
-    if VTMP.Ton_Table > 4 then begin
+    if VTMP.Ton_Table > 5 then begin
       Result := False;
-      msg:='Invalid Ton table (>4) = '+inttostr(VTMP.Ton_Table);
+      msg:='Invalid Ton table (>5) = '+inttostr(VTMP.Ton_Table);
     end;
 
     if not Result then
@@ -15738,7 +15738,7 @@ end;
 
 procedure TMDIChild.UpDown4ChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Smallint; Direction: TUpDownDirection);
 begin
-  AllowChange := NewValue in [0..4];
+  AllowChange := NewValue in [0..5];
   if not AllowChange then Exit;
   if VTMP.Ton_Table = NewValue then Exit;
 

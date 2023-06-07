@@ -1,6 +1,6 @@
 object MDIChild: TMDIChild
-  Left = 826
-  Top = 63
+  Left = 918
+  Top = 102
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
@@ -887,7 +887,7 @@ object MDIChild: TMDIChild
           Height = 20
           Hint = 'Note table'
           Associate = Edit7
-          Max = 4
+          Max = 5
           Position = 2
           TabOrder = 1
           OnChangingEx = UpDown4ChangingEx

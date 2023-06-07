@@ -295,11 +295,20 @@ object Form1: TForm1
             'Want to change track frequency table?'#13#10'Check the track options t' +
             'ab.'
           Associate = DefaultTable
-          Max = 4
+          Max = 5
           ParentShowHint = False
           Position = 2
           ShowHint = True
           TabOrder = 1
+        end
+        object LoadCustomNoteTable: TBitBtn
+          Left = 72
+          Top = 54
+          Width = 89
+          Height = 22
+          Caption = 'Load custom (5)'
+          TabOrder = 2
+          OnClick = LoadCustomNoteTableClick
         end
       end
     end
@@ -2093,6 +2102,11 @@ object Form1: TForm1
       '(*.txt)|*.txt'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Left = 80
+    Top = 536
+  end
+  object OpenCustomNoteTableDialog1: TOpenDialog
+    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
+    Left = 132
     Top = 536
   end
 end

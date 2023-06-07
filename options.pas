@@ -222,6 +222,8 @@ type
     Label3: TLabel;
     CenterOff: TEdit;
     CenterOffInt: TUpDown;
+    LoadCustomNoteTable: TBitBtn;
+    OpenCustomNoteTableDialog1: TOpenDialog;
     procedure StopAndStart;
     procedure ChipSelClick(Sender: TObject);
     procedure IntSelClick(Sender: TObject);
@@ -396,6 +398,7 @@ type
     procedure DecPositionsSizeClick(Sender: TObject);
     procedure IncPositionsSizeClick(Sender: TObject);
     procedure CenterOffChange(Sender: TObject);
+    procedure LoadCustomNoteTableClick(Sender: TObject);
 
 
 
@@ -1874,5 +1877,49 @@ begin
   end;
 end;
 
+procedure TForm1.LoadCustomNoteTableClick(Sender: TObject);
+var
+  TxtFile: TextFile;
+  st,vl: string;
+  vals: TStrings;
+  i,j,rs:integer;
+  enough:boolean;
+begin
+  OpenCustomNoteTableDialog1.Title := 'Load note table';
+  OpenCustomNoteTableDialog1.DefaultExt := 'txt';
+  if OpenCustomNoteTableDialog1.Execute then
+  begin
+    OpenCustomNoteTableDialog1.InitialDir := ExtractFilePath(OpenCustomNoteTableDialog1.FileName);
+
+    AssignFile(TxtFile, OpenCustomNoteTableDialog1.FileName);
+    Reset(TxtFile);
+    j:=0;
+    enough:=false;
+    while not eof(TxtFile) do
+     begin
+      Readln(TxtFile, st);
+      if copy(St,0,3)=#$EF#$BB#$BF then St:=copy(St,4,length(St)-3);
+      St := Trim(St);
+      if Trim(St) = '' then Continue;
+      vals := Split(',',St);
+      for i := 0 to vals.count-1 do
+        begin
+         vl:=trim(vals[i]);
+         if trystrtoint(vl,rs) then
+          begin
+           CustomNoteTable[j]:=rs;
+           inc(j);
+           if j=96 then
+            begin
+             enough:=true;
+             break;
+            end;
+          end;
+        end;
+      if enough then break;
+     end;
+    CloseFile(TxtFile);
+  end;
+end;
 
 end.
