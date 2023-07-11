@@ -21412,10 +21412,32 @@ begin
     Write(f, fByte);
     for iReg := 0 to 13 do begin
       if (currRegs[iReg] <> SoundChip[Chip].AYRegisters.Index[iReg]) then begin
+        if ((SoundChip[Chip].AYRegisters.Index[8]=0) or
+          (SoundChip[Chip].AYRegisters.Index[7] and 1=1)) and
+          ((iReg=0) or (iReg=1)) then continue;
+        if ((SoundChip[Chip].AYRegisters.Index[9]=0) or
+          (SoundChip[Chip].AYRegisters.Index[7] and 2=2)) and
+          ((iReg=2) or (iReg=3)) then continue;
+        if ((SoundChip[Chip].AYRegisters.Index[10]=0) or
+          (SoundChip[Chip].AYRegisters.Index[7] and 4=4)) and
+          ((iReg=4) or (iReg=5)) then continue;
+        if (SoundChip[Chip].AYRegisters.Index[7] and 56=56) and
+          (iReg=6) then continue;
+        i:=0;
+        if ((SoundChip[Chip].AYRegisters.Index[8]=0) or
+          (SoundChip[Chip].AYRegisters.Index[7] and 8=8)) and
+          (iReg=6) then inc(i);
+        if ((SoundChip[Chip].AYRegisters.Index[9]=0) or
+          (SoundChip[Chip].AYRegisters.Index[7] and 16=16)) and
+          (iReg=6) then inc(i);
+        if ((SoundChip[Chip].AYRegisters.Index[10]=0) or
+          (SoundChip[Chip].AYRegisters.Index[7] and 32=32)) and
+          (iReg=6) then inc(i);
+        if (iReg=6) and (i=3) then continue;
         Write(f, iReg);
         Write(f, SoundChip[Chip].AYRegisters.Index[iReg]);
+        currRegs[iReg] := SoundChip[Chip].AYRegisters.Index[iReg];
       end;
-      currRegs[iReg] := SoundChip[Chip].AYRegisters.Index[iReg];
     end;
 
   end;
