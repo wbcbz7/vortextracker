@@ -861,6 +861,7 @@ var
 
   procedure ChangePositions(PlayWindow: TMDIChild);
   begin
+{
     if PlayWindow <> LeadWindow then begin
       if LeadWindow.PositionNumber > PlayWindow.VTMP.Positions.Length - 1 then
         Module_SetCurrentPosition(PlayWindow.VTMP.Positions.Length - 1)
@@ -868,7 +869,7 @@ var
         Module_SetCurrentPosition(LeadWindow.PositionNumber);
       Exit;
     end;
-
+}
     if PlVars[CurChip].CurrentPosition = ToPosition then begin
 
       if PlayAll then
@@ -885,7 +886,7 @@ var
     else
       Module_SetCurrentPosition(PlVars[CurChip].CurrentPosition+1);
 
-    LeadWindow.PositionNumber := PlVars[CurChip].CurrentPosition;
+//    LeadWindow.PositionNumber := PlVars[CurChip].CurrentPosition;
   end;
 
 
