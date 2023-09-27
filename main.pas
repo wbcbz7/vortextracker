@@ -455,8 +455,8 @@ type
     procedure RedoUpdate(Sender: TObject);
     procedure RedoExecute(Sender: TObject);
     procedure CheckCommandLine;
-    procedure SavePT3(CW: TMDIChild; FileName: string; AsText: boolean);
-    procedure SavePT3Backup(CW: TMDIChild; FileName: string; AsText: boolean);
+    function SavePT3(CW: TMDIChild; FileName: string; AsText: boolean): boolean;
+    function SavePT3Backup(CW: TMDIChild; FileName: string; AsText: boolean): boolean;
     function AllowSave(fn: string): boolean;
     procedure RedrawPlWindow(PW: TMDIChild; ps, pat, line: integer);
     procedure TransposeChannel(WorkWin: TMDIChild; Pat, Chn, i, Semitones: integer);
@@ -2953,21 +2953,22 @@ begin
 end;
 
 
-procedure TMainForm.SavePT3(CW: TMDIChild; FileName: string; AsText: boolean);
-const
-  ErrMsg = 'Cannot compile module due to 65536 size limit for PT3-modules. You can save it as text still.';
+function TMainForm.SavePT3(CW: TMDIChild; FileName: string; AsText: boolean):boolean;
 var
   PT3: TSpeccyModule;
   Size: integer;
   f: file;
 
+  errmsg:string;
 begin
+  Result := False;
   if not IsFileWritable(FileName) then Exit;
   if not AsText then
   begin
-    if not VTM2PT3(@PT3, CW.VTMP, Size) then
+    ErrMsg := VTM2PT3(@PT3, CW.VTMP, Size);
+    if ErrMsg<>'' then
     begin
-      Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+      Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
       exit;
     end;
     AssignFile(f, FileName);
@@ -2977,16 +2978,18 @@ begin
       if (CW.TSWindow[0] <> nil) and (CW.TSWindow[1] <> nil) then
       begin
         TSData3.Size0 := Size;
-        if not VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size) then
+        ErrMsg := VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size);
+        if ErrMsg<>'' then
         begin
-          Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+          Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
           exit;
         end;
         BlockWrite(f, PT3, Size);
         TSData3.Size1 := Size;
-        if not VTM2PT3(@PT3, CW.TSWindow[1].VTMP, Size) then
+        ErrMsg := VTM2PT3(@PT3, CW.TSWindow[1].VTMP, Size);
+        if ErrMsg<>'' then
         begin
-          Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+          Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
           exit;
         end;
         BlockWrite(f, PT3, Size);
@@ -2997,9 +3000,10 @@ begin
       if CW.TSWindow[0] <> nil then
       begin
         TSData2.Size1 := Size;
-        if not VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size) then
+        ErrMsg := VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size);
+        if ErrMsg<>'' then
         begin
-          Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+          Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
           exit;
         end;
         BlockWrite(f, PT3, Size);
@@ -3043,22 +3047,24 @@ begin
     CW.TSWindow[1].SetFileName(FileName);
   end;
   AddFileName(FileName);
+  Result := True
 end;
 
-procedure TMainForm.SavePT3Backup(CW: TMDIChild; FileName: string; AsText: boolean);
-const
-  ErrMsg = 'Cannot compile module due 65536 size limit for PT3-modules. You can save it in text yet.';
+function TMainForm.SavePT3Backup(CW: TMDIChild; FileName: string; AsText: boolean): boolean;
 var
   PT3: TSpeccyModule;
   Size: integer;
   f: file;
+  ErrMsg: String;
 begin
+  Result := False;
   if not IsFileWritable(FileName) then Exit;
   if not AsText then
   begin
-    if not VTM2PT3(@PT3, CW.VTMP, Size) then
+    ErrMsg := VTM2PT3(@PT3, CW.VTMP, Size);
+    if ErrMsg<>'' then
     begin
-      Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+      Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
       exit;
     end;
     AssignFile(f, FileName);
@@ -3068,16 +3074,18 @@ begin
       if (CW.TSWindow[0] <> nil) and (CW.TSWindow[1] <> nil) then
       begin
         TSData3.Size0 := Size;
-        if not VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size) then
+        ErrMsg := VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size);
+        if ErrMsg<>'' then
         begin
-          Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+          Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
           exit;
         end;
         BlockWrite(f, PT3, Size);
         TSData3.Size1 := Size;
-        if not VTM2PT3(@PT3, CW.TSWindow[1].VTMP, Size) then
+        ErrMsg := VTM2PT3(@PT3, CW.TSWindow[1].VTMP, Size);
+        if ErrMsg<>'' then
         begin
-          Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+          Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
           exit;
         end;
         BlockWrite(f, PT3, Size);
@@ -3088,9 +3096,10 @@ begin
       if CW.TSWindow[0] <> nil then
       begin
         TSData2.Size1 := Size;
-        if not VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size) then
+        ErrMsg := VTM2PT3(@PT3, CW.TSWindow[0].VTMP, Size);
+        if ErrMsg<>'' then
         begin
-          Application.MessageBox(ErrMsg, PAnsiChar(FileName));
+          Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(FileName));
           exit;
         end;
         BlockWrite(f, PT3, Size);
@@ -4545,6 +4554,7 @@ var
   p: wordptr;
   CurrentWindow: TMDIChild;
   s: string;
+  ErrMsg: string;
 begin
   if MDIChildCount = 0 then exit;
   CurrentWindow := TMDIChild(ActiveMDIChild);
@@ -4569,9 +4579,10 @@ begin
   i := FindResource(HInstance, 'SNDHPLAYER', 'SNDH');
   sndhplsz := SizeofResource(HInstance, i);
   p := LockResource(LoadResource(HInstance, i));
-  if not VTM2PT3(@PT3, CurrentWindow.VTMP, Size) then
+  ErrMsg := VTM2PT3(@PT3, CurrentWindow.VTMP, Size);
+  if ErrMsg<>'' then
   begin
-    Application.MessageBox('Cannot compile module due 65536 size limit for PT3-modules. You can save it in text yet.', PAnsiChar(SaveDialogSNDH.FileName));
+    Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(SaveDialogSNDH.FileName));
     exit
   end;
   AssignFile(f, SaveDialogSNDH.FileName);
@@ -4636,8 +4647,6 @@ begin
 end;
 
 procedure TMainForm.SaveforZXMenuClick(Sender: TObject);
-const
-  ErrMsg = 'Cannot compile module due 65536 size limit for PT3-modules. You can save it in text yet.';
 var
   s: string;
   PT3_1, PT3_2: TSpeccyModule;
@@ -4676,19 +4685,25 @@ var
   AYSongData: TSongData;
   AYPoints: TPoints;
   CurrentWindow: TMDIChild;
+  ErrMsg:String;
 begin
   if MDIChildCount = 0 then exit;
   CurrentWindow := TMDIChild(ActiveMDIChild);
-  if not VTM2PT3(@PT3_1, CurrentWindow.VTMP, ZXModSize1) then
+  ErrMsg:=VTM2PT3(@PT3_1, CurrentWindow.VTMP, ZXModSize1);
+  if ErrMsg<>'' then
   begin
-    Application.MessageBox(ErrMsg, PAnsiChar(CurrentWindow.Caption));
+    Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(CurrentWindow.Caption));
     exit;
   end;
   ZXModSize2 := 0;
-  if (CurrentWindow.TSWindow[0] <> nil) and not VTM2PT3(@PT3_2, CurrentWindow.TSWindow[0].VTMP, ZXModSize2) then
+  if (CurrentWindow.TSWindow[0] <> nil) then
   begin
-    Application.MessageBox(ErrMsg, PAnsiChar(CurrentWindow.TSWindow[0].Caption));
-    exit;
+    ErrMsg:=VTM2PT3(@PT3_2, CurrentWindow.TSWindow[0].VTMP, ZXModSize2);
+    if ErrMsg<>'' then
+    begin
+      Application.MessageBox(PAnsiChar(ErrMsg), PAnsiChar(CurrentWindow.TSWindow[0].Caption));
+      exit;
+    end;
   end;
   if CurrentWindow.TSWindow[0] = nil then
     i := FindResource(HInstance, 'ZXAYPLAYER', 'ZXAY')

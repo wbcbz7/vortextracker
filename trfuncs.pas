@@ -37,7 +37,7 @@ const
   MaxPosNum = 255; // max positions in track
 
   PreviewSamNum = 32;
-  PreviewOrnNum = 16;
+  PreviewOrnNum = 32;
 
   FeaturesLevel: integer = 1;
   //0 for PT 3.5 and older
@@ -121,7 +121,7 @@ type
   TChannelLine = packed record
     Note: shortint; {0..95} {-2 - Sound off (R--)} {-1 - No note (---)}
     Sample: byte; {0..31}
-    Ornament: byte; {0..15}
+    Ornament: byte; {0..31}
     Volume: shortint; {1-15 - vol, 0 - prev vol}
     Envelope: byte; {1-14 - R13, 15 - Envelope off, 0 - prev}
     Additional_Command: TAdditionalCommand;
@@ -141,7 +141,7 @@ type
   TLastNoteParams = array[0..2] of record
     Line: byte; {0..255}
     Sample: byte; {0..31}
-    Ornament: byte; {0..15}
+    Ornament: byte; {0..31}
     Volume: shortint; {1-15 - vol, 0 - prev vol}
     Envelope: byte; {1-14 - R13, 15 - Envelope off, 0 - prev}
   end;
@@ -156,7 +156,7 @@ type
     Initial_Delay: byte;
     Positions: TPosition;
     Samples: array[1..32] of PSample;       // 32 sample for samples browser preview (check PreviewSamNum const)
-    Ornaments: array[0..16] of POrnament;   // 16 ornament for ornaments browser preview (check PreviewOrnNum const)
+    Ornaments: array[0..32] of POrnament;   // 32 ornament for ornaments browser preview (check PreviewOrnNum const)
     Patterns: array[-1..MaxPatNum] of PPattern;
     FeaturesLevel: integer;
     VortexModule_Header: boolean;
@@ -480,7 +480,7 @@ procedure SaveSample(VTMP: PModule; n: integer);
 procedure SaveOrnament(VTM: PModule; n: integer);
 procedure VTM2TextFile(FileName: string; VTM: PModule; Apnd: boolean);
 function VTM2PT3(PT3: PSpeccyModule; VTM: PModule;
-  var Module_Size: Integer): boolean;
+  var Module_Size: Integer): String;
 {конвертер из VTM в PT3.
  PT3 - указатель, где будет сформирован PT3
  в Module_Size возвращается размер данного PT3}
@@ -1560,7 +1560,7 @@ var
       OnePat.Items[len].Channel[i].Sample := j;
       if not SGetNumber(Copy(s, 14 + i * 14, 1), 15, j) then exit;
       OnePat.Items[len].Channel[i].Envelope := j;
-      if not SGetNumber(Copy(s, 15 + i * 14, 1), 15, j) then exit;
+      if not SGetNumber(Copy(s, 15 + i * 14, 1), 31, j) then exit;
       OnePat.Items[len].Channel[i].Ornament := j;
       if not SGetNumber(Copy(s, 16 + i * 14, 1), 15, j) then exit;
       OnePat.Items[len].Channel[i].Volume := j;
@@ -1879,7 +1879,7 @@ var
           Result := 2;
           exit
         end;
-        if not (i in [1..15]) then
+        if not (i in [1..31]) then
         begin
           Result := 3;
           exit
@@ -2259,6 +2259,8 @@ begin
         VTM1.Ornaments[i].Items[j] := PT3.Index[PT3.PT3_OrnamentPointers[i] + 2 + j];
     end;
   end;
+  for i := 16 to 31 do
+      VTM1.Ornaments[i] := nil;
 
   for i := 1 to 31 do
   begin
@@ -2749,7 +2751,7 @@ begin
       Result := Result + sep + NoteToStr(PatPtr.Items[Line].Channel[Chan].Note) + ' ';
       Result := Result + SampToStr(PatPtr.Items[Line].Channel[Chan].Sample);
       Result := Result + Int1DToStr(PatPtr.Items[Line].Channel[Chan].Envelope);
-      Result := Result + Int1DToStr(PatPtr.Items[Line].Channel[Chan].Ornament);
+      Result := Result + SampToStr(PatPtr.Items[Line].Channel[Chan].Ornament);
       Result := Result + Int1DToStr(PatPtr.Items[Line].Channel[Chan].Volume) + ' ';
       Result := Result + Int1DToStr(PatPtr.Items[Line].Channel[Chan].Additional_Command.Number);
       Result := Result + Int1DToStr(PatPtr.Items[Line].Channel[Chan].Additional_Command.Delay);
@@ -2843,7 +2845,7 @@ begin
     Writeln(TxtFile);
     Writeln(TxtFile);
 
-    for i := 1 to 15 do
+    for i := 1 to 31 do
     begin
       Writeln(TxtFile, '[Ornament' + IntToStr(i) + ']');
       SaveOrnament(VTM, i);
@@ -2889,7 +2891,7 @@ begin
 end;
 
 function VTM2PT3(PT3: PSpeccyModule; VTM: PModule;
-  var Module_Size: Integer): boolean;
+  var Module_Size: Integer): string;
 const
   Pt3Id: array[Boolean, 0..29] of char =
   ('ProTracker 3.6 compilation of ',
@@ -2915,11 +2917,13 @@ var
     Skip,
     Envelope: array[0..2] of integer;
   Orn, Sam, Orn1, Sam1: boolean;
+  OrnNum: integer;
+  OrnBroken: boolean;
   PrevNoise, Dl: integer;
-  IsOrnament: array[0..15] of boolean;
+  IsOrnament: array[0..31] of boolean;
   IsSample: array[1..31] of boolean;
 begin
-  Result := False;
+  Result := 'Cannot compile module due to 65536 size limit for PT3-modules. You can save it as text still.';
 
   Move(Pt3Id[VTM.VortexModule_Header and (VTM.FeaturesLevel = 1), 0], PT3.PT3_Name, 30);
   if VTM.FeaturesLevel <> 1 then PT3.PT3_Name[13] := Char($35 + VTM.FeaturesLevel);
@@ -2968,7 +2972,7 @@ begin
   for i := 0 to PT3.PT3_NumberOfPositions - 1 do
     PT3.Index[$C9 + i] := VTMPat2PT3Pat[VTM.Positions.Value[i]] * 3;
 
-  for i := 0 to 15 do IsOrnament[i] := False;
+  for i := 0 to 31 do IsOrnament[i] := False;
   for i := 1 to 31 do IsSample[i] := False;
 
   StrNum := 0;
@@ -2986,6 +2990,7 @@ begin
   TnDl[2] := 0; //
 //BUG in AlCo's pt3 player
 
+  OrnBroken := False;
   for i1 := 0 to PT3.PT3_NumberOfPositions - 1 do
   begin
     i := VTM.Positions.Value[i1];
@@ -3008,13 +3013,14 @@ begin
           j := 0;
           while j < VTM.Patterns[i].Length do
           begin
+            OrnNum := VTM.Patterns[i].Items[j].Channel[k].Ornament;
 
             Orn := ((VTM.Patterns[i].Items[j].Channel[k].Envelope <> 0) or
-              (VTM.Patterns[i].Items[j].Channel[k].Ornament <> 0) {new standard in pt3.69}) and
-              ((VTM.Patterns[i].Items[j].Channel[k].Ornament <> Ornament[k]) or
+              (OrnNum <> 0) {new standard in pt3.69}) and
+              ((OrnNum <> Ornament[k]) or
               ((Ornament[k] <> 0) and (VTM.Patterns[i].Items[j].Channel[k].Note = -1)));
             if Orn then
-              IsOrnament[VTM.Patterns[i].Items[j].Channel[k].Ornament] := True;
+              IsOrnament[OrnNum] := True;
             Sam := (VTM.Patterns[i].Items[j].Channel[k].Note <> -1) and
               (VTM.Patterns[i].Items[j].Channel[k].Sample <> 0) and
               (VTM.Patterns[i].Items[j].Channel[k].Sample <> Sample[k]);
@@ -3024,6 +3030,11 @@ begin
               Sample[k] := VTM.Patterns[i].Items[j].Channel[k].Sample
             end;
 
+            if OrnNum > 15 then
+            begin
+              OrnNum := 15;
+              OrnBroken := True;
+            end;
             Orn1 := Orn;
             Sam1 := Sam;
             if Sam and Orn and (VTM.Patterns[i].Items[j].Channel[k].Envelope <> 0) then //new standard in pt3.69then
@@ -3035,7 +3046,7 @@ begin
                   Sam1 := False;
                   Orn1 := False;
                   PatStrs[StrNum] := PatStrs[StrNum] +
-                    char($F0 + VTM.Patterns[i].Items[j].Channel[k].Ornament) +
+                    char($F0 + OrnNum) +
                     char(VTM.Patterns[i].Items[j].Channel[k].Sample * 2)
                 end
               end
@@ -3049,7 +3060,7 @@ begin
                   char(VTM.Patterns[i].Items[j].Envelope) +
                   char(VTM.Patterns[i].Items[j].Channel[k].Sample * 2);
                 PatStrs[StrNum] := PatStrs[StrNum] +
-                  char($40 + VTM.Patterns[i].Items[j].Channel[k].Ornament)
+                  char($40 + OrnNum)
               end
             end;
             if Sam1 then
@@ -3058,7 +3069,7 @@ begin
             if Orn1 then
             begin
               PatStrs[StrNum] := PatStrs[StrNum] +
-                char($40 + VTM.Patterns[i].Items[j].Channel[k].Ornament);
+                char($40 + OrnNum);
               if VTM.Patterns[i].Items[j].Channel[k].Envelope in [1..14] then
                 PatStrs[StrNum] := PatStrs[StrNum] + char($B1 +
                   VTM.Patterns[i].Items[j].Channel[k].Envelope) +
@@ -3080,7 +3091,7 @@ begin
             end;
 
             if Orn then
-              Ornament[k] := VTM.Patterns[i].Items[j].Channel[k].Ornament;
+              Ornament[k] := OrnNum;
 
             if VTM.Patterns[i].Items[j].Channel[k].Envelope <> 0 then
               Envelope[k] := Ord(VTM.Patterns[i].Items[j].Channel[k].Envelope < 15);
@@ -3183,9 +3194,9 @@ begin
               (VTM.Patterns[i].Items[j].Channel[k].Envelope in [1..14]) or
               ((VTM.Patterns[i].Items[j].Channel[k].Envelope = 15) and
               ((Envelope[k] <> 0) or
-              ((VTM.Patterns[i].Items[j].Channel[k].Ornament = 0) and
+              ((OrnNum = 0) and
               (Ornament[k] <> 0)))) or
-              (VTM.Patterns[i].Items[j].Channel[k].Ornament <> 0) or //new standard in pt3.69
+              (OrnNum <> 0) or //new standard in pt3.69
               ((k = 1) and (VTM.Patterns[i].Items[d].Noise <>
               VTM.Patterns[i].Items[j].Noise));
             if Skip[k] <> SkipPrev[k] then
@@ -3401,7 +3412,12 @@ begin
 
   Module_Size := PatNum;
 
-  Result := True
+  if OrnBroken then
+  begin
+    Result := 'This VTII module has ornaments > 15, incompatible with PT3. You can save it as text still.';
+    exit;
+  end;
+  Result := '';
 
 end;
 
@@ -3545,9 +3561,9 @@ begin
   for i := 0 to 255 do
     VTM.Positions.Value[i] := 0;
   VTM.Ornaments[0] := nil;
-  for i := 1 to 15 do
+  for i := 1 to 31 do
   begin
-    if PT2.PT2_OrnamentPointers[i] = 0 then
+    if (i >= 16) or (PT2.PT2_OrnamentPointers[i] = 0) then
       VTM.Ornaments[i] := nil
     else
     begin
@@ -3759,7 +3775,7 @@ begin
   VTM.Ton_Table := 1;
   VTM.Initial_Delay := STC.ST_Delay;
   VTM.Positions.Loop := 0;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 15 do
   begin
@@ -4119,7 +4135,7 @@ begin
   VTM.Ton_Table := 1;
   VTM.Initial_Delay := STP.STP_Delay;
   VTM.Positions.Loop := STP.Index[STP.STP_PositionsPointer + 1];
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 15 do
     IsOrnament[i] := False;
@@ -4573,7 +4589,7 @@ begin
   VTM.Author := '';
   VTM.Ton_Table := 1;
   VTM.Initial_Delay := 0;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 15 do
     Orn2Sam[i] := 0;
@@ -5113,7 +5129,7 @@ begin
   VTM.Positions.Loop := ASC.ASC1_LoopingPosition;
   for i := 0 to 255 do
     VTM.Positions.Value[i] := 0;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 31 do
     VTM.Samples[i] := nil;
@@ -5642,7 +5658,7 @@ begin
   VTM.Positions.Loop := 0;
   for i := 0 to 255 do
     VTM.Positions.Value[i] := 0;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 31 do
     VTM.Samples[i] := nil;
@@ -6302,7 +6318,7 @@ begin
   VTM.Ton_Table := 1;
   VTM.Initial_Delay := FLS.Index[FLS.FLS_PositionsPointer];
   VTM.Positions.Loop := 0;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 15 do
   begin
@@ -6554,7 +6570,7 @@ begin
   VTM.Ton_Table := 1;
   VTM.Initial_Delay := PT1.PT1_Delay;
   VTM.Positions.Loop := PT1.PT1_LoopPosition;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 15 do
   begin
@@ -6767,7 +6783,7 @@ begin
   VTM.Ton_Table := 1;
   VTM.Initial_Delay := GTR.GTR_Delay;
   VTM.Positions.Loop := GTR.GTR_LoopPosition;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 15 do
     IsOrnament[i] := False;
@@ -7055,7 +7071,7 @@ begin
   VTM.Positions.Loop := FTC.FTC_Loop_Position;
   for i := 0 to 255 do
     VTM.Positions.Value[i] := 0;
-  for i := 0 to 15 do
+  for i := 0 to 31 do
     VTM.Ornaments[i] := nil;
   for i := 1 to 31 do
     VTM.Samples[i] := nil;

@@ -448,7 +448,8 @@ object AboutBox: TAboutBox
           ''
           '(c) Ivan Pirog (Flexx/Enhancers) 2017-2021'
           'Version 1.5 - 2.6'
-          'TS3 test version  by Dexus (Volutar)'
+          '(c) Dexus (Volutar) 2022-2023'
+          'Version 2.6 ts3'
           ''
           'Date of build: %datetime%')
         ParentFont = False
@@ -472,7 +473,7 @@ object AboutBox: TAboutBox
     end
     object line2: TGroupBox
       Left = 8
-      Top = 360
+      Top = 370
       Width = 265
       Height = 1
       BiDiMode = bdLeftToRight

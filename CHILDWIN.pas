@@ -4697,7 +4697,15 @@ begin
         end;
         X := (num + Shift) * CelW;
 
-        Print(X, Y, IntToHex(ShownPattern.Items[Line].Channel[j].Ornament, 1));
+        // Get sample char
+        num := ShownPattern.Items[Line].Channel[j].Ornament;
+        if num < 16 then
+          s := IntToHex(num, 1)
+        else
+          s := Char(num + Ord('A') - 10);
+
+        Print(X, Y, s);
+//        Print(X, Y, IntToHex(ShownPattern.Items[Line].Channel[j].Ornament, 1));
       end;
 
 
@@ -4959,7 +4967,7 @@ begin
     s := Int4DToStr(Envelope) + '|' + Int2DToStr(Noise) + '|';
     with Channel[0] do
     begin
-      s := s + NoteToStr(Note) + ' ' + SampToStr(Sample) + Int1DToStr(Envelope) + Int1DToStr(Ornament) + Int1DToStr(Volume) + ' ' + Int1DToStr(Additional_Command.Number) + Int1DToStr(Additional_Command.Delay) + Int2DToStr(Additional_Command.Parameter);
+      s := s + NoteToStr(Note) + ' ' + SampToStr(Sample) + Int1DToStr(Envelope) + SampToStr(Ornament) + Int1DToStr(Volume) + ' ' + Int1DToStr(Additional_Command.Number) + Int1DToStr(Additional_Command.Delay) + Int2DToStr(Additional_Command.Parameter);
     end
   end;
   TextOut(DC1, 0, 0, PChar(s), Length(s));
@@ -5952,6 +5960,7 @@ const
   EnvelopePoses =[0..3];
   SamTabs: array[0..2] of Integer = (12, 26, 40);
   SamPoses =[12, 26, 40];
+  OrnPoses =[14, 28, 42];
 
 function ColTab(i: Integer): Integer;
 var
@@ -6013,7 +6022,7 @@ begin
       s := 'Envelope type (hex 1-E) or envelope off (F).' + Chr(13) + '0th ornament can be set only with 1-F.';
 
     14, 28, 42:
-      s := 'Ornament (hex 0-F). 0th ornament can be set' + Chr(13) + 'only with envelope type or off (1-F).' +Chr(13)+Chr(13)+ 'Ctrl+Enter, Ctrl+Click -- edit ornament.';
+      s := 'Ornament (0-9, A-V). 0th ornament can be set' + Chr(13) + 'only with envelope type or off (1-F).' +Chr(13)+Chr(13)+ 'Ctrl+Enter, Ctrl+Click -- edit ornament.';
 
     15, 29, 43:
       s := 'Volume (hex 1-F).' + Chr(13) + 'Use R-- instead of volume 0.';
@@ -7349,7 +7358,8 @@ var
   begin
     if Tracks.CursorX in SamPoses then
       i := 31
-
+    else if Tracks.CursorX in OrnPoses then
+      i := 31
     else if Tracks.CursorX = 5 then         // First number of noise
       if DecBaseNoiseOn then
         i := 3  // Dec noise
@@ -8570,6 +8580,8 @@ procedure TTestLine.TestLineKeyDown(Sender: TObject; var Key: Word; Shift: TShif
       i := 1
     else if CursorX = 12 then
       i := 31
+    else if CursorX = 14 then
+      i := 31
     else
       i := 15;
     if Key in [Ord('0')..Ord('9')] then
@@ -8729,7 +8741,7 @@ begin
         // Change Ornament up
         else if CursorX = 14 then with TMDIChild(ParWind).VTMP.Patterns[-1].Items[Ord(TestSample)].Channel[0] do
         begin
-          if (Ornament+1 <= 15) then
+          if (Ornament+1 <= 31) then
             Inc(Ornament);
         end
 
@@ -11109,7 +11121,7 @@ begin
       VK_ADD:
         begin
         //next ornament
-          if StrToInt(OrnamentNumEdit.Text) in [1..14] then
+          if StrToInt(OrnamentNumEdit.Text) in [1..30] then
           begin
             ChangeOrnament(StrToInt(OrnamentNumEdit.Text) + 1);
             OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) + 1));
@@ -11118,7 +11130,7 @@ begin
       VK_SUBTRACT:
         begin
         //previous sample
-          if StrToInt(OrnamentNumEdit.Text) in [2..15] then
+          if StrToInt(OrnamentNumEdit.Text) in [2..31] then
           begin
             ChangeSample(StrToInt(OrnamentNumEdit.Text) - 1, True);
             OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) - 1));
@@ -12739,7 +12751,7 @@ begin
         for Tm := VTMP.Samples[i].Length to MaxSamLen - 1 do
           VTMP.Samples[i].Items[Tm] := EmptySampleTick;
       end;
-    for i := 1 to 15 do
+    for i := 1 to 31 do
       if VTMP.Ornaments[i] <> nil then
         for Tm := VTMP.Ornaments[i].Length to MaxOrnLen - 1 do
           VTMP.Ornaments[i].Items[Tm] := 0;
@@ -16927,7 +16939,7 @@ end; }
 
 procedure TMDIChild.OrnamentNumUpDownChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Smallint; Direction: TUpDownDirection);
 begin
-  AllowChange := NewValue in [1..15];
+  AllowChange := NewValue in [1..31];
   if AllowChange then
     ChangeOrnament(NewValue)
 end;
@@ -17483,7 +17495,7 @@ end;
 
 procedure TMDIChild.OrnamentCopyToUpDownChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Smallint; Direction: TUpDownDirection);
 begin
-  AllowChange := NewValue in [1..15]
+  AllowChange := NewValue in [1..31]
 end;
 
 
@@ -18871,13 +18883,24 @@ begin
           exit;
         nums[l, 7 + k * 9] := i
       end;
-      for j := 0 to 2 do
-        if s[14 + k * 14 + j] <> #32 then
-        begin
-          if not SGetNumber(s[14 + k * 14 + j], 15, i) then
-            exit;
-          nums[l, 8 + k * 9 + j] := i
-        end;
+      if s[14 + k * 14] <> #32 then
+      begin
+        if not SGetNumber(s[14 + k * 14], 15, i) then
+          exit;
+        nums[l, 8 + k * 9] := i
+      end;
+      if s[15 + k * 14] <> #32 then
+      begin
+        if not SGetNumber(s[15 + k * 14], 31, i) then
+          exit;
+        nums[l, 9 + k * 9] := i
+      end;
+      if s[16 + k * 14] <> #32 then
+      begin
+        if not SGetNumber(s[16 + k * 14], 15, i) then
+          exit;
+        nums[l, 10 + k * 9] := i
+      end;
       for j := 0 to 3 do
         if s[18 + k * 14 + j] <> #32 then
         begin
@@ -18956,6 +18979,8 @@ begin
           else if (m = 6) and DecBaseNoiseOn then
             sz := 9
           else if m in SamPoses then
+            sz := 31
+          else if m in OrnPoses then
             sz := 31
           //else if (m in [5, 6]) and DecBaseLinesOn then // fix for dec noise
           //  sz := 31
@@ -19996,9 +20021,11 @@ begin
         SaveDialog1.FileName := ChangeFileExt(SaveDialog1.FileName, '.pt3');
 
       SaveDialog1.InitialDir := SaveDialog1.FileName;
-      SetFileName(SaveDialog1.FileName);
-      SavePT3(Self, SaveDialog1.FileName, SaveDialog1.FilterIndex = 1);
-      Result := True;
+      if SavePT3(Self, SaveDialog1.FileName, SaveDialog1.FilterIndex = 1) then
+      begin
+        SetFileName(SaveDialog1.FileName);
+        Result := True;
+      end
     end
 
 
@@ -20023,9 +20050,9 @@ begin
       s := ChangeFileExt(WinFileName, '.vt2')
     else
       s := ChangeFileExt(WinFileName, '.pt3');
-    if s <> WinFileName then
-      SetFileName(s);
-    MainForm.SavePT3(Self, WinFileName, SavedAsText);
+    if MainForm.SavePT3(Self, WinFileName, SavedAsText) then
+      if s <> WinFileName then
+        SetFileName(s);
   end;
 end;
 
@@ -20048,8 +20075,8 @@ begin
   s := ExtractFileDir(FilePath) + '\' + ExtractFileNameEX(FilePath) +
        ' ver ' + Format('%.3d', [BackupVersionCounter]) + '.vt2';
 
-  MainForm.SavePT3Backup(Self, s, True);
-  BackupSongChanged := False;
+  if MainForm.SavePT3Backup(Self, s, True) then
+    BackupSongChanged := False;
 end;
 
 procedure TMDIChild.FormActivate(Sender: TObject);

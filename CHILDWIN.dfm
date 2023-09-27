@@ -1587,7 +1587,7 @@ object MDIChild: TMDIChild
           Hint = 'Current ornament'
           Associate = OrnamentNumEdit
           Min = 1
-          Max = 15
+          Max = 31
           ParentShowHint = False
           Position = 1
           ShowHint = True
