@@ -630,6 +630,8 @@ type
     Panel16: TPanel;
     Panel17: TPanel;
     ButtonDisjoin: TButton;
+    SampleScrollBox: TScrollBox;
+    StringGrid2: TStringGrid;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -742,6 +744,7 @@ type
     procedure GoToTime(Time: Integer);
     procedure SinchronizeModules;
     procedure SetStringGrid1Scroll(ACol: Integer);
+    procedure SetStringGrid2Scroll(ACol: Integer);
     procedure SelectPosition(Pos: Integer);
     procedure SelectPosition2(ps: Integer);
     procedure SelectPositions(SelGrid: TGridRect);
@@ -816,7 +819,7 @@ type
     procedure SampleNumUpDownChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Smallint; Direction: TUpDownDirection);
     procedure SampleLenEditExit(Sender: TObject);
     procedure SampleLenUpDownChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Smallint; Direction: TUpDownDirection);
-    procedure ChangeSample(n: Integer; UpdateUpDown: Boolean);
+    procedure ChangeSample(n: Integer; UpdateUpDown: Boolean; UpdateGrid: Boolean);
     procedure ClearShownOrnament;
     procedure ClearShownSample;
     procedure ChangeOrnament(n: Integer);
@@ -1017,6 +1020,14 @@ type
     procedure FileBrowserSetFavorite(Sender: TObject);
     procedure FileBrowserSaveInstrument(Sender: TObject);
     procedure ButtonDisjoinClick(Sender: TObject);
+    procedure StringGrid2SelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid2MouseWheelDown(Sender: TObject;
+      Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid2MouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
 
 
 
@@ -2427,6 +2438,7 @@ procedure TMDIChild.FormCreate(Sender: TObject);
 var
   i: Integer;
   sel: TGridRect;
+  cs: char;
 
 begin
 
@@ -2523,6 +2535,13 @@ begin
   AutoEnv1 := 1;
   AutoStep := False;
 
+  for i:=1 to 31 do
+  begin
+    cs:=char(ord('0')+i);
+    if i>=10 then cs := char(ord(cs)+ ord('A')-ord('9')-1);
+    StringGrid2.Cells[i-1,0]:=cs;
+  end;
+
   CreateTracks;
   CreateTestLines;
   CreateSamples;
@@ -2604,6 +2623,7 @@ begin
   SampleLoopEdit.DoubleBuffered := True;
   SampleLoopUpDown.DoubleBuffered := True;
   SampleNumUpDown.DoubleBuffered := True;
+  SampleScrollBox.DoubleBuffered := True;
   LoadSampleBtn.DoubleBuffered := True;
   SaveSampleBtn.DoubleBuffered := True;
   HideSamBrowserBtn.DoubleBuffered := True;
@@ -2967,6 +2987,7 @@ begin
 
     // Patterns positions
     PositionsScrollBox.Width := MainWidth - 10;
+    SampleScrollBox.Width := MainWidth - 10;
     InitStringGridMetrix;
 
     // Channels box
@@ -8727,7 +8748,7 @@ begin
         begin
           if (Sample+1 <= 31) then
             if TestSample then
-              TMDIChild(ParWind).ChangeSample(Sample+1, True)
+              TMDIChild(ParWind).ChangeSample(Sample+1, True, True)
             else
               Inc(Sample);
         end
@@ -8812,7 +8833,7 @@ begin
         begin
           if (Sample-1 > 0) then
             if TestSample then
-              TMDIChild(ParWind).ChangeSample(Sample-1, True)
+              TMDIChild(ParWind).ChangeSample(Sample-1, True, True)
             else
               Dec(Sample);
         end
@@ -10053,7 +10074,7 @@ begin
         //next sample
           if SampleNumUpDown.Position in [1..30] then
           begin
-            ChangeSample(SampleNumUpDown.Position + 1, True);
+            ChangeSample(SampleNumUpDown.Position + 1, True, True);
           end;
         end;
 
@@ -10063,7 +10084,7 @@ begin
         //previous sample
           if SampleNumUpDown.Position in [2..31] then
           begin
-            ChangeSample(SampleNumUpDown.Position - 1, True);
+            ChangeSample(SampleNumUpDown.Position - 1, True, True);
           end;
         end;
 
@@ -11133,7 +11154,7 @@ begin
         //previous sample
           if StrToInt(OrnamentNumEdit.Text) in [2..31] then
           begin
-            ChangeSample(StrToInt(OrnamentNumEdit.Text) - 1, True);
+            ChangeSample(StrToInt(OrnamentNumEdit.Text) - 1, True, True);
             OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) - 1));
           end;
         end;
@@ -13158,6 +13179,13 @@ end;
 
 procedure TMDIChild.SamplesMouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
+
+  if IsMouseOverControl(SampleScrollBox) then
+  begin
+    FormMouseWheel(Sender,Shift,-1,MousePos,Handled);
+    Exit;
+  end;
+
   Samples.InputSNumber := 0;
   ValidateSample2(SamNum);
   Handled := True;
@@ -13216,6 +13244,13 @@ end;
 
 procedure TMDIChild.SamplesMouseWheelUp(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
+
+  if IsMouseOverControl(SampleScrollBox) then
+  begin
+    FormMouseWheel(Sender,Shift,1,MousePos,Handled);
+    Exit;
+  end;
+
   Samples.InputSNumber := 0;
   Handled := True;
 
@@ -13901,6 +13936,35 @@ begin
     TSWindow[1].IsSinchronizing := False;
   end;
 
+end;
+
+procedure TMDIChild.SetStringGrid2Scroll(ACol: Integer);
+var
+  ScrollPos, ColPos, VisibleArea, SelRows, VisibleColCount: Integer;
+  Shift: Boolean;
+
+begin
+  VisibleColCount := SampleScrollBox.ClientWidth div (StringGrid2.DefaultColWidth+1);
+  SelRows := StringGrid2.Selection.Right - StringGrid2.Selection.Left + 1;
+
+  Shift := False;
+  if ACol = -1 then begin
+    if SelRows = 1 then
+      ACol := StringGrid2.Selection.Left + 1
+    else begin
+      ACol := StringGrid2.Selection.Left - (VisibleColCount div 2) + (SelRows div 2);
+      Shift := True;
+    end;
+  end;
+
+  ScrollPos := SampleScrollBox.HorzScrollBar.Position;
+  ColPos := ACol * (StringGrid2.DefaultColWidth+1);
+  VisibleArea := ScrollPos + SampleScrollBox.ClientWidth;
+
+  if (ColPos < ScrollPos) or (ColPos >= VisibleArea) or Shift then
+    ScrollPos := ColPos;
+
+  SampleScrollBox.HorzScrollBar.Position := ScrollPos;
 end;
 
 
@@ -14921,13 +14985,18 @@ begin
   StringGrid1.ColCount := ColCount;
   for i := 0 to StringGrid1.ColCount-1 do
     if StringGrid1.Cells[i, 0] = '' then
-      StringGrid1.Cells[i, 0] := '...';    
+      StringGrid1.Cells[i, 0] := '...';
 
 
   StringGrid1.Width := (StringGrid1.DefaultColWidth+1) * ColCount - 1;
   PositionsScrollBox.AutoScroll := False;
   PositionsScrollBox.HorzScrollBar.Range := StringGrid1.Width+1;
   PositionsScrollBox.Height := StringGrid1.DefaultRowHeight + HScrollbarSize + 5;
+
+  StringGrid2.Width := (StringGrid2.DefaultColWidth+1) * StringGrid2.ColCount -1;
+  SampleScrollBox.AutoScroll := False;
+  SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-16;
+  SampleScrollBox.Height := StringGrid2.DefaultRowHeight + HScrollbarSize + 5;
 
   SelectObject(DC, p);
   ReleaseDC(Handle, DC);
@@ -16297,7 +16366,7 @@ end;
 procedure TMDIChild.SampleNumEditChange(Sender: TObject);
 begin
   if SamNum <> SampleNumUpDown.Position then
-    ChangeSample(SampleNumUpDown.Position, True)
+    ChangeSample(SampleNumUpDown.Position, True, True)
 end;
 
 procedure TMDIChild.SampleNumEditExit(Sender: TObject);
@@ -16310,7 +16379,7 @@ begin
   AllowChange := NewValue in [1..31];
   if AllowChange then begin
     SamplesSelectionOff;
-    ChangeSample(NewValue, False);
+    ChangeSample(NewValue, False, True);
   end;
 end;
 
@@ -16365,7 +16434,7 @@ begin
   end;
 end;
 
-procedure TMDIChild.ChangeSample(n: Integer; UpdateUpDown: Boolean);
+procedure TMDIChild.ChangeSample(n: Integer; UpdateUpDown: Boolean; UpdateGrid: Boolean);
 var
   l: Integer;
 begin
@@ -16387,7 +16456,10 @@ begin
 
     if UpdateUpDown then
       SampleNumUpDown.Position := n;
-      
+
+    if UpdateGrid then
+      StringGrid2.Col:=n-1;
+
     if VTMP.Samples[SamNum] = nil then
       l := 1
     else
@@ -17635,7 +17707,7 @@ begin
     Samples.ShownFrom := 0;
     Samples.CursorX := 0;
     Samples.CursorY := 0;
-    ChangeSample(SamNum, False);
+    ChangeSample(SamNum, False, True);
 
     SampleLenUpDown.Position  := VTMP.Samples[SamNum].Length;
     SampleLoopUpDown.Position := VTMP.Samples[SamNum].Loop;
@@ -19448,7 +19520,7 @@ var
     with ChangeList[index] do
     begin
       if SampleNumUpDown.Position = ComParams.CurrentSample then
-        ChangeSample(ComParams.CurrentSample, False)
+        ChangeSample(ComParams.CurrentSample, False, True)
       else
         SampleNumUpDown.Position := ComParams.CurrentSample;
     end;
@@ -22214,7 +22286,6 @@ procedure TMDIChild.StringGrid1MouseWheelDown(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 var
   NewPos: Integer;
-  sel: TGridRect;
 begin
 
   if IsMouseOverControl(Tracks) then
@@ -22232,16 +22303,14 @@ begin
 
   // If playing current pattern only
   if IsPlaying and (PlayMode = PMPlayPattern) then Exit;
-  
+
   NewPos := PositionNumber + 1;
   if NewPos = VTMP.Positions.Length then Exit;
-  
+
   SetStringGrid1Scroll(NewPos);
   SelectPosition(NewPos);
 
-  sel.Left := NewPos; sel.Right := NewPos;
-  sel.Top := 0; sel.Bottom := 0;
-  StringGrid1.Selection := sel;
+  StringGrid1.Col:= NewPos;
 
 end;
 
@@ -22249,7 +22318,6 @@ procedure TMDIChild.StringGrid1MouseWheelUp(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 var
   NewPos: Integer;
-  sel: TGridRect;
 begin
 
   if IsMouseOverControl(Tracks) then
@@ -22274,9 +22342,7 @@ begin
   SetStringGrid1Scroll(NewPos);
   SelectPosition(NewPos);
 
-  sel.Left := NewPos; sel.Right := NewPos;
-  sel.Top := 0; sel.Bottom := 0;
-  StringGrid1.Selection := sel;
+  StringGrid1.Col:= NewPos;
 end;
 
 procedure TMDIChild.SpeedBpmEditEnter(Sender: TObject);
@@ -22353,5 +22419,56 @@ begin
 
 end;
 
-end.
+procedure TMDIChild.StringGrid2SelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var
+  ScrollPos: Integer;
+begin
+  if (ACol < 0) or (ACol >= 31) then CanSelect := False
+  else
+  begin
+    ChangeSample(ACol+1, True, False);
+    SetStringGrid2Scroll(ACol);
+  end
 
+end;
+
+procedure TMDIChild.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  i:integer;
+begin
+  if IsMouseOverControl(SampleScrollBox) then
+  begin
+    if WheelDelta>0 then
+      for i:=0 to 0 do SampleScrollBox.Perform(WM_HSCROLL,0,0)
+    else
+    if WheelDelta<0 then
+      for i:=0 to 0 do SampleScrollBox.Perform(WM_HSCROLL,1,0);
+    Handled:=true;
+  end;
+  if IsMouseOverControl(Samples) then
+  begin
+    if WheelDelta>0 then
+      for i:=0 to 0 do SamplesMouseWheelUp(Sender,Shift,MousePos,Handled)
+    else
+    if WheelDelta<0 then
+      for i:=0 to 0 do SamplesMouseWheelDown(Sender,Shift,MousePos,Handled);
+    Handled:=true;
+  end;
+
+end;
+
+procedure TMDIChild.StringGrid2MouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  FormMouseWheel(Sender,Shift,-1,MousePos,Handled)
+end;
+
+procedure TMDIChild.StringGrid2MouseWheelUp(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  FormMouseWheel(Sender,Shift,1,MousePos,Handled)
+end;
+
+end.

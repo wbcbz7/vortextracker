@@ -23,6 +23,7 @@ object MDIChild: TMDIChild
   OnDblClick = FormDblClick
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  OnMouseWheel = FormMouseWheel
   OnPaint = FormPaint
   OnResize = FormResize
   PixelsPerInch = 96
@@ -40,7 +41,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = PatternsSheet
+    ActivePage = SamplesSheet
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -795,7 +796,7 @@ object MDIChild: TMDIChild
       object PositionsScrollBox: TScrollBox
         Left = 0
         Top = 85
-        Width = 1129
+        Width = 500
         Height = 36
         HorzScrollBar.Smooth = True
         HorzScrollBar.Style = ssFlat
@@ -1039,9 +1040,9 @@ object MDIChild: TMDIChild
       end
       object SampleBrowserBox: TGroupBox
         Left = 343
-        Top = 232
+        Top = 272
         Width = 183
-        Height = 273
+        Height = 233
         Ctl3D = True
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -1084,7 +1085,7 @@ object MDIChild: TMDIChild
       end
       object SampleBox: TGroupBox
         Left = 343
-        Top = 43
+        Top = 79
         Width = 183
         Height = 195
         TabOrder = 3
@@ -1266,7 +1267,7 @@ object MDIChild: TMDIChild
       end
       object NextPrevSampleBox: TGroupBox
         Left = 343
-        Top = -2
+        Top = 34
         Width = 183
         Height = 51
         TabOrder = 1
@@ -1293,14 +1294,14 @@ object MDIChild: TMDIChild
       end
       object SampleEditBox: TGroupBox
         Left = 0
-        Top = 42
+        Top = 80
         Width = 345
-        Height = 431
+        Height = 385
         TabOrder = 2
       end
       object SamplesTestFieldBox: TGroupBox
         Left = 0
-        Top = -2
+        Top = 34
         Width = 345
         Height = 51
         TabOrder = 0
@@ -1335,13 +1336,58 @@ object MDIChild: TMDIChild
           OnClick = LoadSampleBtnClick
         end
       end
+      object SampleScrollBox: TScrollBox
+        Left = 0
+        Top = 0
+        Width = 1129
+        Height = 41
+        HorzScrollBar.Smooth = True
+        HorzScrollBar.Style = ssFlat
+        HorzScrollBar.Tracking = True
+        VertScrollBar.Range = 120
+        VertScrollBar.Visible = False
+        AutoScroll = False
+        Color = clScrollBar
+        Ctl3D = True
+        ParentColor = False
+        ParentCtl3D = False
+        TabOrder = 6
+        object StringGrid2: TStringGrid
+          Left = 0
+          Top = 0
+          Width = 992
+          Height = 33
+          Cursor = crArrow
+          Hint = 'Sample list'
+          BorderStyle = bsNone
+          Color = clWhite
+          ColCount = 31
+          DefaultColWidth = 22
+          DefaultRowHeight = 21
+          FixedCols = 0
+          RowCount = 1
+          FixedRows = 0
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -15
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = [fsBold]
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColMoving, goThumbTracking]
+          ParentFont = False
+          ScrollBars = ssNone
+          TabOrder = 0
+          OnMouseWheelDown = StringGrid2MouseWheelDown
+          OnMouseWheelUp = StringGrid2MouseWheelUp
+          OnSelectCell = StringGrid2SelectCell
+        end
+      end
     end
     object OrnamentsSheet: TTabSheet
       Caption = 'Ornaments'
       ImageIndex = 30
       object SpeedButton21: TSpeedButton
         Left = 464
-        Top = 424
+        Top = 440
         Width = 41
         Height = 22
         Hint = 'External ornament generator plug-in'
@@ -1428,7 +1474,7 @@ object MDIChild: TMDIChild
       end
       object OrnamentsBrowserBox: TGroupBox
         Left = 367
-        Top = 212
+        Top = 244
         Width = 154
         Height = 197
         TabOrder = 4
@@ -1465,14 +1511,14 @@ object MDIChild: TMDIChild
       end
       object OrnamentEditBox: TGroupBox
         Left = 0
-        Top = 42
+        Top = 78
         Width = 369
-        Height = 431
+        Height = 387
         TabOrder = 2
       end
       object OrnamentsTestFieldBox: TGroupBox
         Left = 0
-        Top = -2
+        Top = 34
         Width = 369
         Height = 51
         TabOrder = 0
@@ -1499,7 +1545,7 @@ object MDIChild: TMDIChild
       end
       object OrnamentBox: TGroupBox
         Left = 367
-        Top = 46
+        Top = 77
         Width = 154
         Height = 158
         TabOrder = 3
@@ -1660,7 +1706,7 @@ object MDIChild: TMDIChild
       end
       object NextPrevOrnBox: TGroupBox
         Left = 367
-        Top = -2
+        Top = 34
         Width = 161
         Height = 51
         TabOrder = 1
