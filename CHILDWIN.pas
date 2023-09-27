@@ -4941,7 +4941,7 @@ begin
 end;
 
 
-procedure TTestLine.RedrawTestLine;
+procedure TTestLine.RedrawTestLine(DC: HDC);
 var
   DC1: HDC;
   s: string;
@@ -5119,7 +5119,7 @@ begin
 end;
 
 
-procedure TSamples.RedrawSamples;
+procedure TSamples.RedrawSamples(DC: HDC);
 
 const
   XPosLineNums = 0;
@@ -5308,8 +5308,9 @@ begin
     1: ToneTablePtr := @PT3NoteTable_ST;
     2: ToneTablePtr := @PT3NoteTable_ASM;
     3: ToneTablePtr := @PT3NoteTable_REAL;
+    4: ToneTablePtr := @PT3NoteTable_NATURAL;
   else
-    ToneTablePtr := @PT3NoteTable_NATURAL;
+    ToneTablePtr := @CustomNoteTable; //5
   end;
 
   // Search last not empty line
@@ -5740,7 +5741,7 @@ begin
 
 end;
 
-procedure TOrnaments.RedrawOrnaments;
+procedure TOrnaments.RedrawOrnaments(DC: HDC);
 var
   Line, OrnLength, Loop, x, y, num, i, LastDataLine: Integer;
   DC1: HDC;
@@ -11647,6 +11648,7 @@ begin
   begin
     i := ShownFrom + y;
 
+    if (i < 0) or (i >= 64) then Exit;
     if ShownSample.Items[i].Amplitude <> x then
     begin
       SongChanged := True;
@@ -12153,7 +12155,7 @@ begin
   end;
 
   // Scroll up
-  if ButtonPressed and (y1 = 0) and (Samples.ShownFrom > 0) then
+  if ButtonPressed and (y1 <= 0) and (Samples.ShownFrom > 0) then
   begin
     Dec(Samples.ShownFrom);
     SamplesLastCursorY := 255;
