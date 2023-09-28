@@ -189,6 +189,7 @@ type
   TSamples = class(TWinControl)
   public
     fBitmap: TBitmap;
+    fBitmapThumb: TBitmap;
     ArrowsFont: TFont;
     ArrowsFontW, ArrowsFontH: Integer;
     InputSNumber, CelW, CelH: Integer;
@@ -633,6 +634,10 @@ type
     SampleScrollBox: TScrollBox;
     StringGrid2: TStringGrid;
     UpdateTimer: TTimer;
+    SampleListPopupMenu: TPopupMenu;
+    Copysample1: TMenuItem;
+    Pastesample1: TMenuItem;
+    ClearSample1: TMenuItem;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -1033,6 +1038,11 @@ type
       Rect: TRect; State: TGridDrawState);
     procedure StringGrid2Redraw(ACol:integer;Active:Boolean);
     procedure UpdateTimerTimer(Sender: TObject);
+    procedure StringGrid2MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Copysample1Click(Sender: TObject);
+    procedure Pastesample1Click(Sender: TObject);
+    procedure ClearSample1Click(Sender: TObject);
 
 
 
@@ -3427,6 +3437,7 @@ begin
   Parent := TWinControl(AOwner);
   ControlStyle := [csOpaque, csClickEvents, csSetCaption, csFixedHeight];
   fBitmap := TBitmap.Create;
+  fBitmapThumb := TBitmap.Create;
   TabStop := True;
   ParentColor := False;
   BevelKind := bkTile;
@@ -3446,6 +3457,7 @@ destructor TSamples.Destroy;
 begin
   ArrowsFont.Free;
   fBitmap.Free;
+  fBitmapThumb.Free;
   inherited;
 end;
 
@@ -3499,6 +3511,8 @@ begin
 
   Samples.fBitmap.Free;
   Samples.fBitmap := TBitmap.Create;
+  Samples.fBitmapThumb.Free;
+  Samples.fBitmapThumb := TBitmap.Create;
 
   Samples.ClientWidth := Samples.CelW * 40;
   if Samples.ClientWidth < 320 then Samples.ClientWidth := 320;
@@ -4218,7 +4232,7 @@ begin
 
   SelectObject(DC, p);
   ReleaseDC(MainForm.Handle, DC);
-  
+
 
 end;
 
@@ -4278,7 +4292,6 @@ begin
     DC1 := GetDC(Handle)
   else
     DC1 := DC;
-
 
   if (fBitmap.Width <> ClientWidth) or (fBitmap.Height <> ClientHeight) then
   begin
@@ -21292,7 +21305,7 @@ procedure TMDIChild.ClearSampleClick(Sender: TObject);
 
 begin
   StopAndRestoreControls;
-  
+
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
   SamplesSelectionOff;
@@ -22499,49 +22512,85 @@ var
   LightBg: Boolean;
   S: string;
   MasterVol,MasterTon:integer;
-  MaxX,MaxY,I,X,Y,x1,y1,nx,yy,mt: Integer;
+  MaxX,MaxYY,MaxY,I,X,Y,x1,y1,nx,yy,mt: Integer;
   Samp:PSample;
   Tail:Boolean;
-
+  rect1,rect2,rect_orig:TRect;
+  DC1: HDC;
 begin
+  DC1 := GetDC(StringGrid2.Handle);
 
-  with StringGrid2 do
+  Rect_orig:=Rect;
+  Rect.Left:=0;
+  Rect.Top:=0;
+  Rect.Right:=Rect_orig.Right-Rect_orig.Left;
+  Rect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
+
+//  p := SelectObject(DC1, Font.Handle);
+
+  with Samples.fBitmapThumb do
   begin
+    if (Width <> Rect.Right) or (Height <> Rect.Bottom) then
+    begin
+      Width := Rect.Right;
+      Height := Rect.Bottom;
+      Canvas.Font := Font;
+    end;
 
-    Canvas.Brush.Color := clWhite;
+    Canvas.Brush.Color := clBtnFace;
     LightBg := not (gdSelected in State);
 
-    if (Canvas.Brush.Color = clWhite) then// or LightBg then
+    if (Canvas.Brush.Color < clGray) then// or LightBg then
       FontColor := clBlack
     else
       FontColor := clWhite;
 
+    S := StringGrid2.Cells[ACol, ARow]; // cell content
+
+    Rect1:=Rect;
+    Rect2:=Rect;
+    Rect1.Bottom:=StringGrid2.DefaultRowHeight-1-15;
+    Rect2.Top:=Rect1.Bottom-1;
+
     if gdSelected in State then
     begin
       FontColor := clWhite;
-      Canvas.Brush.Color := TColor($00422106);
+      Canvas.Brush.Color := $824116;
+      Canvas.Pen.Color:=Canvas.Brush.Color;
+      Canvas.Rectangle(Rect1);
+      Canvas.FillRect(Rect2);
+      Canvas.Brush.Color:=clWhite;
+      Rect1.Top:=Rect1.Top+1;
+      Rect1.Left:=Rect1.Left+1;
+      Rect1.Right:=Rect1.Right-1;
+      Canvas.FillRect(Rect1);
+    end
+    else
+    begin
+      Canvas.FillRect(Rect2);
+      Canvas.Brush.Color:=clWhite;
+      Canvas.FillRect(Rect1);
+      Canvas.Pen.Color:=$c0c0c0;
+      Canvas.MoveTo(0,Rect1.Bottom);
+      Canvas.LineTo(Rect1.Right,Rect1.Bottom);
     end;
 
-    S := StringGrid2.Cells[ACol, ARow]; // cell content
-
-    Canvas.FillRect(Rect);
 
     Samp := VTMP.Samples[ACol+1];
     MaxX:=StringGrid2.DefaultColWidth-1;
     MaxY:=StringGrid2.DefaultRowHeight-1;
+    MaxYY:=StringGrid2.DefaultRowHeight-1-15;
     x1:=Rect.Left;
     y1:=Rect.Bottom;
     Canvas.Pen.Color:=$808080;
     if Samp<>nil then
     begin
-      MasterVol := 15;
+      MasterVol := 0;
       MasterTon := 0;
       yy:=0;
       Tail:=False;
-      for y := 0 to maxy-2 do
+      for y := 0 to maxyy-2 do
       begin
-        x:=Samp.Items[yy].Amplitude;
-//        if x=0 then continue;
         if Samp.Items[yy].Amplitude_Sliding then
         begin
           if Samp.Items[yy].Amplitude_Slide_Up then
@@ -22550,13 +22599,13 @@ begin
           end
           else
           begin
-            if MasterVol>0 then MasterVol:=MasterVol-1;
-          end
+            if MasterVol>-15 then MasterVol:=MasterVol-1;
+          end;
         end;
-        x:=(x*MasterVol)div 15;
+        x := Samp.Items[yy].Amplitude + MasterVol;
+        if x<0 then x:=0
+        else if x>15 then x := 15;
 
-//       Canvas.MoveTo(x1+x,y1-0);
-//       Canvas.LineTo(x1+x,y1-y);
         Canvas.MoveTo(x1+4,y1-MaxY+y);
         Canvas.LineTo(x1+4+x,y1-MaxY+y);
         mt:=MasterTon + Samp.Items[yy].Add_to_Ton;
@@ -22567,14 +22616,14 @@ begin
         if mt<-9 then mt:=-9
         else if mt>10 then mt:=10;
         if Samp.Items[yy].Mixer_Ton then Canvas.Pixels[x1+11-mt,y1-MaxY+y]:=$404040;
-        if Samp.Items[yy].Mixer_Noise then Canvas.Pixels[x1+1,y1-MaxY+y]:=$ffa040;
-        if Samp.Items[yy].Envelope_Enabled then Canvas.Pixels[x1+2,y1-MaxY+y]:=$60ff60;
+        if Samp.Items[yy].Mixer_Noise then Canvas.Pixels[x1+2,y1-MaxY+y]:=$ffa040;
+        if Samp.Items[yy].Envelope_Enabled then Canvas.Pixels[x1+3,y1-MaxY+y]:=$60ff60;
         inc(yy);
         if yy=Samp.Length then
         begin
           yy:=Samp.Loop;
           Tail:=True;
-          Canvas.Pen.Color:=$C0C0C0;
+          Canvas.Pen.Color:=$a0a0a0;
         end;
       end;
     end;
@@ -22586,14 +22635,15 @@ begin
 //    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
     Canvas.Font:=StringGrid2.Font;
     PosNumberX := Rect.Left+((Rect.Right - Rect.Left) div 2);
-    PosNumberY := Rect.Bottom-Canvas.Font.Size*2;
+    PosNumberY := Rect.Bottom-Canvas.Font.Size*2+2;
     Canvas.Brush.Style := bsClear;
     SetTextColor(Canvas.Handle, FontColor);
 //    Canvas.Font:=StringGrid2.Font;
     Canvas.TextRect(Rect, PosNumberX, PosNumberY, S);
     SetTextAlign(Canvas.Handle, SavedAlign);
-
   end;
+  BitBlt(DC1, Rect_orig.Left, Rect_orig.Top, Rect.Right, Rect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
+  ReleaseDC(Handle, DC1);
 end;
 
 procedure TMDIChild.UpdateTimerTimer(Sender: TObject);
@@ -22602,6 +22652,68 @@ begin
     StringGrid2Redraw(StringGrid2.Col,True);
 //  if PageControl1.ActivePage = OrnamentsSheet then;
 
+end;
+
+procedure TMDIChild.StringGrid2MouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  pf: TPoint;
+  xx1,yy1: Integer;
+begin
+  if (Button = mbRight) then
+  begin
+    StringGrid2.MouseToCell(X, Y, xx1, yy1);
+    if xx1<0 then xx1:=0;
+    if xx1>30 then xx1:=30;
+    StringGrid2.Col := xx1;
+    StringGrid2.Update;
+//    SampleListPopupMenu.Items[0].Caption := StringGrid2.Cells[StringGrid2.Col,0];
+    pf:=StringGrid2.ClientToScreen(Point(X,Y));
+    SampleListPopupMenu.Popup(pf.X, pf.Y);
+  end;
+end;
+
+procedure TMDIChild.Copysample1Click(Sender: TObject);
+begin
+  copySampleToBuffer(True);
+end;
+
+procedure TMDIChild.Pastesample1Click(Sender: TObject);
+begin
+  if LastClipboard = LCNone then Exit;
+
+  StopAndRestoreControls;
+  SaveSampleUndo(Samples.ShownSample);
+  ClearShownSample;
+
+  case LastClipboard of
+    LCSamples: pasteSampleFromBuffer(True);
+    LCOrnaments: PasteOrnamentToSample;
+    LCTracks: PastePatternToSample;
+  end;
+
+  SaveSampleRedo;
+  if Samples.CanFocus then
+    Samples.SetFocus;
+end;
+
+procedure TMDIChild.ClearSample1Click(Sender: TObject);
+begin
+  StopAndRestoreControls;
+
+  SaveSampleUndo(Samples.ShownSample);
+  ClearShownSample;
+  SamplesSelectionOff;
+  SaveSampleRedo;
+
+  SongChanged := True;
+  BackupSongChanged := True;
+
+  Samples.HideMyCaret;
+  Samples.RedrawSamples(0);
+  Samples.ShowMyCaret;
+  if Samples.CanFocus then
+    Samples.SetFocus;
 end;
 
 end.

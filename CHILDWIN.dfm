@@ -1085,7 +1085,7 @@ object MDIChild: TMDIChild
       end
       object SampleBox: TGroupBox
         Left = 343
-        Top = 87
+        Top = 95
         Width = 183
         Height = 195
         TabOrder = 3
@@ -1267,7 +1267,7 @@ object MDIChild: TMDIChild
       end
       object NextPrevSampleBox: TGroupBox
         Left = 343
-        Top = 42
+        Top = 50
         Width = 183
         Height = 51
         TabOrder = 1
@@ -1293,15 +1293,15 @@ object MDIChild: TMDIChild
         end
       end
       object SampleEditBox: TGroupBox
-        Left = 0
-        Top = 88
+        Left = -8
+        Top = 96
         Width = 345
         Height = 385
         TabOrder = 2
       end
       object SamplesTestFieldBox: TGroupBox
         Left = 0
-        Top = 42
+        Top = 50
         Width = 345
         Height = 51
         TabOrder = 0
@@ -1340,7 +1340,7 @@ object MDIChild: TMDIChild
         Left = 0
         Top = 0
         Width = 1129
-        Height = 50
+        Height = 54
         HorzScrollBar.Smooth = True
         HorzScrollBar.Style = ssFlat
         HorzScrollBar.ThumbSize = 8
@@ -1357,14 +1357,14 @@ object MDIChild: TMDIChild
           Left = 0
           Top = 0
           Width = 992
-          Height = 48
+          Height = 49
           Cursor = crArrow
           Hint = 'Sample list'
           BorderStyle = bsNone
           Color = clWhite
           ColCount = 31
           DefaultColWidth = 22
-          DefaultRowHeight = 32
+          DefaultRowHeight = 42
           DefaultDrawing = False
           FixedCols = 0
           RowCount = 1
@@ -1379,6 +1379,7 @@ object MDIChild: TMDIChild
           ScrollBars = ssNone
           TabOrder = 0
           OnDrawCell = StringGrid2DrawCell
+          OnMouseUp = StringGrid2MouseUp
           OnMouseWheelDown = StringGrid2MouseWheelDown
           OnMouseWheelUp = StringGrid2MouseWheelUp
           OnSelectCell = StringGrid2SelectCell
@@ -1514,14 +1515,14 @@ object MDIChild: TMDIChild
       end
       object OrnamentEditBox: TGroupBox
         Left = 0
-        Top = 86
+        Top = 94
         Width = 369
-        Height = 387
+        Height = 368
         TabOrder = 2
       end
       object OrnamentsTestFieldBox: TGroupBox
         Left = 0
-        Top = 42
+        Top = 50
         Width = 369
         Height = 51
         TabOrder = 0
@@ -1548,9 +1549,9 @@ object MDIChild: TMDIChild
       end
       object OrnamentBox: TGroupBox
         Left = 367
-        Top = 85
+        Top = 94
         Width = 154
-        Height = 158
+        Height = 147
         TabOrder = 3
         object Label31: TLabel
           Left = 16
@@ -1709,7 +1710,7 @@ object MDIChild: TMDIChild
       end
       object NextPrevOrnBox: TGroupBox
         Left = 367
-        Top = 42
+        Top = 50
         Width = 161
         Height = 51
         TabOrder = 1
@@ -2127,5 +2128,24 @@ object MDIChild: TMDIChild
     OnTimer = UpdateTimerTimer
     Left = 384
     Top = 672
+  end
+  object SampleListPopupMenu: TPopupMenu
+    AutoHotkeys = maManual
+    AutoPopup = False
+    OwnerDraw = True
+    Left = 424
+    Top = 672
+    object Copysample1: TMenuItem
+      Caption = 'Copy sample'
+      OnClick = Copysample1Click
+    end
+    object Pastesample1: TMenuItem
+      Caption = 'Paste sample'
+      OnClick = Pastesample1Click
+    end
+    object ClearSample1: TMenuItem
+      Caption = 'Clear Sample'
+      OnClick = ClearSample1Click
+    end
   end
 end
