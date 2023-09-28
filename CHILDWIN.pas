@@ -632,6 +632,7 @@ type
     ButtonDisjoin: TButton;
     SampleScrollBox: TScrollBox;
     StringGrid2: TStringGrid;
+    UpdateTimer: TTimer;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -1028,6 +1029,10 @@ type
       Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
     procedure StringGrid2MouseWheelUp(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid2DrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure StringGrid2Redraw(ACol:integer;Active:Boolean);
+    procedure UpdateTimerTimer(Sender: TObject);
 
 
 
@@ -15033,7 +15038,7 @@ begin
       10: Canvas.Brush.Color := TColor($00CDCDFF);  // Light2
       11: Canvas.Brush.Color := TColor($00FFCAFA);  // Light3
       12: Canvas.Brush.Color := TColor($00B9FFB7);  // Light4
-      13: Canvas.Brush.Color := TColor($00FFC6C6);  // Light5      
+      13: Canvas.Brush.Color := TColor($00FFC6C6);  // Light5
     end;
     LightBg := ((VTMP.Positions.Colors[ACol] > 8) or (VTMP.Positions.Colors[ACol] = 0)) and not (gdSelected in State);
 
@@ -22469,6 +22474,134 @@ procedure TMDIChild.StringGrid2MouseWheelUp(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
   FormMouseWheel(Sender,Shift,1,MousePos,Handled)
+end;
+
+procedure TMDIChild.StringGrid2Redraw(ACol:integer;Active:Boolean);
+var
+  gds:TGridDrawState;
+  rect:TRect;
+begin
+  if Active then gds:=[gdSelected] else gds:=[];
+  rect.Left:=ACol*(StringGrid2.DefaultColWidth+1);
+  rect.Right:=(ACol+1)*(StringGrid2.DefaultColWidth+1)-1;
+  rect.Top:=0;
+  rect.Bottom:=StringGrid2.DefaultRowHeight;
+
+  StringGrid2DrawCell(self,ACol,0,rect,gds);
+end;
+
+procedure TMDIChild.StringGrid2DrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  SavedAlign: word;
+  FontColor, PrevColor: TColor;
+  PosNumberX, PosNumberY: Integer;
+  LightBg: Boolean;
+  S: string;
+  MasterVol,MasterTon:integer;
+  MaxX,MaxY,I,X,Y,x1,y1,nx,yy,mt: Integer;
+  Samp:PSample;
+  Tail:Boolean;
+
+begin
+
+  with StringGrid2 do
+  begin
+
+    Canvas.Brush.Color := clWhite;
+    LightBg := not (gdSelected in State);
+
+    if (Canvas.Brush.Color = clWhite) then// or LightBg then
+      FontColor := clBlack
+    else
+      FontColor := clWhite;
+
+    if gdSelected in State then
+    begin
+      FontColor := clWhite;
+      Canvas.Brush.Color := TColor($00422106);
+    end;
+
+    S := StringGrid2.Cells[ACol, ARow]; // cell content
+
+    Canvas.FillRect(Rect);
+
+    Samp := VTMP.Samples[ACol+1];
+    MaxX:=StringGrid2.DefaultColWidth-1;
+    MaxY:=StringGrid2.DefaultRowHeight-1;
+    x1:=Rect.Left;
+    y1:=Rect.Bottom;
+    Canvas.Pen.Color:=$808080;
+    if Samp<>nil then
+    begin
+      MasterVol := 15;
+      MasterTon := 0;
+      yy:=0;
+      Tail:=False;
+      for y := 0 to maxy-2 do
+      begin
+        x:=Samp.Items[yy].Amplitude;
+//        if x=0 then continue;
+        if Samp.Items[yy].Amplitude_Sliding then
+        begin
+          if Samp.Items[yy].Amplitude_Slide_Up then
+          begin
+            if MasterVol<15 then MasterVol:=MasterVol+1
+          end
+          else
+          begin
+            if MasterVol>0 then MasterVol:=MasterVol-1;
+          end
+        end;
+        x:=(x*MasterVol)div 15;
+
+//       Canvas.MoveTo(x1+x,y1-0);
+//       Canvas.LineTo(x1+x,y1-y);
+        Canvas.MoveTo(x1+4,y1-MaxY+y);
+        Canvas.LineTo(x1+4+x,y1-MaxY+y);
+        mt:=MasterTon + Samp.Items[yy].Add_to_Ton;
+        if Samp.Items[yy].Ton_Accumulation then
+          MasterTon:=MasterTon+Samp.Items[yy].Add_to_Ton;
+        if mt>3 then mt:=((mt-3) div 48)+3;
+        if mt<-3 then mt:=((mt+3) div 48)-3;
+        if mt<-9 then mt:=-9
+        else if mt>10 then mt:=10;
+        if Samp.Items[yy].Mixer_Ton then Canvas.Pixels[x1+11-mt,y1-MaxY+y]:=$404040;
+        if Samp.Items[yy].Mixer_Noise then Canvas.Pixels[x1+1,y1-MaxY+y]:=$ffa040;
+        if Samp.Items[yy].Envelope_Enabled then Canvas.Pixels[x1+2,y1-MaxY+y]:=$60ff60;
+        inc(yy);
+        if yy=Samp.Length then
+        begin
+          yy:=Samp.Loop;
+          Tail:=True;
+          Canvas.Pen.Color:=$C0C0C0;
+        end;
+      end;
+    end;
+
+//    CSamOrnBackground
+
+    SavedAlign := SetTextAlign(Canvas.Handle, TA_CENTER);
+//    PosNumberX := (Rect.Left + (Rect.Right - Rect.Left) div 2) + StringGridTextHShift;
+//    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
+    Canvas.Font:=StringGrid2.Font;
+    PosNumberX := Rect.Left+((Rect.Right - Rect.Left) div 2);
+    PosNumberY := Rect.Bottom-Canvas.Font.Size*2;
+    Canvas.Brush.Style := bsClear;
+    SetTextColor(Canvas.Handle, FontColor);
+//    Canvas.Font:=StringGrid2.Font;
+    Canvas.TextRect(Rect, PosNumberX, PosNumberY, S);
+    SetTextAlign(Canvas.Handle, SavedAlign);
+
+  end;
+end;
+
+procedure TMDIChild.UpdateTimerTimer(Sender: TObject);
+begin
+  if PageControl1.ActivePage = SamplesSheet   then
+    StringGrid2Redraw(StringGrid2.Col,True);
+//  if PageControl1.ActivePage = OrnamentsSheet then;
+
 end;
 
 end.

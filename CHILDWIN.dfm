@@ -1085,7 +1085,7 @@ object MDIChild: TMDIChild
       end
       object SampleBox: TGroupBox
         Left = 343
-        Top = 79
+        Top = 87
         Width = 183
         Height = 195
         TabOrder = 3
@@ -1267,7 +1267,7 @@ object MDIChild: TMDIChild
       end
       object NextPrevSampleBox: TGroupBox
         Left = 343
-        Top = 34
+        Top = 42
         Width = 183
         Height = 51
         TabOrder = 1
@@ -1294,14 +1294,14 @@ object MDIChild: TMDIChild
       end
       object SampleEditBox: TGroupBox
         Left = 0
-        Top = 80
+        Top = 88
         Width = 345
         Height = 385
         TabOrder = 2
       end
       object SamplesTestFieldBox: TGroupBox
         Left = 0
-        Top = 34
+        Top = 42
         Width = 345
         Height = 51
         TabOrder = 0
@@ -1340,9 +1340,10 @@ object MDIChild: TMDIChild
         Left = 0
         Top = 0
         Width = 1129
-        Height = 41
+        Height = 50
         HorzScrollBar.Smooth = True
         HorzScrollBar.Style = ssFlat
+        HorzScrollBar.ThumbSize = 8
         HorzScrollBar.Tracking = True
         VertScrollBar.Range = 120
         VertScrollBar.Visible = False
@@ -1356,26 +1357,28 @@ object MDIChild: TMDIChild
           Left = 0
           Top = 0
           Width = 992
-          Height = 33
+          Height = 48
           Cursor = crArrow
           Hint = 'Sample list'
           BorderStyle = bsNone
           Color = clWhite
           ColCount = 31
           DefaultColWidth = 22
-          DefaultRowHeight = 21
+          DefaultRowHeight = 32
+          DefaultDrawing = False
           FixedCols = 0
           RowCount = 1
           FixedRows = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColMoving, goThumbTracking]
           ParentFont = False
           ScrollBars = ssNone
           TabOrder = 0
+          OnDrawCell = StringGrid2DrawCell
           OnMouseWheelDown = StringGrid2MouseWheelDown
           OnMouseWheelUp = StringGrid2MouseWheelUp
           OnSelectCell = StringGrid2SelectCell
@@ -1511,14 +1514,14 @@ object MDIChild: TMDIChild
       end
       object OrnamentEditBox: TGroupBox
         Left = 0
-        Top = 78
+        Top = 86
         Width = 369
         Height = 387
         TabOrder = 2
       end
       object OrnamentsTestFieldBox: TGroupBox
         Left = 0
-        Top = 34
+        Top = 42
         Width = 369
         Height = 51
         TabOrder = 0
@@ -1545,7 +1548,7 @@ object MDIChild: TMDIChild
       end
       object OrnamentBox: TGroupBox
         Left = 367
-        Top = 77
+        Top = 85
         Width = 154
         Height = 158
         TabOrder = 3
@@ -1706,7 +1709,7 @@ object MDIChild: TMDIChild
       end
       object NextPrevOrnBox: TGroupBox
         Left = 367
-        Top = 34
+        Top = 42
         Width = 161
         Height = 51
         TabOrder = 1
@@ -2118,5 +2121,11 @@ object MDIChild: TMDIChild
   object EurekaLog1: TEurekaLog
     Left = 340
     Top = 673
+  end
+  object UpdateTimer: TTimer
+    Interval = 500
+    OnTimer = UpdateTimerTimer
+    Left = 384
+    Top = 672
   end
 end
