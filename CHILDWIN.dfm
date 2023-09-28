@@ -1,12 +1,12 @@
 object MDIChild: TMDIChild
-  Left = 918
-  Top = 102
+  Left = 854
+  Top = 0
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Module'
-  ClientHeight = 718
+  ClientHeight = 708
   ClientWidth = 595
   Color = clBtnFace
   Constraints.MinHeight = 470
@@ -130,7 +130,7 @@ object MDIChild: TMDIChild
           Caption = 'Chan A'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -11
+          Font.Height = -9
           Font.Name = 'Microsoft Sans Serif'
           Font.Pitch = fpVariable
           Font.Style = []
@@ -209,6 +209,13 @@ object MDIChild: TMDIChild
           Height = 20
           Hint = 'Mute Channel'
           Caption = 'Chan B'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -9
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Pitch = fpVariable
+          Font.Style = []
+          ParentFont = False
           TabOrder = 0
           OnClick = MuteOnClick
           OnDblClick = MuteOnClick
@@ -271,6 +278,13 @@ object MDIChild: TMDIChild
           Height = 20
           Hint = 'Mute Channel'
           Caption = 'Chan C'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -9
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Pitch = fpVariable
+          Font.Style = []
+          ParentFont = False
           TabOrder = 0
           OnClick = MuteOnClick
           OnDblClick = MuteOnClick
@@ -741,7 +755,7 @@ object MDIChild: TMDIChild
         object EnvelopeAsNoteOpt: TCheckBox
           Left = 12
           Top = 11
-          Width = 117
+          Width = 141
           Height = 17
           Hint = 'Envelope As Note (press [/] on Numpad to change)'
           Caption = 'Envelope as Note'
@@ -761,7 +775,7 @@ object MDIChild: TMDIChild
         object DuplicateNoteParams: TCheckBox
           Left = 198
           Top = 11
-          Width = 125
+          Width = 147
           Height = 17
           Hint = 'Use sample, envelope, ornament and value of last note'
           Caption = 'Use last note params'
@@ -778,7 +792,7 @@ object MDIChild: TMDIChild
         object BetweenPatterns: TCheckBox
           Left = 376
           Top = 11
-          Width = 133
+          Width = 161
           Height = 17
           Hint = 'Move continuously between patterns while editing'
           Caption = 'Move between patterns'
@@ -1085,7 +1099,7 @@ object MDIChild: TMDIChild
       end
       object SampleBox: TGroupBox
         Left = 343
-        Top = 95
+        Top = 93
         Width = 183
         Height = 195
         TabOrder = 3
@@ -1293,9 +1307,9 @@ object MDIChild: TMDIChild
         end
       end
       object SampleEditBox: TGroupBox
-        Left = -8
-        Top = 96
-        Width = 345
+        Left = 0
+        Top = 93
+        Width = 346
         Height = 385
         TabOrder = 2
       end
@@ -1515,7 +1529,7 @@ object MDIChild: TMDIChild
       end
       object OrnamentEditBox: TGroupBox
         Left = 0
-        Top = 94
+        Top = 96
         Width = 369
         Height = 368
         TabOrder = 2
@@ -1549,7 +1563,7 @@ object MDIChild: TMDIChild
       end
       object OrnamentBox: TGroupBox
         Left = 367
-        Top = 94
+        Top = 95
         Width = 154
         Height = 147
         TabOrder = 3
@@ -1996,9 +2010,9 @@ object MDIChild: TMDIChild
   end
   object Panel16: TPanel
     Left = 456
-    Top = 3
+    Top = 0
     Width = 33
-    Height = 20
+    Height = 16
     Caption = 'Mute'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -2012,9 +2026,9 @@ object MDIChild: TMDIChild
   end
   object Panel17: TPanel
     Left = 489
-    Top = 3
+    Top = 0
     Width = 32
-    Height = 20
+    Height = 16
     Caption = 'Solo'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -2124,7 +2138,7 @@ object MDIChild: TMDIChild
     Top = 673
   end
   object UpdateTimer: TTimer
-    Interval = 500
+    Interval = 300
     OnTimer = UpdateTimerTimer
     Left = 384
     Top = 672

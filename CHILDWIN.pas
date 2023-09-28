@@ -2948,6 +2948,19 @@ begin
 
 end;
 
+Function GetWidthText(const Text:String; Font:TFont) : Integer;
+var
+  LBmp: TBitmap;
+begin
+  LBmp := TBitmap.Create;
+  try
+   LBmp.Canvas.Font := Font;
+   Result := LBmp.Canvas.TextWidth(Text);
+  finally
+   LBmp.Free;
+  end;
+end;
+
 
 procedure TMDIChild.AutoResizeForm;
 var
@@ -2994,7 +3007,10 @@ begin
     Tracks.FitNumberOfLines;
   end;
 
-  
+  // Mute/solo
+  Panel17.Left := Width - Panel17.Width - 8;
+  Panel16.Left := Panel17.Left - Panel16.Width - 2;
+
   if WidthChanged then begin
 
     TopBackgroundBox.Left  := PageControl1.Left;
@@ -3092,7 +3108,24 @@ begin
     // Bottom options
     SampleOpts.Width := SampleBrowserBox.Left + SampleBrowserBox.Width;
     RecalcTonesBtn.Left := SampleEditBox.Width - RecalcTonesBtn.Width - 8;
+
+    //Sample options
+    SamToneShiftAsNoteOpt.Width:= 30 +
+      GetWidthText(SamToneShiftAsNoteOpt.Caption, SamToneShiftAsNoteOpt.Font);
+    SamOptsSep.Left := SamToneShiftAsNoteOpt.Left + SamToneShiftAsNoteOpt.Width + 8;
+    SamOctaveLabel.Left := SamOptsSep.Left + 8;
+    SamOctaveTxt.Left := SamOctaveLabel.Left + SamOctaveLabel.Width + 8;
+    SamOctaveNum.Left := SamOctaveTxt.Left + SamOctaveTxt.Width + 8;
     SamOptsSep1.Left := RecalcTonesBtn.Left - 8;
+
+    //Ornament options
+    OrnToneShiftAsNoteOpt.Width:= 30 +
+      GetWidthText(OrnToneShiftAsNoteOpt.Caption, OrnToneShiftAsNoteOpt.Font);
+    OrnOptsSep.Left := OrnToneShiftAsNoteOpt.Left + OrnToneShiftAsNoteOpt.Width + 8;
+    OrnOctaveLabel.Left := OrnOptsSep.Left + 8;
+    OrnOctaveTxt.Left := OrnOctaveLabel.Left + OrnOctaveLabel.Width + 8;
+    OrnOctaveNum.Left := OrnOctaveTxt.Left + OrnOctaveTxt.Width + 8;
+
   end;
   
 
@@ -6176,7 +6209,7 @@ begin
       ShowCaret(Handle)
     end
   end
-  else if BigCaret then
+  else  if BigCaret then
   begin
     DestroyCaret;
     CreateMyCaret;
@@ -8903,9 +8936,12 @@ begin
             Dec(CursorX, 2)
           else
             Dec(CursorX);
-          RecreateCaret;
-          SetCaretPosition;
+          HideCaret(Handle);
           RedrawTestLine(0);
+          SetCaretPosition;
+          CreateMyCaret;
+          ShowCaret(Handle);
+
         end;
       VK_RIGHT:
         if CursorX < 20 then
@@ -8915,9 +8951,11 @@ begin
             Inc(CursorX)
           else if CursorX = 9 then
             Inc(CursorX, 3);
-          RecreateCaret;
-          SetCaretPosition;
+          HideCaret(Handle);
           RedrawTestLine(0);
+          SetCaretPosition;
+          CreateMyCaret;
+          ShowCaret(Handle);
         end;
       192:
         begin
@@ -8944,17 +8982,21 @@ begin
         if CursorX < 17 then
         begin
           CursorX := ColTabs[ColTab(CursorX) + 1];
-          RecreateCaret;
-          SetCaretPosition;
+          HideCaret(Handle);
           RedrawTestLine(0);
+          SetCaretPosition;
+          CreateMyCaret;
+          ShowCaret(Handle);
         end;
       VK_LEFT:
         if CursorX > 4 then
         begin
           CursorX := ColTabs[ColTab(CursorX) - 1];
-          RecreateCaret;
-          SetCaretPosition;
+          HideCaret(Handle);
           RedrawTestLine(0);
+          SetCaretPosition;
+          CreateMyCaret;
+          ShowCaret(Handle);
         end;
       VK_ADD, VK_SUBTRACT:
         begin
@@ -11666,9 +11708,9 @@ begin
   if Focused then
   begin
     HideCaret(Handle);
-    RecreateCaret;
-    SetCaretPosition;
     RedrawTestLine(0);
+    SetCaretPosition;
+    CreateMyCaret;
     ShowCaret(Handle);
   end
   else
@@ -14925,7 +14967,7 @@ var
   i: Integer;
   VisibleColCount, ColCount: Integer;
   p: HFONT;
-  
+  K,FonSize:Integer;
 
 begin
 
@@ -15011,9 +15053,20 @@ begin
   PositionsScrollBox.HorzScrollBar.Range := StringGrid1.Width+1;
   PositionsScrollBox.Height := StringGrid1.DefaultRowHeight + HScrollbarSize + 5;
 
+  //100=36
+  //125=44
+  //150=52
+  FonSize := GetWidthText('XXXX',StringGrid2.Font);
+  K:= (FonSize*10) div 16;
+  StringGrid2.DefaultColWidth:=K;
+  StringGrid2.DefaultRowHeight:=FonSize+4;
+//    StringGrid2.Height:=FonSize+20;
+  StringGrid2.Height:=FonSize+4;
+//    Panel16.Caption:=inttostr(FonSize);
+
   StringGrid2.Width := (StringGrid2.DefaultColWidth+1) * StringGrid2.ColCount -1;
   SampleScrollBox.AutoScroll := False;
-  SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-16;
+  SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-FonSize div 2 +1;
   SampleScrollBox.Height := StringGrid2.DefaultRowHeight + HScrollbarSize + 5;
 
   SelectObject(DC, p);
@@ -22517,6 +22570,7 @@ var
   Tail:Boolean;
   rect1,rect2,rect_orig:TRect;
   DC1: HDC;
+  mx:integer;
 begin
   DC1 := GetDC(StringGrid2.Handle);
 
@@ -22534,8 +22588,8 @@ begin
     begin
       Width := Rect.Right;
       Height := Rect.Bottom;
-      Canvas.Font := Font;
     end;
+    Canvas.Font := Font;
 
     Canvas.Brush.Color := clBtnFace;
     LightBg := not (gdSelected in State);
@@ -22549,7 +22603,8 @@ begin
 
     Rect1:=Rect;
     Rect2:=Rect;
-    Rect1.Bottom:=StringGrid2.DefaultRowHeight-1-15;
+    Rect1.Bottom:=StringGrid2.DefaultRowHeight-1+round(Font.Height*1.3);
+    MaxYY:=Rect1.Bottom;
     Rect2.Top:=Rect1.Bottom-1;
 
     if gdSelected in State then
@@ -22579,16 +22634,17 @@ begin
     Samp := VTMP.Samples[ACol+1];
     MaxX:=StringGrid2.DefaultColWidth-1;
     MaxY:=StringGrid2.DefaultRowHeight-1;
-    MaxYY:=StringGrid2.DefaultRowHeight-1-15;
     x1:=Rect.Left;
     y1:=Rect.Bottom;
     Canvas.Pen.Color:=$808080;
+    nx:=(MaxX- (22-1)) div 2;
     if Samp<>nil then
     begin
       MasterVol := 0;
       MasterTon := 0;
       yy:=0;
       Tail:=False;
+      mx:=nx+x1+10;
       for y := 0 to maxyy-2 do
       begin
         if Samp.Items[yy].Amplitude_Sliding then
@@ -22606,18 +22662,18 @@ begin
         if x<0 then x:=0
         else if x>15 then x := 15;
 
-        Canvas.MoveTo(x1+4,y1-MaxY+y);
-        Canvas.LineTo(x1+4+x,y1-MaxY+y);
+        Canvas.MoveTo(nx+x1+4,y1-MaxY+y);
+        Canvas.LineTo(nx+x1+4+x,y1-MaxY+y);
         mt:=MasterTon + Samp.Items[yy].Add_to_Ton;
         if Samp.Items[yy].Ton_Accumulation then
           MasterTon:=MasterTon+Samp.Items[yy].Add_to_Ton;
         if mt>3 then mt:=((mt-3) div 48)+3;
         if mt<-3 then mt:=((mt+3) div 48)-3;
-        if mt<-9 then mt:=-9
-        else if mt>10 then mt:=10;
-        if Samp.Items[yy].Mixer_Ton then Canvas.Pixels[x1+11-mt,y1-MaxY+y]:=$404040;
-        if Samp.Items[yy].Mixer_Noise then Canvas.Pixels[x1+2,y1-MaxY+y]:=$ffa040;
-        if Samp.Items[yy].Envelope_Enabled then Canvas.Pixels[x1+3,y1-MaxY+y]:=$60ff60;
+        if mt<-mx then mt:=-mx
+        else if mt>mx then mt:=mx;
+        if Samp.Items[yy].Mixer_Ton then Canvas.Pixels[nx+x1+11-mt,y1-MaxY+y]:=$404040;
+        if Samp.Items[yy].Mixer_Noise then Canvas.Pixels[nx+x1+2,y1-MaxY+y]:=$ffa040;
+        if Samp.Items[yy].Envelope_Enabled then Canvas.Pixels[nx+x1+3,y1-MaxY+y]:=$60ff60;
         inc(yy);
         if yy=Samp.Length then
         begin
@@ -22635,7 +22691,7 @@ begin
 //    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
     Canvas.Font:=StringGrid2.Font;
     PosNumberX := Rect.Left+((Rect.Right - Rect.Left) div 2);
-    PosNumberY := Rect.Bottom-Canvas.Font.Size*2+2;
+    PosNumberY := Rect.Bottom+round(Font.Height*1.3)-1;
     Canvas.Brush.Style := bsClear;
     SetTextColor(Canvas.Handle, FontColor);
 //    Canvas.Font:=StringGrid2.Font;
@@ -22651,6 +22707,12 @@ begin
   if PageControl1.ActivePage = SamplesSheet   then
     StringGrid2Redraw(StringGrid2.Col,True);
 //  if PageControl1.ActivePage = OrnamentsSheet then;
+  if PageControl1.ActivePage = PatternsSheet then
+  begin
+    Panel17.Left := Width - Panel17.Width - 8;
+    Panel16.Left := Panel17.Left - Panel16.Width - 2;
+  end;
+
 
 end;
 

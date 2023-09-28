@@ -1139,6 +1139,7 @@ begin
     if PlVars[CurChip].DelayCounter = 0 then
     begin
       Inc(Result);
+      if VTM.Patterns[PlVars[CurChip].CurrentPattern]=nil then exit;
       if VTM.Patterns[PlVars[CurChip].CurrentPattern].Length <= PlVars[CurChip].CurrentLine then
       begin
         Inc(PlVars[CurChip].DelayCounter);
