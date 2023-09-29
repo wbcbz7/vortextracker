@@ -644,9 +644,10 @@ type
     CopyOrnament1: TMenuItem;
     PasteOrnament1: TMenuItem;
     ClearOrnament1: TMenuItem;
+    procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
-    function OuterHeight: Integer;    
+    function OuterHeight: Integer;
     procedure SetWidth(Value: Integer; Fixed: Boolean);
     function  GetCurrentFileBrowser: TFileBrowser;
     procedure FileBrowserRename(Sender: TObject);
@@ -835,7 +836,7 @@ type
     procedure ChangeSample(n: Integer; UpdateUpDown: Boolean; UpdateGrid: Boolean);
     procedure ClearShownOrnament;
     procedure ClearShownSample;
-    procedure ChangeOrnament(n: Integer; UpdateGrid: Boolean);
+    procedure ChangeOrnament(n: Integer; UpdateUpDown: Boolean; UpdateGrid: Boolean);
     procedure ChangeOrnamentLength(NL: Integer; UpdateUpDown: Boolean);
     procedure ChangeOrnamentLoop(NL: Integer; UpdateUpDown: Boolean);
     procedure ChangeSampleLength(NL: Integer; UpdateUpDown: Boolean);
@@ -1042,7 +1043,7 @@ type
     procedure StringGrid2MouseWheelUp(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
     procedure StringGrid2DrawCell(Sender: TObject; ACol, ARow: Integer;
-      Rect: TRect; State: TGridDrawState);
+      RRect: TRect; State: TGridDrawState);
     procedure StringGrid2Redraw(ACol:integer;Active:Boolean);
     procedure UpdateTimerTimer(Sender: TObject);
     procedure StringGrid2MouseUp(Sender: TObject; Button: TMouseButton;
@@ -1064,6 +1065,7 @@ type
     procedure CopyOrnament1Click(Sender: TObject);
     procedure PasteOrnament1Click(Sender: TObject);
     procedure ClearOrnament1Click(Sender: TObject);
+    procedure ActivateSheet(ASheetIndex : Integer);
 
 
 
@@ -1150,6 +1152,8 @@ type
     SamplesDir, OrnamentsDir: String;
     ChanButtons: array[0..2] of TChannelButtons;
     ChanButtons_s: array[0..2] of TChannelButtonsState;
+    SampUsage: array [0..31] of Boolean;
+    OrnUsage: array [0..31] of Boolean;
 
   published
      //    destructor Destroy; override;
@@ -2523,7 +2527,7 @@ begin
     end;
   end;
 
-  PageControl1.ActivePageIndex := 0;
+  ActivateSheet(0);//PageControl1.ActivePageIndex := 0;
   NumModule := 1;
   AutoScroll := False;
   AutoSize := False;
@@ -3952,6 +3956,33 @@ begin
 
   inherited;
 end;
+
+procedure TMDIChild.RecalcSampOrnUsage;
+var
+  i, j, k, d, p: integer;
+begin
+  for i:=0 to 31 do
+  begin
+    SampUsage[i]:=False;
+    OrnUsage[i]:=False;
+  end;
+  if VTMP = nil then exit;
+  for i := 0 to VTMP.Positions.Length - 1 do
+  begin
+    p := VTMP.Positions.Value[i];
+    if VTMP.Patterns[p] = nil then continue;
+    for j := 0 to VTMP.Patterns[p].Length - 1 do
+    begin
+      for k := 2 downto 0 do
+        with VTMP.Patterns[p].Items[j].Channel[k] do
+        begin
+          if Sample<>0 then SampUsage[Sample]:=True;
+          if Ornament<>0 then OrnUsage[Ornament]:=True;
+        end;
+    end
+  end;
+end;
+
 
 procedure TOrnaments.WMEraseBkGnd(var Message:TMessage);
 begin
@@ -6126,13 +6157,13 @@ begin
     15, 29, 43:
       s := 'Volume (hex 1-F).' + Chr(13) + 'Use R-- instead of volume 0.';
     17, 31, 45:
-      s := 'Special command:' + Chr(13) + '1 - Tone slide Down' + Chr(13) + '2 - Tone slide Up' + Chr(13) + '3 - Tone portamento' + Chr(13) + '4 - Sample offset' + Chr(13) + '5 - Ornament offset' + Chr(13) + '6 - Vibrato' + Chr(13) + '9 - Envelope slide Down' + Chr(13) + 'A - Envelope slide Up' + Chr(13) + 'B - Set Speed';
+      s := 'Special command:' + Chr(13) + '1 - Tone slide Down' + Chr(13) + '2 - Tone slide Up' + Chr(13) + '3 - Tone portamento' + Chr(13) + '4 - Sample offset' + Chr(13) + '5 - Ornament offset' + Chr(13) + '6 - Tremor' + Chr(13) + '9 - Envelope slide Down' + Chr(13) + 'A - Envelope slide Up' + Chr(13) + 'B - Set Speed';
     18, 32, 46:
       s := 'Delay for commands 1-3, 9-A (1-F for change period, 0 for stop).';
     19, 33, 47:
-      s := 'Hi digit for commands 1-5, 9-B. Hex: 0-F.' + #13 +'OR 1st parameter for command 6 (Vibrato)' + Chr(13) + '(1-F to sound on period, 0 to stop).';
+      s := 'Hi digit for commands 1-5, 9-B. Hex: 0-F.' + #13 +'OR 1st parameter for command 6 (Tremor)' + Chr(13) + '(1-F to sound on period, 0 to stop).';
     20, 34, 48:
-      s := 'Lo digit for commands 1-5, 9-B. Hex: 0-F' +#13+ 'OR second parameter for command 6 (Vibrato)' + Chr(13) + '(1-F to sound off period, 0 to stop after sound on period).';
+      s := 'Lo digit for commands 1-5, 9-B. Hex: 0-F' +#13+ 'OR second parameter for command 6 (Tremor)' + Chr(13) + '(1-F to sound off period, 0 to stop after sound on period).';
   end;
   if not (CursorX in [19, 33, 47, 20, 34, 48]) then begin
     s := s + Chr(13) + Chr(13) + 'Ctrl + Space to Autostep On/Off' + Chr(13);
@@ -6896,7 +6927,7 @@ begin
     SampleNumUpDown.Position := ASample;
 
     // Activate samples tab
-    PageControl1.ActivePageIndex := 1;
+    ActivateSheet(1);//PageControl1.ActivePageIndex := 1;
 
     // Set focus
     if SampleTestLine.Enabled and SampleTestLine.CanFocus then
@@ -6917,10 +6948,10 @@ begin
   begin
 
     // Select ornament
-    OrnamentNumUpDown.Position := AOrnament;
+    ChangeOrnament(AOrnament, True, True);
 
     // Activate ornaments tab
-    PageControl1.ActivePageIndex := 2;
+    ActivateSheet(2);//PageControl1.ActivePageIndex := 2;
 
     // Set focus
     if OrnamentTestLine.Enabled and OrnamentTestLine.CanFocus then
@@ -7117,7 +7148,7 @@ begin
   BackupSongChanged := True;
 
   if OtherTracks <> Tracks then begin
-    OtherModule.PageControl1.ActivePageIndex := 0;
+    OtherModule.ActivateSheet(0);//OtherModule.PageControl1.ActivePageIndex := 0;
     OtherModule.Show;
     OtherModule.SetFocus;
     if OtherTracks.CanFocus then
@@ -7228,7 +7259,7 @@ begin
 
       Tracks.RemoveSelection;
       Tracks.RedrawTracks(0);
-      PageControl1.ActivePageIndex := 0;
+      ActivateSheet(0);//PageControl1.ActivePageIndex := 0;
       Show;
       SetFocus;
       if Tracks.CanFocus then
@@ -8714,7 +8745,7 @@ procedure TTestLine.TestLineKeyDown(Sender: TObject; var Key: Word; Shift: TShif
         begin
           TMDIChild(ParWind).VTMP.Patterns[-1].Items[Ord(TestSample)].Channel[0].Sample := n;
           if (n > 0) and TestSample then
-            TMDIChild(ParWind).SampleNumUpDown.Position := n
+            TMDIChild(ParWind).ChangeSample(n, True, True);
         end;
       13:
         begin
@@ -8725,7 +8756,7 @@ procedure TTestLine.TestLineKeyDown(Sender: TObject; var Key: Word; Shift: TShif
         begin
           TMDIChild(ParWind).VTMP.Patterns[-1].Items[Ord(TestSample)].Channel[0].Ornament := n;
           if (n > 0) and not TestSample then
-            TMDIChild(ParWind).OrnamentNumUpDown.Position := n
+            TMDIChild(ParWind).ChangeOrnament(n, True, True);
         end;
       15:
         TMDIChild(ParWind).VTMP.Patterns[-1].Items[Ord(TestSample)].Channel[0].Volume := n;
@@ -11231,17 +11262,15 @@ begin
         //next ornament
           if StrToInt(OrnamentNumEdit.Text) in [1..30] then
           begin
-            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) + 1, True);
-            OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) + 1));
+            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) + 1, True, True);
           end;
         end;
       VK_SUBTRACT:
         begin
-        //previous sample
+        //previous ornament
           if StrToInt(OrnamentNumEdit.Text) in [2..31] then
           begin
-            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) - 1, True);
-            OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) - 1));
+            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) - 1, True, True);
           end;
         end;
 {      VK_INSERT:
@@ -11653,7 +11682,7 @@ begin
     SampleNumUpDown.Position := Sample;
 
     // Activate samples tab
-    PageControl1.ActivePageIndex := 1;
+    ActivateSheet(1);//PageControl1.ActivePageIndex := 1;
 
     // Set focus
     if SampleTestLine.Enabled and SampleTestLine.CanFocus then
@@ -11685,10 +11714,10 @@ begin
       VTMP.Patterns[-1].Items[0] := VTMP.Patterns[-1].Items[1];
 
     // Select ornament
-    OrnamentNumUpDown.Position := Ornament;
+    ChangeOrnament(Ornament, True, True);
 
     // Activate ornaments tab
-    PageControl1.ActivePageIndex := 2;
+    ActivateSheet(2);//PageControl1.ActivePageIndex := 2;
 
     // Set focus
     if OrnamentTestLine.Enabled and OrnamentTestLine.CanFocus then
@@ -16772,10 +16801,14 @@ begin
   BackupSongChanged := True;
 end;
 
-procedure TMDIChild.ChangeOrnament(n: Integer; UpdateGrid: Boolean);
+procedure TMDIChild.ChangeOrnament(n: Integer; UpdateUpDown: Boolean; UpdateGrid: Boolean);
 var
   l: Integer;
 begin
+  if n=0 then exit;
+  if n<1 then n:=1;
+  if n>31 then n:=31;
+  if n=OrnNum then exit;
 
   Ornaments.isSelecting := False;
   OrnNum := n;
@@ -16794,6 +16827,9 @@ begin
   else
     l := VTMP.Ornaments[OrnNum].Length;
   OrnamentLenUpDown.Position := l;
+
+  if UpdateUpDown then
+    OrnamentNumUpDown.Position := n;
 
   if UpdateGrid then
     StringGrid3.Col:=n-1;
@@ -17183,13 +17219,13 @@ procedure TMDIChild.OrnamentNumUpDownChangingEx(Sender: TObject; var AllowChange
 begin
   AllowChange := NewValue in [1..31];
   if AllowChange then
-    ChangeOrnament(NewValue, True)
+    ChangeOrnament(NewValue, False, True);
 end;
 
 procedure TMDIChild.OrnamentNumEditChange(Sender: TObject);
 begin
   if OrnNum <> OrnamentNumUpDown.Position then
-    ChangeOrnament(OrnamentNumUpDown.Position, True)
+    ChangeOrnament(OrnamentNumUpDown.Position, False, True);
 end;
 
 procedure TMDIChild.OrnamentNumEditExit(Sender: TObject);
@@ -17611,7 +17647,7 @@ begin
       Ornaments.CursorX := 0;
       Ornaments.CursorY := 0;
       Ornaments.ShownFrom := 0;
-      ChangeOrnament(OrnNum, True);
+      ChangeOrnament(OrnNum, True, True);
       ChangeList[ChangeCount - 1].NewParams.prm.OrnamentCursor := Ornaments.CursorY + Ornaments.CursorX div OrnNChars * Ornaments.NRaw;
       ChangeList[ChangeCount - 1].NewParams.prm.OrnamentShownFrom := 0;
     end
@@ -18112,7 +18148,7 @@ begin
             FamiRow.fx1prm := ChannelLine.Additional_Command.Parameter;
           end;
 
-          // Vibrato
+          // Tremor
           6: begin
             FamiRow.fx1cmd := $0b;
             FamiRow.fx1prm := ChannelLine.Additional_Command.Parameter;
@@ -18262,7 +18298,7 @@ begin
             2:  line[10] := '1';  // Tone Slide Up
             1:  line[10] := '2';  // Tone Slide Down
             3:  line[10] := '3';  // Tone Portamento
-            6:  line[10] := '4';  // Vibrato
+            6:  line[10] := '4';  // Tremor
             $B: line[10] := 'F';  // Set Speed
           end;
         end;
@@ -18535,7 +18571,7 @@ begin
           ChannelLine.Additional_Command.Parameter := FamiRow.fx1prm;
         end;
 
-        // Vibrato
+        // Tremor
         $0b: begin
           ChannelLine.Additional_Command.Number    := 6;
           ChannelLine.Additional_Command.Parameter := FamiRow.fx1prm;
@@ -18661,7 +18697,7 @@ begin
             '2': ChannelLine.Additional_Command.Number := 1;
             // Tone Portamento
             '3': ChannelLine.Additional_Command.Number := 3;
-            // Vibrato
+            // Tremor
             '4': ChannelLine.Additional_Command.Number := 6;
             // Speed
             'F': ChannelLine.Additional_Command.Number := $b;
@@ -18675,7 +18711,7 @@ begin
             'E': ChannelLine.Additional_Command.Number := 1;
             // Tone Portamento
             'G': ChannelLine.Additional_Command.Number := 3;
-            // Vibrato
+            // Tremor
             'H': ChannelLine.Additional_Command.Number := 6;
             // Speed
             'A': ChannelLine.Additional_Command.Number := $b;
@@ -19619,7 +19655,7 @@ procedure TMDIChild.DoUndo(Steps: Integer; Undo: Boolean);
     f: Boolean;
   begin
     f := PageControl1.ActivePageIndex = Page;
-    PageControl1.ActivePageIndex := Page;
+    ActivateSheet(Page);//PageControl1.ActivePageIndex := Page;
     case Page of
       0:
         if not f or not (Tracks.Enabled and Tracks.Focused) then
@@ -19662,7 +19698,7 @@ procedure TMDIChild.DoUndo(Steps: Integer; Undo: Boolean);
         Tracks.ShowMyCaret
       else
       begin
-        PageControl1.ActivePageIndex := 0;
+        ActivateSheet(0);//PageControl1.ActivePageIndex := 0;
         if Tracks.CanFocus then
           Windows.SetFocus(Tracks.Handle);
       end;
@@ -19694,7 +19730,7 @@ var
     end;
     if not Samples.Focused then
     begin
-      PageControl1.ActivePageIndex := 1;
+      ActivateSheet(1);//PageControl1.ActivePageIndex := 1;
       if Samples.CanFocus then
         Windows.SetFocus(Samples.Handle)
     end;
@@ -19765,14 +19801,14 @@ begin
             end;
           CAChangeSampleLoop:
             begin
-              SampleNumUpDown.Position := ComParams.CurrentSample;
+              ChangeSample(ComParams.CurrentSample, True, True);
               SampleLoopUpDown.Position := Pars.prm.Loop;
               SampleLoopEdit.SelectAll;
               SetF(1, SampleLoopEdit)
             end;
           CAChangeOrnamentLoop:
             begin
-              OrnamentNumUpDown.Position := ComParams.CurrentOrnament;
+              ChangeOrnament(ComParams.CurrentOrnament, True, True);
               OrnamentLoopUpDown.Position := Pars.prm.Loop;
               OrnamentLoopEdit.SelectAll;
               SetF(2, OrnamentLoopEdit)
@@ -20128,7 +20164,7 @@ begin
             end;
           CAChangeOrnamentSize:
             begin
-              OrnamentNumUpDown.Position  := ComParams.CurrentOrnament;
+              ChangeOrnament(ComParams.CurrentOrnament, True, True);
               OrnamentLenUpDown.Position  := Pars.prm.Size;
               OrnamentLoopUpDown.Position := Pars.prm.PrevLoop;
               if Ornaments.Focused then
@@ -20151,7 +20187,7 @@ begin
             end;
           CAChangeOrnamentValue:
             begin
-              OrnamentNumUpDown.Position := ComParams.CurrentOrnament;
+              ChangeOrnament(ComParams.CurrentOrnament, True, True);
               VTMP.Ornaments[ComParams.CurrentOrnament].Items[OldParams.prm.OrnamentShownFrom + OldParams.prm.OrnamentCursor] := Pars.prm.Value;
               with Ornaments do
               begin
@@ -20166,7 +20202,7 @@ begin
                   ShowMyCaret
                 else
                 begin
-                  PageControl1.ActivePageIndex := 2;
+                  ActivateSheet(2);//PageControl1.ActivePageIndex := 2;
                   if CanFocus then
                     Windows.SetFocus(Handle);
                 end;
@@ -20182,13 +20218,10 @@ begin
               Ornaments.CursorY := Pars.prm.OrnamentCursor mod Ornaments.NRaw;
               Ornaments.CursorX := Pars.prm.OrnamentCursor div Ornaments.NRaw * OrnNChars;
               Ornaments.ShownFrom := Pars.prm.OrnamentShownFrom;
-              if OrnamentNumUpDown.Position = ComParams.CurrentOrnament then
-                ChangeOrnament(ComParams.CurrentOrnament, True)
-              else
-                OrnamentNumUpDown.Position := ComParams.CurrentOrnament;
+              ChangeOrnament(ComParams.CurrentOrnament, True, True);
               if not Ornaments.Focused then
               begin
-                PageControl1.ActivePageIndex := 2;
+                ActivateSheet(2);//PageControl1.ActivePageIndex := 2;
                 if Ornaments.CanFocus then
                   Windows.SetFocus(Ornaments.Handle)
               end;
@@ -21797,25 +21830,25 @@ end;
 
 procedure TMDIChild.PrevSampleBtnClick(Sender: TObject);
 begin
-  SampleNumUpDown.Position := SampleNumUpDown.Position - 1;
+  ChangeSample(SampleNumUpDown.Position - 1, True, True);
   SamplePreview;
 end;
 
 procedure TMDIChild.NextSampleBtnClick(Sender: TObject);
 begin
-  SampleNumUpDown.Position := SampleNumUpDown.Position + 1;
+  ChangeSample(SampleNumUpDown.Position + 1, True, True);
   SamplePreview;
 end;
 
 procedure TMDIChild.PrevOrnBtnClick(Sender: TObject);
 begin
-  OrnamentNumUpDown.Position := OrnamentNumUpDown.Position - 1;
+  ChangeOrnament(OrnamentNumUpDown.Position - 1, True, True);
   OrnamentPreview;
 end;
 
 procedure TMDIChild.NextOrnBtnClick(Sender: TObject);
 begin
-  OrnamentNumUpDown.Position := OrnamentNumUpDown.Position + 1;
+  ChangeOrnament(OrnamentNumUpDown.Position + 1, True, True);
   OrnamentPreview;
 end;
 
@@ -21892,12 +21925,24 @@ begin
   MainForm.RedrawAllSamOrnBrowsers;
 end;
 
+procedure TMDIChild.ActivateSheet(ASheetIndex : Integer);
+begin
+  if (PageControl1.ActivePageIndex <> ASheetIndex) and
+     (ASheetIndex > -1) and
+     (ASheetIndex < PageControl1.PageCount) then
+  begin
+    if (PageControl1.ActivePageIndex=0) and (ASheetIndex in [1..2]) then RecalcSampOrnUsage;
+    PageControl1.ActivePageIndex:=ASheetIndex;
+//    PageControl1.Perform(TCM_SETCURFOCUS,ASheetIndex,0);
+  end;
+end;
+
 procedure TMDIChild.PageControl1Change(Sender: TObject);
 begin
 
   // If CTRL pressed, then change Tab in second turbotrack module
   if (GetKeyState(VK_CONTROL) < 0) and (TSWindow[0] <> nil) then begin
-    TSWindow[0].PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
+    TSWindow[0].ActivateSheet(PageControl1.ActivePageIndex);//TSWindow[0].PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
 
     if PageControl1.ActivePage = OptTab then begin
       TSWindow[0].ManualHz.Left := TrackChipFreq.Buttons[20].Left + 95;
@@ -21905,7 +21950,7 @@ begin
     end;
     // change Tab in third turbotrack module
     if TSWindow[1] <> nil then begin
-      TSWindow[1].PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
+      TSWindow[1].ActivateSheet(PageControl1.ActivePageIndex);//TSWindow[1].PageControl1.ActivePageIndex := PageControl1.ActivePageIndex;
 
       if PageControl1.ActivePage = OptTab then begin
         TSWindow[1].ManualHz.Left := TrackChipFreq.Buttons[20].Left + 95; //!!!
@@ -21929,6 +21974,7 @@ begin
     SamplesDriveSelect.FillDiskDrives;
     SampleTestLine.CursorX := 12;
     SampleTestLine.SetFocus;
+    RecalcSampOrnUsage;
   end;
 
   if PageControl1.ActivePage = OrnamentsSheet then
@@ -21936,6 +21982,7 @@ begin
     OrnamentsDriveSelect.FillDiskDrives;
     OrnamentTestLine.CursorX := 14;
     OrnamentTestLine.SetFocus;
+    RecalcSampOrnUsage;
   end;
 
   if PageControl1.ActivePage = OptTab then begin
@@ -22605,7 +22652,7 @@ begin
   if (ACol < 0) or (ACol >= 31) then CanSelect := False
   else
   begin
-    ChangeOrnament(ACol+1, False);
+    ChangeOrnament(ACol+1, True, False);
     SetStringGrid3Scroll(ACol);
     OrnamentPreview;
   end
@@ -22695,7 +22742,7 @@ begin
 end;
 
 procedure TMDIChild.StringGrid2DrawCell(Sender: TObject; ACol,
-  ARow: Integer; Rect: TRect; State: TGridDrawState);
+  ARow: Integer; RRect: TRect; State: TGridDrawState);
 var
   SavedAlign: word;
   FontColor, PrevColor: TColor;
@@ -22712,20 +22759,20 @@ var
 begin
   DC1 := GetDC(StringGrid2.Handle);
 
-  Rect_orig:=Rect;
-  Rect.Left:=0;
-  Rect.Top:=0;
-  Rect.Right:=Rect_orig.Right-Rect_orig.Left;
-  Rect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
+  Rect_orig:=RRect;
+  RRect.Left:=0;
+  RRect.Top:=0;
+  RRect.Right:=Rect_orig.Right-Rect_orig.Left;
+  RRect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
 
 //  p := SelectObject(DC1, Font.Handle);
 
   with Samples.fBitmapThumb do
   begin
-    if (Width <> Rect.Right) or (Height <> Rect.Bottom) then
+    if (Width <> RRect.Right) or (Height <> RRect.Bottom) then
     begin
-      Width := Rect.Right;
-      Height := Rect.Bottom;
+      Width := RRect.Right;
+      Height := RRect.Bottom;
     end;
     Canvas.Font := Font;
 
@@ -22739,8 +22786,8 @@ begin
 
     S := StringGrid2.Cells[ACol, ARow]; // cell content
 
-    Rect1:=Rect;
-    Rect2:=Rect;
+    Rect1:=RRect;
+    Rect2:=RRect;
     Rect1.Bottom:=StringGrid2.DefaultRowHeight-1+round(Font.Height*1.3);
     MaxYY:=Rect1.Bottom;
     Rect2.Top:=Rect1.Bottom-1;
@@ -22772,8 +22819,8 @@ begin
     Samp := VTMP.Samples[ACol+1];
     MaxX:=StringGrid2.DefaultColWidth-1;
     MaxY:=StringGrid2.DefaultRowHeight-1;
-    x1:=Rect.Left;
-    y1:=Rect.Bottom;
+    x1:=RRect.Left;
+    y1:=RRect.Bottom;
     Canvas.Pen.Color:=$808080;
     nx:=(MaxX- (22-1)) div 2;
     if Samp<>nil then
@@ -22823,20 +22870,25 @@ begin
     end;
 
 //    CSamOrnBackground
+    if SampUsage[ACol+1] then
+    begin
+      Canvas.Brush.Color := clRed;
+      Canvas.FillRect(Rect(RRect.Right-5,Rect2.Top+3, RRect.Right-2,Rect2.Top+6));
+    end;
 
     SavedAlign := SetTextAlign(Canvas.Handle, TA_CENTER);
 //    PosNumberX := (Rect.Left + (Rect.Right - Rect.Left) div 2) + StringGridTextHShift;
 //    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
     Canvas.Font:=StringGrid2.Font;
-    PosNumberX := Rect.Left+((Rect.Right - Rect.Left) div 2);
-    PosNumberY := Rect.Bottom+round(Font.Height*1.3)-1;
+    PosNumberX := RRect.Left+((RRect.Right - RRect.Left) div 2);
+    PosNumberY := RRect.Bottom+round(Font.Height*1.3)-1;
     Canvas.Brush.Style := bsClear;
     SetTextColor(Canvas.Handle, FontColor);
 //    Canvas.Font:=StringGrid2.Font;
-    Canvas.TextRect(Rect, PosNumberX, PosNumberY, S);
+    Canvas.TextRect(RRect, PosNumberX, PosNumberY, S);
     SetTextAlign(Canvas.Handle, SavedAlign);
   end;
-  BitBlt(DC1, Rect_orig.Left, Rect_orig.Top, Rect.Right, Rect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
+  BitBlt(DC1, Rect_orig.Left, Rect_orig.Top, RRect.Right, RRect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
   ReleaseDC(Handle, DC1);
 end;
 
@@ -22994,6 +23046,12 @@ begin
             Tail:=True;
           end;
       end;
+
+    if OrnUsage[ACol+1] then
+    begin
+      Canvas.Brush.Color := clRed;
+      Canvas.FillRect(Rect(RRect.Right-5,Rect2.Top+3, RRect.Right-2,Rect2.Top+6));
+    end;
 
     SavedAlign := SetTextAlign(Canvas.Handle, TA_CENTER);
 //    PosNumberX := (Rect.Left + (Rect.Right - Rect.Left) div 2) + StringGridTextHShift;
