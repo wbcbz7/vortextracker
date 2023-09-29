@@ -1,6 +1,6 @@
 object MDIChild: TMDIChild
-  Left = 854
-  Top = 0
+  Left = 815
+  Top = 92
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
@@ -1529,9 +1529,9 @@ object MDIChild: TMDIChild
       end
       object OrnamentEditBox: TGroupBox
         Left = 0
-        Top = 96
+        Top = 94
         Width = 369
-        Height = 368
+        Height = 366
         TabOrder = 2
       end
       object OrnamentsTestFieldBox: TGroupBox
@@ -1563,7 +1563,7 @@ object MDIChild: TMDIChild
       end
       object OrnamentBox: TGroupBox
         Left = 367
-        Top = 95
+        Top = 94
         Width = 154
         Height = 147
         TabOrder = 3
@@ -1747,6 +1747,55 @@ object MDIChild: TMDIChild
           Caption = '<<'
           TabOrder = 0
           OnClick = PrevOrnBtnClick
+        end
+      end
+      object OrnamentScrollBox: TScrollBox
+        Left = 0
+        Top = 0
+        Width = 1129
+        Height = 54
+        HorzScrollBar.Smooth = True
+        HorzScrollBar.Style = ssFlat
+        HorzScrollBar.ThumbSize = 8
+        HorzScrollBar.Tracking = True
+        VertScrollBar.Range = 120
+        VertScrollBar.Visible = False
+        AutoScroll = False
+        Color = clScrollBar
+        Ctl3D = True
+        ParentColor = False
+        ParentCtl3D = False
+        TabOrder = 6
+        object StringGrid3: TStringGrid
+          Left = 0
+          Top = 0
+          Width = 992
+          Height = 49
+          Cursor = crArrow
+          Hint = 'Ornament list'
+          BorderStyle = bsNone
+          Color = clWhite
+          ColCount = 31
+          DefaultColWidth = 26
+          DefaultRowHeight = 42
+          DefaultDrawing = False
+          FixedCols = 0
+          RowCount = 1
+          FixedRows = 0
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = [fsBold]
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColMoving, goThumbTracking]
+          ParentFont = False
+          ScrollBars = ssNone
+          TabOrder = 0
+          OnDrawCell = StringGrid3DrawCell
+          OnMouseUp = StringGrid3MouseUp
+          OnMouseWheelDown = StringGrid3MouseWheelDown
+          OnMouseWheelUp = StringGrid3MouseWheelUp
+          OnSelectCell = StringGrid3SelectCell
         end
       end
     end
@@ -2151,15 +2200,34 @@ object MDIChild: TMDIChild
     Top = 672
     object Copysample1: TMenuItem
       Caption = 'Copy sample'
-      OnClick = Copysample1Click
+      OnClick = CopySample1Click
     end
     object Pastesample1: TMenuItem
       Caption = 'Paste sample'
-      OnClick = Pastesample1Click
+      OnClick = PasteSample1Click
     end
     object ClearSample1: TMenuItem
       Caption = 'Clear Sample'
       OnClick = ClearSample1Click
+    end
+  end
+  object OrnamentListPopupMenu: TPopupMenu
+    AutoHotkeys = maManual
+    AutoPopup = False
+    OwnerDraw = True
+    Left = 452
+    Top = 672
+    object Copyornament1: TMenuItem
+      Caption = 'Copy ornament'
+      OnClick = CopyOrnament1Click
+    end
+    object Pasteornament1: TMenuItem
+      Caption = 'Paste ornament'
+      OnClick = PasteOrnament1Click
+    end
+    object Clearornament1: TMenuItem
+      Caption = 'Clear ornament'
+      OnClick = ClearOrnament1Click
     end
   end
 end

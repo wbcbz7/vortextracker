@@ -633,11 +633,17 @@ type
     ButtonDisjoin: TButton;
     SampleScrollBox: TScrollBox;
     StringGrid2: TStringGrid;
+    OrnamentScrollBox: TScrollBox;
+    StringGrid3: TStringGrid;
     UpdateTimer: TTimer;
     SampleListPopupMenu: TPopupMenu;
-    Copysample1: TMenuItem;
-    Pastesample1: TMenuItem;
+    OrnamentListPopupMenu: TPopupMenu;
+    CopySample1: TMenuItem;
+    PasteSample1: TMenuItem;
     ClearSample1: TMenuItem;
+    CopyOrnament1: TMenuItem;
+    PasteOrnament1: TMenuItem;
+    ClearOrnament1: TMenuItem;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
     function OuterHeight: Integer;    
@@ -751,6 +757,7 @@ type
     procedure SinchronizeModules;
     procedure SetStringGrid1Scroll(ACol: Integer);
     procedure SetStringGrid2Scroll(ACol: Integer);
+    procedure SetStringGrid3Scroll(ACol: Integer);
     procedure SelectPosition(Pos: Integer);
     procedure SelectPosition2(ps: Integer);
     procedure SelectPositions(SelGrid: TGridRect);
@@ -828,7 +835,7 @@ type
     procedure ChangeSample(n: Integer; UpdateUpDown: Boolean; UpdateGrid: Boolean);
     procedure ClearShownOrnament;
     procedure ClearShownSample;
-    procedure ChangeOrnament(n: Integer);
+    procedure ChangeOrnament(n: Integer; UpdateGrid: Boolean);
     procedure ChangeOrnamentLength(NL: Integer; UpdateUpDown: Boolean);
     procedure ChangeOrnamentLoop(NL: Integer; UpdateUpDown: Boolean);
     procedure ChangeSampleLength(NL: Integer; UpdateUpDown: Boolean);
@@ -1026,10 +1033,10 @@ type
     procedure FileBrowserSetFavorite(Sender: TObject);
     procedure FileBrowserSaveInstrument(Sender: TObject);
     procedure ButtonDisjoinClick(Sender: TObject);
-    procedure StringGrid2SelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid2SelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
     procedure StringGrid2MouseWheelDown(Sender: TObject;
       Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
     procedure StringGrid2MouseWheelUp(Sender: TObject; Shift: TShiftState;
@@ -1040,9 +1047,23 @@ type
     procedure UpdateTimerTimer(Sender: TObject);
     procedure StringGrid2MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure Copysample1Click(Sender: TObject);
-    procedure Pastesample1Click(Sender: TObject);
+    procedure StringGrid3SelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure StringGrid3MouseWheelDown(Sender: TObject;
+      Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid3MouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid3DrawCell(Sender: TObject; ACol, ARow: Integer;
+      RRect: TRect; State: TGridDrawState);
+    procedure StringGrid3Redraw(ACol:integer;Active:Boolean);
+    procedure StringGrid3MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure CopySample1Click(Sender: TObject);
+    procedure PasteSample1Click(Sender: TObject);
     procedure ClearSample1Click(Sender: TObject);
+    procedure CopyOrnament1Click(Sender: TObject);
+    procedure PasteOrnament1Click(Sender: TObject);
+    procedure ClearOrnament1Click(Sender: TObject);
 
 
 
@@ -2555,6 +2576,7 @@ begin
     cs:=char(ord('0')+i);
     if i>=10 then cs := char(ord(cs)+ ord('A')-ord('9')-1);
     StringGrid2.Cells[i-1,0]:=cs;
+    StringGrid3.Cells[i-1,0]:=cs;
   end;
 
   CreateTracks;
@@ -2639,6 +2661,7 @@ begin
   SampleLoopUpDown.DoubleBuffered := True;
   SampleNumUpDown.DoubleBuffered := True;
   SampleScrollBox.DoubleBuffered := True;
+  OrnamentScrollBox.DoubleBuffered := True;
   LoadSampleBtn.DoubleBuffered := True;
   SaveSampleBtn.DoubleBuffered := True;
   HideSamBrowserBtn.DoubleBuffered := True;
@@ -3019,6 +3042,7 @@ begin
     // Patterns positions
     PositionsScrollBox.Width := MainWidth - 10;
     SampleScrollBox.Width := MainWidth - 10;
+    OrnamentScrollBox.Width := MainWidth - 10;
     InitStringGridMetrix;
 
     // Channels box
@@ -3107,6 +3131,8 @@ begin
 
     // Bottom options
     SampleOpts.Width := SampleBrowserBox.Left + SampleBrowserBox.Width;
+    RecalcTonesBtn.Width:= 20 +
+      GetWidthText(RecalcTonesBtn.Caption, RecalcTonesBtn.Font);
     RecalcTonesBtn.Left := SampleEditBox.Width - RecalcTonesBtn.Width - 8;
 
     //Sample options
@@ -11205,7 +11231,7 @@ begin
         //next ornament
           if StrToInt(OrnamentNumEdit.Text) in [1..30] then
           begin
-            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) + 1);
+            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) + 1, True);
             OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) + 1));
           end;
         end;
@@ -11214,7 +11240,7 @@ begin
         //previous sample
           if StrToInt(OrnamentNumEdit.Text) in [2..31] then
           begin
-            ChangeSample(StrToInt(OrnamentNumEdit.Text) - 1, True, True);
+            ChangeOrnament(StrToInt(OrnamentNumEdit.Text) - 1, True);
             OrnamentNumEdit.Text := IntToStr((StrToInt(OrnamentNumEdit.Text) - 1));
           end;
         end;
@@ -12451,18 +12477,38 @@ begin
 end;
 
 procedure TMDIChild.OrnamentsMouseWheelUp(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+var c:integer;
 begin
-  if Ornaments.ShownFrom = 0 then Exit;
+  if IsMouseOverControl(OrnamentScrollBox) then
+  begin
+    FormMouseWheel(Sender,Shift,1,MousePos,Handled);
+    Exit;
+  end;
+
+  c := Ornaments.ShownFrom;
+  if c = 0 then Exit;
+
   Handled := True;
-  Ornaments.ShownFrom := Ornaments.ShownFrom - 1;
+  if c>2 then c:=2;
+  Ornaments.ShownFrom := Ornaments.ShownFrom - c;
   Ornaments.RedrawOrnaments(0);
 end;
 
 procedure TMDIChild.OrnamentsMouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+var c:integer;
 begin
-  if Ornaments.ShownFrom = MaxOrnLen - (OrnNCol * Ornaments.NRaw) then Exit;
+  if IsMouseOverControl(OrnamentScrollBox) then
+  begin
+    FormMouseWheel(Sender,Shift,-1,MousePos,Handled);
+    Exit;
+  end;
+
+  c:=MaxOrnLen - (OrnNCol * Ornaments.NRaw) - Ornaments.ShownFrom;
+  if c = 0 then Exit;
+  if c>2 then c:=2;
+
   Handled := True;
-  Ornaments.ShownFrom := Ornaments.ShownFrom + 1;
+  Ornaments.ShownFrom := Ornaments.ShownFrom + c;
   Ornaments.RedrawOrnaments(0);
 end;
 
@@ -13341,7 +13387,7 @@ begin
     Samples.ShowMyCaret
   end;
 
-  
+
   {if (Shift = [ssRight]) and (SamplesRightMouseButton) then   // Some old shit
     if SamplesClickStartLine >= SamplesClickEndLine then
     begin
@@ -14025,6 +14071,35 @@ begin
     ScrollPos := ColPos;
 
   SampleScrollBox.HorzScrollBar.Position := ScrollPos;
+end;
+
+procedure TMDIChild.SetStringGrid3Scroll(ACol: Integer);
+var
+  ScrollPos, ColPos, VisibleArea, SelRows, VisibleColCount: Integer;
+  Shift: Boolean;
+
+begin
+  VisibleColCount := OrnamentScrollBox.ClientWidth div (StringGrid3.DefaultColWidth+1);
+  SelRows := StringGrid3.Selection.Right - StringGrid3.Selection.Left + 1;
+
+  Shift := False;
+  if ACol = -1 then begin
+    if SelRows = 1 then
+      ACol := StringGrid3.Selection.Left + 1
+    else begin
+      ACol := StringGrid3.Selection.Left - (VisibleColCount div 2) + (SelRows div 2);
+      Shift := True;
+    end;
+  end;
+
+  ScrollPos := OrnamentScrollBox.HorzScrollBar.Position;
+  ColPos := ACol * (StringGrid3.DefaultColWidth+1);
+  VisibleArea := ScrollPos + OrnamentScrollBox.ClientWidth;
+
+  if (ColPos < ScrollPos) or (ColPos >= VisibleArea) or Shift then
+    ScrollPos := ColPos;
+
+  OrnamentScrollBox.HorzScrollBar.Position := ScrollPos;
 end;
 
 
@@ -15060,14 +15135,23 @@ begin
   K:= (FonSize*10) div 16;
   StringGrid2.DefaultColWidth:=K;
   StringGrid2.DefaultRowHeight:=FonSize+4;
-//    StringGrid2.Height:=FonSize+20;
   StringGrid2.Height:=FonSize+4;
-//    Panel16.Caption:=inttostr(FonSize);
 
   StringGrid2.Width := (StringGrid2.DefaultColWidth+1) * StringGrid2.ColCount -1;
   SampleScrollBox.AutoScroll := False;
   SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-FonSize div 2 +1;
   SampleScrollBox.Height := StringGrid2.DefaultRowHeight + HScrollbarSize + 5;
+
+  FonSize := GetWidthText('XXXX',StringGrid3.Font);
+  K:= (FonSize*10) div 16;
+  StringGrid3.DefaultColWidth:=K+4;
+  StringGrid3.DefaultRowHeight:=FonSize+4;
+  StringGrid3.Height:=FonSize+4;
+
+  StringGrid3.Width := (StringGrid3.DefaultColWidth+1) * StringGrid3.ColCount -1;
+  OrnamentScrollBox.AutoScroll := False;
+  OrnamentScrollBox.HorzScrollBar.Range := StringGrid3.Width-FonSize div 2 +1;
+  OrnamentScrollBox.Height := StringGrid3.DefaultRowHeight + HScrollbarSize + 5;
 
   SelectObject(DC, p);
   ReleaseDC(Handle, DC);
@@ -16523,6 +16607,15 @@ begin
       if Focused then
         ShowCaret(Handle);
     end;
+    with OrnamentTestLine do //update sample in ornament testline
+    begin
+      VTMP.Patterns[-1].Items[0].Channel[0].Sample := n;
+      if Focused then
+        HideCaret(Handle);
+      RedrawTestLine(0);
+      if Focused then
+        ShowCaret(Handle);
+    end; //end
     Samples.ShownSample := VTMP.Samples[SamNum];
 
     if UpdateUpDown then
@@ -16679,7 +16772,7 @@ begin
   BackupSongChanged := True;
 end;
 
-procedure TMDIChild.ChangeOrnament(n: Integer);
+procedure TMDIChild.ChangeOrnament(n: Integer; UpdateGrid: Boolean);
 var
   l: Integer;
 begin
@@ -16701,6 +16794,10 @@ begin
   else
     l := VTMP.Ornaments[OrnNum].Length;
   OrnamentLenUpDown.Position := l;
+
+  if UpdateGrid then
+    StringGrid3.Col:=n-1;
+
   if VTMP.Ornaments[OrnNum] = nil then
     l := 0
   else
@@ -17086,13 +17183,13 @@ procedure TMDIChild.OrnamentNumUpDownChangingEx(Sender: TObject; var AllowChange
 begin
   AllowChange := NewValue in [1..31];
   if AllowChange then
-    ChangeOrnament(NewValue)
+    ChangeOrnament(NewValue, True)
 end;
 
 procedure TMDIChild.OrnamentNumEditChange(Sender: TObject);
 begin
   if OrnNum <> OrnamentNumUpDown.Position then
-    ChangeOrnament(OrnamentNumUpDown.Position)
+    ChangeOrnament(OrnamentNumUpDown.Position, True)
 end;
 
 procedure TMDIChild.OrnamentNumEditExit(Sender: TObject);
@@ -17514,7 +17611,7 @@ begin
       Ornaments.CursorX := 0;
       Ornaments.CursorY := 0;
       Ornaments.ShownFrom := 0;
-      ChangeOrnament(OrnNum);
+      ChangeOrnament(OrnNum, True);
       ChangeList[ChangeCount - 1].NewParams.prm.OrnamentCursor := Ornaments.CursorY + Ornaments.CursorX div OrnNChars * Ornaments.NRaw;
       ChangeList[ChangeCount - 1].NewParams.prm.OrnamentShownFrom := 0;
     end
@@ -20086,7 +20183,7 @@ begin
               Ornaments.CursorX := Pars.prm.OrnamentCursor div Ornaments.NRaw * OrnNChars;
               Ornaments.ShownFrom := Pars.prm.OrnamentShownFrom;
               if OrnamentNumUpDown.Position = ComParams.CurrentOrnament then
-                ChangeOrnament(ComParams.CurrentOrnament)
+                ChangeOrnament(ComParams.CurrentOrnament, True)
               else
                 OrnamentNumUpDown.Position := ComParams.CurrentOrnament;
               if not Ornaments.Focused then
@@ -22492,14 +22589,25 @@ end;
 
 procedure TMDIChild.StringGrid2SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
-var
-  ScrollPos: Integer;
 begin
   if (ACol < 0) or (ACol >= 31) then CanSelect := False
   else
   begin
     ChangeSample(ACol+1, True, False);
     SetStringGrid2Scroll(ACol);
+    SamplePreview;
+  end
+end;
+
+procedure TMDIChild.StringGrid3SelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  if (ACol < 0) or (ACol >= 31) then CanSelect := False
+  else
+  begin
+    ChangeOrnament(ACol+1, False);
+    SetStringGrid3Scroll(ACol);
+    OrnamentPreview;
   end
 
 end;
@@ -22518,13 +22626,31 @@ begin
       for i:=0 to 0 do SampleScrollBox.Perform(WM_HSCROLL,1,0);
     Handled:=true;
   end;
+  if IsMouseOverControl(OrnamentScrollBox) then
+  begin
+    if WheelDelta>0 then
+      for i:=0 to 0 do OrnamentScrollBox.Perform(WM_HSCROLL,0,0)
+    else
+    if WheelDelta<0 then
+      for i:=0 to 0 do OrnamentScrollBox.Perform(WM_HSCROLL,1,0);
+    Handled:=true;
+  end;
   if IsMouseOverControl(Samples) then
   begin
     if WheelDelta>0 then
-      for i:=0 to 0 do SamplesMouseWheelUp(Sender,Shift,MousePos,Handled)
+      for i:=0 to 2 do SamplesMouseWheelUp(Sender,Shift,MousePos,Handled)
     else
     if WheelDelta<0 then
-      for i:=0 to 0 do SamplesMouseWheelDown(Sender,Shift,MousePos,Handled);
+      for i:=0 to 2 do SamplesMouseWheelDown(Sender,Shift,MousePos,Handled);
+    Handled:=true;
+  end;
+  if IsMouseOverControl(Ornaments) then
+  begin
+    if WheelDelta>0 then
+      for i:=0 to 2 do OrnamentsMouseWheelUp(Sender,Shift,MousePos,Handled)
+    else
+    if WheelDelta<0 then
+      for i:=0 to 2 do OrnamentsMouseWheelDown(Sender,Shift,MousePos,Handled);
     Handled:=true;
   end;
 
@@ -22536,7 +22662,19 @@ begin
   FormMouseWheel(Sender,Shift,-1,MousePos,Handled)
 end;
 
+procedure TMDIChild.StringGrid3MouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  FormMouseWheel(Sender,Shift,-1,MousePos,Handled)
+end;
+
 procedure TMDIChild.StringGrid2MouseWheelUp(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  FormMouseWheel(Sender,Shift,1,MousePos,Handled)
+end;
+
+procedure TMDIChild.StringGrid3MouseWheelUp(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
   FormMouseWheel(Sender,Shift,1,MousePos,Handled)
@@ -22702,11 +22840,184 @@ begin
   ReleaseDC(Handle, DC1);
 end;
 
+procedure TMDIChild.StringGrid3Redraw(ACol:integer;Active:Boolean);
+var
+  gds:TGridDrawState;
+  rect:TRect;
+begin
+  if Active then gds:=[gdSelected] else gds:=[];
+  rect.Left:=ACol*(StringGrid3.DefaultColWidth+1);
+  rect.Right:=(ACol+1)*(StringGrid3.DefaultColWidth+1)-1;
+  rect.Top:=0;
+  rect.Bottom:=StringGrid3.DefaultRowHeight;
+
+  StringGrid3DrawCell(self,ACol,0,rect,gds);
+end;
+
+procedure TMDIChild.StringGrid3DrawCell(Sender: TObject; ACol,
+  ARow: Integer; RRect: TRect; State: TGridDrawState);
+var
+  SavedAlign: word;
+  FontColor, PrevColor: TColor;
+  PosNumberX, PosNumberY: Integer;
+  LightBg: Boolean;
+  S: string;
+  MaxX,MaxYY,MaxY,I,X,Y,x1,y1,nx,yy,mt: Integer;
+  Orn:POrnament;
+  note:integer;
+  oct:integer;
+  Tail:Boolean;
+  rect1,rect2,rect_orig:TRect;
+  DC1: HDC;
+  mx:integer;
+const
+  NoteCol: array[0..11] of TColor=(
+  $000000, $0000ff, $00c0ff, $ff6000, $00c010, $0080ff,
+  $909090, $ff0080, $90f000, $ffb000, $00f0b0, $d000ff
+  );
+  OctCol: array[-4..4] of TColor=(
+  $404040,$8090a0,$c0a0c0,$c0c0d0,
+  0,
+  $d0c0c0,$c0a0c0,$a09080,$404040);
+
+begin
+  DC1 := GetDC(StringGrid3.Handle);
+
+  Rect_orig:=RRect;
+  RRect.Left:=0;
+  RRect.Top:=0;
+  RRect.Right:=Rect_orig.Right-Rect_orig.Left;
+  RRect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
+
+//  p := SelectObject(DC1, Font.Handle);
+
+  with Samples.fBitmapThumb do
+  begin
+    if (Width <> RRect.Right) or (Height <> RRect.Bottom) then
+    begin
+      Width := RRect.Right;
+      Height := RRect.Bottom;
+    end;
+    Canvas.Font := Font;
+
+    Canvas.Brush.Color := clBtnFace;
+    Canvas.Brush.Style:=bsSolid;
+
+    LightBg := not (gdSelected in State);
+
+    if (Canvas.Brush.Color < clGray) then// or LightBg then
+      FontColor := clBlack
+    else
+      FontColor := clWhite;
+
+    S := StringGrid3.Cells[ACol, ARow]; // cell content
+
+    Rect1:=RRect;
+    Rect2:=RRect;
+    Rect1.Bottom:=StringGrid3.DefaultRowHeight-1+round(Font.Height*1.3);
+    MaxYY:=Rect1.Bottom;
+    Rect2.Top:=Rect1.Bottom-1;
+
+    if gdSelected in State then
+    begin
+      FontColor := clWhite;
+      Canvas.Brush.Color := $824116;
+      Canvas.Pen.Color:=Canvas.Brush.Color;
+      Canvas.Rectangle(Rect1);
+      Canvas.FillRect(Rect2);
+      Canvas.Brush.Color:=clWhite;
+      Rect1.Top:=Rect1.Top+1;
+      Rect1.Left:=Rect1.Left+1;
+      Rect1.Right:=Rect1.Right-1;
+      Canvas.FillRect(Rect1);
+    end
+    else
+    begin
+      Canvas.FillRect(Rect2);
+      Canvas.Brush.Color:=clWhite;
+      Canvas.FillRect(Rect1);
+      Canvas.Pen.Color:=$c0c0c0;
+      Canvas.MoveTo(0,Rect1.Bottom);
+      Canvas.LineTo(Rect1.Right,Rect1.Bottom);
+    end;
+
+
+    Orn := VTMP.Ornaments[ACol+1];
+    MaxX:=StringGrid3.DefaultColWidth-1;
+    MaxY:=StringGrid3.DefaultRowHeight-1;
+    x1:=RRect.Left;
+    y1:=RRect.Bottom;
+//    Canvas.Pen.Color:=$404040;
+    Canvas.Brush.Color:=$000000;
+    Canvas.Brush.Style:=bsSolid;
+    nx:=(MaxX- (26-1)) div 2;
+
+    yy:=0;
+    Tail:=False;
+    mx:=nx+x1+10;
+    if (Orn<>nil) and ((Orn.Length>1) or (Orn.Items[0]<>0)) then //non empty
+      for y := 0 to (maxyy-2) div 2 do
+      begin
+        if Orn<>nil then
+          x := Orn.Items[yy]
+        else x := 0;
+        note:= x mod 12;
+        oct:=x div 12;
+        if (oct<-3) or (oct>3) then oct:=3;
+        if oct<>0 then
+        Canvas.Brush.Color:=OctCol[oct];
+        if oct>0 then
+          Canvas.FillRect(Rect(nx+x1+12,y1-MaxY+y*2,nx+x1+14+11,y1-MaxY+y*2+2))
+        else if oct<0 then
+          Canvas.FillRect(Rect(nx+x1+12-11,y1-MaxY+y*2,nx+x1+14-2,y1-MaxY+y*2+2));
+  {        if Tail then
+          Canvas.Brush.Color:=$808080
+        else
+          Canvas.Brush.Color:=$000000;
+  }
+        if note>=0 then Canvas.Brush.Color:=NoteCol[note]
+        else Canvas.Brush.Color:=NoteCol[note+12];
+        Canvas.FillRect(Rect(nx+x1+12+note,y1-MaxY+y*2,nx+x1+14+note,y1-MaxY+y*2+2));
+        inc(yy);
+        if Orn<>nil then
+        begin
+          if yy=Orn.Length then
+          begin
+            yy:=Orn.Loop;
+            Tail:=True;
+          end;
+        end
+        else
+          if yy=1 then
+          begin
+            yy:=0;
+            Tail:=True;
+          end;
+      end;
+
+    SavedAlign := SetTextAlign(Canvas.Handle, TA_CENTER);
+//    PosNumberX := (Rect.Left + (Rect.Right - Rect.Left) div 2) + StringGridTextHShift;
+//    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
+    Canvas.Font:=StringGrid3.Font;
+    PosNumberX := RRect.Left+((RRect.Right - RRect.Left) div 2);
+    PosNumberY := RRect.Bottom+round(Font.Height*1.3)-1;
+    Canvas.Brush.Style := bsClear;
+    SetTextColor(Canvas.Handle, FontColor);
+//    Canvas.Font:=StringGrid2.Font;
+    Canvas.TextRect(RRect, PosNumberX, PosNumberY, S);
+    SetTextAlign(Canvas.Handle, SavedAlign);
+  end;
+  BitBlt(DC1, Rect_orig.Left, Rect_orig.Top, RRect.Right, RRect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
+  ReleaseDC(Handle, DC1);
+end;
+
+
 procedure TMDIChild.UpdateTimerTimer(Sender: TObject);
 begin
   if PageControl1.ActivePage = SamplesSheet   then
     StringGrid2Redraw(StringGrid2.Col,True);
-//  if PageControl1.ActivePage = OrnamentsSheet then;
+  if PageControl1.ActivePage = OrnamentsSheet then
+    StringGrid3Redraw(StringGrid3.Col,True);
   if PageControl1.ActivePage = PatternsSheet then
   begin
     Panel17.Left := Width - Panel17.Width - 8;
@@ -22735,12 +23046,32 @@ begin
   end;
 end;
 
-procedure TMDIChild.Copysample1Click(Sender: TObject);
+procedure TMDIChild.StringGrid3MouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  pf: TPoint;
+  xx1,yy1: Integer;
+begin
+  if (Button = mbRight) then
+  begin
+    StringGrid3.MouseToCell(X, Y, xx1, yy1);
+    if xx1<0 then xx1:=0;
+    if xx1>30 then xx1:=30;
+    StringGrid3.Col := xx1;
+    StringGrid3.Update;
+//    SampleListPopupMenu.Items[0].Caption := StringGrid3.Cells[StringGrid2.Col,0];
+    pf:=StringGrid3.ClientToScreen(Point(X,Y));
+    OrnamentListPopupMenu.Popup(pf.X, pf.Y);
+  end;
+end;
+
+
+procedure TMDIChild.CopySample1Click(Sender: TObject);
 begin
   copySampleToBuffer(True);
 end;
 
-procedure TMDIChild.Pastesample1Click(Sender: TObject);
+procedure TMDIChild.PasteSample1Click(Sender: TObject);
 begin
   if LastClipboard = LCNone then Exit;
 
@@ -22777,5 +23108,45 @@ begin
   if Samples.CanFocus then
     Samples.SetFocus;
 end;
+
+procedure TMDIChild.CopyOrnament1Click(Sender: TObject);
+begin
+  copyOrnamentToBuffer(True);
+end;
+
+procedure TMDIChild.PasteOrnament1Click(Sender: TObject);
+begin
+  if LastClipboard in [LCNone, LCSamples] then Exit;
+
+  StopAndRestoreControls;
+  SaveOrnamentUndo;
+  ClearShownOrnament;
+
+  case LastClipboard of
+    LCOrnaments: pasteOrnamentFromBuffer;
+    LCTracks: PastePatternToOrnament;
+  end;
+
+  SaveOrnamentRedo;
+  if Ornaments.CanFocus then
+    Ornaments.SetFocus;
+end;
+
+procedure TMDIChild.ClearOrnament1Click(Sender: TObject);
+begin
+  StopAndRestoreControls;
+  SaveOrnamentUndo;
+
+  ClearShownOrnament;
+  SaveOrnamentRedo;
+
+  Ornaments.HideMyCaret;
+  Ornaments.RedrawOrnaments(0);
+  Ornaments.ShowMyCaret;
+  if Ornaments.CanFocus then
+    Ornaments.SetFocus;
+  
+end;
+
 
 end.
