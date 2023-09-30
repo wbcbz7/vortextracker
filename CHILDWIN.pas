@@ -3035,7 +3035,7 @@ begin
   end;
 
   // Mute/solo
-  Panel17.Left := Width - Panel17.Width - 8;
+  Panel17.Left := ClientWidth - Panel17.Width - 8;
   Panel16.Left := Panel17.Left - Panel16.Width - 2;
 
   if WidthChanged then begin
@@ -17604,6 +17604,7 @@ procedure TMDIChild.LoadOrnament(FN: string; Index: Integer = -1);
 var
   f: TextFile;
   s: string;
+  OrnNum2: integer;
   Orn: POrnament;
 
 begin
@@ -17647,7 +17648,9 @@ begin
       Ornaments.CursorX := 0;
       Ornaments.CursorY := 0;
       Ornaments.ShownFrom := 0;
-      ChangeOrnament(OrnNum, True, True);
+      OrnNum2:=OrnNum;
+      OrnNum:=-1;
+      ChangeOrnament(OrnNum2, True, True);
       ChangeList[ChangeCount - 1].NewParams.prm.OrnamentCursor := Ornaments.CursorY + Ornaments.CursorX div OrnNChars * Ornaments.NRaw;
       ChangeList[ChangeCount - 1].NewParams.prm.OrnamentShownFrom := 0;
     end
@@ -21812,6 +21815,7 @@ end;
 procedure TMDIChild.SamplePreview;
 begin
   if IsPlaying and (PlayMode in [PMPlayPattern, PMPlayModule]) then Exit;
+  if Samples.ShownSample=nil then Exit;
   StopPlayTimer.Enabled := False;
   SampleTestLine.PlayCurrentNote;
   StopPlayTimer.Enabled := True;
@@ -21820,6 +21824,7 @@ end;
 procedure TMDIChild.OrnamentPreview;
 begin
   if IsPlaying and (PlayMode in [PMPlayPattern, PMPlayModule]) then Exit;
+  if Ornaments.ShownOrnament=nil then Exit;
   if IsPlaying then ResetPlaying;
   if (Ornaments.ShownOrnament.Length = 1) and (Ornaments.ShownOrnament.Items[0] = 0) then Exit;
   StopPlayTimer.Enabled := False;
@@ -23078,7 +23083,7 @@ begin
     StringGrid3Redraw(StringGrid3.Col,True);
   if PageControl1.ActivePage = PatternsSheet then
   begin
-    Panel17.Left := Width - Panel17.Width - 8;
+    Panel17.Left := ClientWidth - Panel17.Width - 8;
     Panel16.Left := Panel17.Left - Panel16.Width - 2;
   end;
 
