@@ -644,6 +644,8 @@ type
     CopyOrnament1: TMenuItem;
     PasteOrnament1: TMenuItem;
     ClearOrnament1: TMenuItem;
+    CutSample1: TMenuItem;
+    CutOrnament1: TMenuItem;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -1066,6 +1068,8 @@ type
     procedure PasteOrnament1Click(Sender: TObject);
     procedure ClearOrnament1Click(Sender: TObject);
     procedure ActivateSheet(ASheetIndex : Integer);
+    procedure CutOrnament1Click(Sender: TObject);
+    procedure CutSample1Click(Sender: TObject);
 
 
 
@@ -5731,6 +5735,8 @@ begin
 
   if EmptySample then
     ShownSample := nil;
+
+  TMDIChild(ParentWin).StringGrid2Redraw(TMDIChild(ParentWin).StringGrid2.Col,True);
 end;
 
 procedure TOrnaments.SetCaretPosition;
@@ -6048,6 +6054,8 @@ begin
   SelectObject(DC1, p);
   if DC = 0 then
     ReleaseDC(Handle, DC1);
+
+  TMDIChild(ParentWin).StringGrid3Redraw(TMDIChild(ParentWin).StringGrid3.Col,True);
 end;
 
 procedure TOrnaments.DoHint;
@@ -8391,7 +8399,7 @@ begin
             Tracks.ShowSelection
           else
             Tracks.RemoveSelection;
-          Tracks.RedrawTracks(0);            
+          Tracks.RedrawTracks(0);
           Tracks.SetCaretPosition;
           Tracks.ShowMyCaret
         end
@@ -14079,7 +14087,7 @@ var
   Shift: Boolean;
 
 begin
-  VisibleColCount := SampleScrollBox.ClientWidth div (StringGrid2.DefaultColWidth+1);
+  VisibleColCount := SampleScrollBox.ClientWidth div (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth);
   SelRows := StringGrid2.Selection.Right - StringGrid2.Selection.Left + 1;
 
   Shift := False;
@@ -14093,7 +14101,7 @@ begin
   end;
 
   ScrollPos := SampleScrollBox.HorzScrollBar.Position;
-  ColPos := ACol * (StringGrid2.DefaultColWidth+1);
+  ColPos := ACol * (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth);
   VisibleArea := ScrollPos + SampleScrollBox.ClientWidth;
 
   if (ColPos < ScrollPos) or (ColPos >= VisibleArea) or Shift then
@@ -14108,7 +14116,7 @@ var
   Shift: Boolean;
 
 begin
-  VisibleColCount := OrnamentScrollBox.ClientWidth div (StringGrid3.DefaultColWidth+1);
+  VisibleColCount := OrnamentScrollBox.ClientWidth div (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth);
   SelRows := StringGrid3.Selection.Right - StringGrid3.Selection.Left + 1;
 
   Shift := False;
@@ -14122,7 +14130,7 @@ begin
   end;
 
   ScrollPos := OrnamentScrollBox.HorzScrollBar.Position;
-  ColPos := ACol * (StringGrid3.DefaultColWidth+1);
+  ColPos := ACol * (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth);
   VisibleArea := ScrollPos + OrnamentScrollBox.ClientWidth;
 
   if (ColPos < ScrollPos) or (ColPos >= VisibleArea) or Shift then
@@ -15166,9 +15174,9 @@ begin
   StringGrid2.DefaultRowHeight:=FonSize+4;
   StringGrid2.Height:=FonSize+4;
 
-  StringGrid2.Width := (StringGrid2.DefaultColWidth+1) * StringGrid2.ColCount -1;
+  StringGrid2.Width := (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth) * StringGrid2.ColCount ;
   SampleScrollBox.AutoScroll := False;
-  SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-FonSize div 2 +1;
+  SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-FonSize div 2 +StringGrid2.GridLineWidth +1 -StringGrid2.GridLineWidth;
   SampleScrollBox.Height := StringGrid2.DefaultRowHeight + HScrollbarSize + 5;
 
   FonSize := GetWidthText('XXXX',StringGrid3.Font);
@@ -15177,9 +15185,9 @@ begin
   StringGrid3.DefaultRowHeight:=FonSize+4;
   StringGrid3.Height:=FonSize+4;
 
-  StringGrid3.Width := (StringGrid3.DefaultColWidth+1) * StringGrid3.ColCount -1;
+  StringGrid3.Width := (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth) * StringGrid3.ColCount ;
   OrnamentScrollBox.AutoScroll := False;
-  OrnamentScrollBox.HorzScrollBar.Range := StringGrid3.Width-FonSize div 2 +1;
+  OrnamentScrollBox.HorzScrollBar.Range := StringGrid3.Width-FonSize div 2 +StringGrid3.GridLineWidth +1 -StringGrid3.GridLineWidth;
   OrnamentScrollBox.Height := StringGrid3.DefaultRowHeight + HScrollbarSize + 5;
 
   SelectObject(DC, p);
@@ -20105,6 +20113,7 @@ begin
               if Samples.Focused then
                 Samples.HideMyCaret;
               Samples.RedrawSamples(0);
+              Samples.SetCaretPosition;
               if Samples.Focused then
                 Samples.ShowMyCaret;
               SetF(1, Samples)
@@ -20146,6 +20155,7 @@ begin
               if Ornaments.Focused then
                 Ornaments.HideMyCaret;
               Ornaments.RedrawOrnaments(0);
+              Ornaments.SetCaretPosition;
               if Ornaments.Focused then
                 Ornaments.ShowMyCaret;
               SetF(2, Ornaments)
@@ -22738,8 +22748,8 @@ var
   rect:TRect;
 begin
   if Active then gds:=[gdSelected] else gds:=[];
-  rect.Left:=ACol*(StringGrid2.DefaultColWidth+1);
-  rect.Right:=(ACol+1)*(StringGrid2.DefaultColWidth+1)-1;
+  rect.Left:=ACol*(StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth);
+  rect.Right:=(ACol+1)*(StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth)-1;
   rect.Top:=0;
   rect.Bottom:=StringGrid2.DefaultRowHeight;
 
@@ -23077,10 +23087,6 @@ end;
 
 procedure TMDIChild.UpdateTimerTimer(Sender: TObject);
 begin
-  if PageControl1.ActivePage = SamplesSheet   then
-    StringGrid2Redraw(StringGrid2.Col,True);
-  if PageControl1.ActivePage = OrnamentsSheet then
-    StringGrid3Redraw(StringGrid3.Col,True);
   if PageControl1.ActivePage = PatternsSheet then
   begin
     Panel17.Left := ClientWidth - Panel17.Width - 8;
@@ -23153,6 +23159,25 @@ begin
     Samples.SetFocus;
 end;
 
+procedure TMDIChild.CutSample1Click(Sender: TObject);
+begin
+  copySampleToBuffer(True);
+  StopAndRestoreControls;
+  SaveSampleUndo(Samples.ShownSample);
+  ClearShownSample;
+  SamplesSelectionOff;
+  SaveSampleRedo;
+
+  SongChanged := True;
+  BackupSongChanged := True;
+
+  Samples.HideMyCaret;
+  Samples.RedrawSamples(0);
+  Samples.ShowMyCaret;
+  if Samples.CanFocus then
+    Samples.SetFocus;
+end;
+
 procedure TMDIChild.ClearSample1Click(Sender: TObject);
 begin
   StopAndRestoreControls;
@@ -23195,8 +23220,9 @@ begin
     Ornaments.SetFocus;
 end;
 
-procedure TMDIChild.ClearOrnament1Click(Sender: TObject);
+procedure TMDIChild.CutOrnament1Click(Sender: TObject);
 begin
+  copyOrnamentToBuffer(True);
   StopAndRestoreControls;
   SaveOrnamentUndo;
 
@@ -23211,5 +23237,20 @@ begin
   
 end;
 
+procedure TMDIChild.ClearOrnament1Click(Sender: TObject);
+begin
+  StopAndRestoreControls;
+  SaveOrnamentUndo;
+
+  ClearShownOrnament;
+  SaveOrnamentRedo;
+
+  Ornaments.HideMyCaret;
+  Ornaments.RedrawOrnaments(0);
+  Ornaments.ShowMyCaret;
+  if Ornaments.CanFocus then
+    Ornaments.SetFocus;
+
+end;
 
 end.

@@ -2206,8 +2206,12 @@ object MDIChild: TMDIChild
       Caption = 'Paste sample'
       OnClick = PasteSample1Click
     end
+    object Cutsample1: TMenuItem
+      Caption = 'Cut sample'
+      OnClick = Cutsample1Click
+    end
     object ClearSample1: TMenuItem
-      Caption = 'Clear Sample'
+      Caption = 'Clear sample'
       OnClick = ClearSample1Click
     end
   end
@@ -2224,6 +2228,10 @@ object MDIChild: TMDIChild
     object Pasteornament1: TMenuItem
       Caption = 'Paste ornament'
       OnClick = PasteOrnament1Click
+    end
+    object Cutornament1: TMenuItem
+      Caption = 'Cut ornament'
+      OnClick = Cutornament1Click
     end
     object Clearornament1: TMenuItem
       Caption = 'Clear ornament'
