@@ -5082,6 +5082,12 @@ begin
   else if TMDIChild(MainForm.ActiveMDIChild).Ornaments = A then
     Result := True
 
+  else if TMDIChild(MainForm.ActiveMDIChild).StringGrid2 = A then
+    Result := True
+
+  else if TMDIChild(MainForm.ActiveMDIChild).StringGrid3 = A then
+    Result := True
+
   else
     Result := False;
 
@@ -5130,6 +5136,12 @@ begin
   else if TMDIChild(MainForm.ActiveMDIChild).Ornaments = A then
     R := True
 
+  else if TMDIChild(MainForm.ActiveMDIChild).StringGrid2 = A then
+    R := True
+
+  else if TMDIChild(MainForm.ActiveMDIChild).StringGrid3 = A then
+    R := True
+
   else
     R := False;
 
@@ -5168,7 +5180,25 @@ begin
 
       Result := TMDIChild(MainForm.ActiveMDIChild).Ornaments = WC;
       if Result then
+      begin
         CT := 3;
+        Exit
+      end;
+
+      Result := TMDIChild(MainForm.ActiveMDIChild).StringGrid2 = WC;
+      if Result then
+      begin
+        CT := 4;
+        Exit;
+      end;
+
+      Result := TMDIChild(MainForm.ActiveMDIChild).StringGrid3 = WC;
+      if Result then
+      begin
+        CT := 5;
+        Exit;
+      end;
+
     end;
   end
 end;
@@ -5182,7 +5212,10 @@ begin
     case CtrlType of
       0: (WC as TCustomEdit).CutToClipboard;
       1: (WC as TTracks).CutToClipboard;
-      3: (WC as TOrnaments).CutToClipBoard;
+//      2: (WC as TSample).CutToClipBoard;
+      3: (WC as TOrnaments).CutToClipBoard;  //weird!!!
+      4: TMDIChild(MainForm.ActiveMDIChild).CutSample1Click(self);
+      5: TMDIChild(MainForm.ActiveMDIChild).CutOrnament1Click(self);
     end;
 end;
 
@@ -5209,7 +5242,17 @@ begin
         TMDIChild(MainForm.ActiveMDIChild).copyOrnamentToBuffer(False);
         LastClipboard := LCOrnaments;
       end;
-      
+
+      4: begin
+        TMDIChild(MainForm.ActiveMDIChild).copySampleToBuffer(True);
+        LastClipboard := LCSamples;
+      end;
+
+      5: begin
+        TMDIChild(MainForm.ActiveMDIChild).copyOrnamentToBuffer(True);
+        LastClipboard := LCOrnaments;
+      end;
+
     end;
 end;
 
@@ -5224,6 +5267,8 @@ begin
       1: (WC as TTracks).PasteFromClipboard(False);
       2: TMDIChild(ActiveMDIChild).pasteSampleFromBuffer(False);
       3: TMDIChild(ActiveMDIChild).pasteOrnamentFromBuffer;
+      4: TMDIChild(ActiveMDIChild).pasteSampleFromBuffer(True);
+      5: TMDIChild(ActiveMDIChild).pasteOrnamentFromBuffer;
     end;
 end;
 

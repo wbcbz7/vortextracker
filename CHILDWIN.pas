@@ -23155,27 +23155,12 @@ begin
   end;
 
   SaveSampleRedo;
-  if Samples.CanFocus then
-    Samples.SetFocus;
 end;
 
 procedure TMDIChild.CutSample1Click(Sender: TObject);
 begin
   copySampleToBuffer(True);
-  StopAndRestoreControls;
-  SaveSampleUndo(Samples.ShownSample);
-  ClearShownSample;
-  SamplesSelectionOff;
-  SaveSampleRedo;
-
-  SongChanged := True;
-  BackupSongChanged := True;
-
-  Samples.HideMyCaret;
-  Samples.RedrawSamples(0);
-  Samples.ShowMyCaret;
-  if Samples.CanFocus then
-    Samples.SetFocus;
+  ClearSample1Click(self);
 end;
 
 procedure TMDIChild.ClearSample1Click(Sender: TObject);
@@ -23193,8 +23178,6 @@ begin
   Samples.HideMyCaret;
   Samples.RedrawSamples(0);
   Samples.ShowMyCaret;
-  if Samples.CanFocus then
-    Samples.SetFocus;
 end;
 
 procedure TMDIChild.CopyOrnament1Click(Sender: TObject);
@@ -23216,25 +23199,12 @@ begin
   end;
 
   SaveOrnamentRedo;
-  if Ornaments.CanFocus then
-    Ornaments.SetFocus;
 end;
 
 procedure TMDIChild.CutOrnament1Click(Sender: TObject);
 begin
   copyOrnamentToBuffer(True);
-  StopAndRestoreControls;
-  SaveOrnamentUndo;
-
-  ClearShownOrnament;
-  SaveOrnamentRedo;
-
-  Ornaments.HideMyCaret;
-  Ornaments.RedrawOrnaments(0);
-  Ornaments.ShowMyCaret;
-  if Ornaments.CanFocus then
-    Ornaments.SetFocus;
-  
+  ClearOrnament1Click(self);
 end;
 
 procedure TMDIChild.ClearOrnament1Click(Sender: TObject);
@@ -23248,9 +23218,6 @@ begin
   Ornaments.HideMyCaret;
   Ornaments.RedrawOrnaments(0);
   Ornaments.ShowMyCaret;
-  if Ornaments.CanFocus then
-    Ornaments.SetFocus;
-
 end;
 
 end.

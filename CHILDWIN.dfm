@@ -2198,6 +2198,10 @@ object MDIChild: TMDIChild
     OwnerDraw = True
     Left = 424
     Top = 672
+    object Cutsample1: TMenuItem
+      Caption = 'Cut sample'
+      OnClick = Cutsample1Click
+    end
     object Copysample1: TMenuItem
       Caption = 'Copy sample'
       OnClick = CopySample1Click
@@ -2205,10 +2209,6 @@ object MDIChild: TMDIChild
     object Pastesample1: TMenuItem
       Caption = 'Paste sample'
       OnClick = PasteSample1Click
-    end
-    object Cutsample1: TMenuItem
-      Caption = 'Cut sample'
-      OnClick = Cutsample1Click
     end
     object ClearSample1: TMenuItem
       Caption = 'Clear sample'
@@ -2221,6 +2221,10 @@ object MDIChild: TMDIChild
     OwnerDraw = True
     Left = 452
     Top = 672
+    object Cutornament1: TMenuItem
+      Caption = 'Cut ornament'
+      OnClick = Cutornament1Click
+    end
     object Copyornament1: TMenuItem
       Caption = 'Copy ornament'
       OnClick = CopyOrnament1Click
@@ -2228,10 +2232,6 @@ object MDIChild: TMDIChild
     object Pasteornament1: TMenuItem
       Caption = 'Paste ornament'
       OnClick = PasteOrnament1Click
-    end
-    object Cutornament1: TMenuItem
-      Caption = 'Cut ornament'
-      OnClick = Cutornament1Click
     end
     object Clearornament1: TMenuItem
       Caption = 'Clear ornament'
