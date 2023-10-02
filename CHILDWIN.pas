@@ -646,6 +646,7 @@ type
     ClearOrnament1: TMenuItem;
     CutSample1: TMenuItem;
     CutOrnament1: TMenuItem;
+    SpeedButton1: TSpeedButton;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -9697,8 +9698,9 @@ var
     begin
       SamplesSelectionOff;
       GetSamParams(l, i);
-      if i >= l then
-        exit;
+// commented out, because we don't want to ignore changes below length
+//      if i >= l then
+//        exit;
       SongChanged := True;
       BackupSongChanged := True;
       ValidateSample2(SamNum);
@@ -17567,7 +17569,7 @@ end;
 
 procedure TMDIChild.SaveOrnamentBtnClick(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
 
   SaveTextDlg.Title := 'Save ornament';
   SaveTextDlg.Filter := 'Ornament files|*.vto|Text files|*.txt|All files|*.*';
@@ -17589,7 +17591,7 @@ end;
 
 procedure TMDIChild.LoadOrnamentBtnClick(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   
   LoadTextDlg.Title := 'Load ornament';
   LoadTextDlg.Filter := 'Ornament files|*.vto|Text files|*.txt|All files|*.*';
@@ -17833,7 +17835,7 @@ end;
 
 procedure TMDIChild.SaveSampleBtnClick(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
 
   SaveTextDlg.Title      := 'Save sample';
   SaveTextDlg.Filter     := 'Sample files|*.vts|Text files|*.txt|All files|*.*';
@@ -17855,7 +17857,7 @@ end;
 
 procedure TMDIChild.LoadSampleBtnClick(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
 
   LoadTextDlg.Title := 'Load sample';
   LoadTextDlg.Filter := 'Sample files|*.vts|Text files|*.txt|All files|*.*';
@@ -21500,7 +21502,7 @@ end;
 procedure TMDIChild.ClearSampleClick(Sender: TObject);
 
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
 
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
@@ -21869,7 +21871,7 @@ end;
 
 procedure TMDIChild.ClearOrnButClick(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   SaveOrnamentUndo;
 
   ClearShownOrnament;
@@ -21887,7 +21889,7 @@ procedure TMDIChild.PasteOrnButClick(Sender: TObject);
 begin
   if LastClipboard in [LCNone, LCSamples] then Exit;
 
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   SaveOrnamentUndo;
   ClearShownOrnament;
 
@@ -21906,7 +21908,7 @@ procedure TMDIChild.PasteSamButClick(Sender: TObject);
 begin
   if LastClipboard = LCNone then Exit;
 
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
 
@@ -22867,6 +22869,8 @@ begin
         mt:=MasterTon + Samp.Items[yy].Add_to_Ton;
         if Samp.Items[yy].Ton_Accumulation then
           MasterTon:=MasterTon+Samp.Items[yy].Add_to_Ton;
+        mt := mt and $fff;
+        if mt>$400 then mt:=mt-$1000; //wrap around 12 bits
         if mt>3 then mt:=((mt-3) div 48)+3;
         if mt<-3 then mt:=((mt+3) div 48)-3;
         if mt<-mx then mt:=-mx
@@ -22943,9 +22947,9 @@ const
   $909090, $ff0080, $90f000, $ffb000, $00f0b0, $d000ff
   );
   OctCol: array[-4..4] of TColor=(
-  $404040,$8090a0,$c0a0c0,$c0c0d0,
+  $404040,$6090a0,$80a0c0,$b0c0d0,
   0,
-  $d0c0c0,$c0a0c0,$a09080,$404040);
+  $d0c0b0,$c0a080,$a09060,$404040);
 
 begin
   DC1 := GetDC(StringGrid3.Handle);
@@ -23144,7 +23148,7 @@ procedure TMDIChild.PasteSample1Click(Sender: TObject);
 begin
   if LastClipboard = LCNone then Exit;
 
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
 
@@ -23165,7 +23169,7 @@ end;
 
 procedure TMDIChild.ClearSample1Click(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
 
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
@@ -23189,7 +23193,7 @@ procedure TMDIChild.PasteOrnament1Click(Sender: TObject);
 begin
   if LastClipboard in [LCNone, LCSamples] then Exit;
 
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   SaveOrnamentUndo;
   ClearShownOrnament;
 
@@ -23209,7 +23213,7 @@ end;
 
 procedure TMDIChild.ClearOrnament1Click(Sender: TObject);
 begin
-  StopAndRestoreControls;
+//  StopAndRestoreControls;
   SaveOrnamentUndo;
 
   ClearShownOrnament;

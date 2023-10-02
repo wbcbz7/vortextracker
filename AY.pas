@@ -132,8 +132,8 @@ var
   NumberOfSoundChips: integer = MaxNumberOfSoundChips;
 
  //Sound chip parameters
-  SoundChip: array[1..MaxNumberOfSoundChips] of TSoundChip;
-  AyumiChip1, AyumiChip2, AyumiChip3: TAyumi;
+  SoundChip: array[0..MaxNumberOfSoundChips] of TSoundChip;
+  AyumiChip0, AyumiChip1, AyumiChip2, AyumiChip3: TAyumi;
 
  //Parameters for all sound chips
   Index_AL, Index_AR, Index_BL, Index_BR, Index_CL, Index_CR: byte;
@@ -870,11 +870,12 @@ var
 
 
 begin
-
-  for Chip := 1 to NumberOfSoundChips do begin
+  for Chip := 0 to NumberOfSoundChips do begin
 
     r := @SoundChip[Chip].AYRegisters;
-    if Chip = 1 then
+    if Chip = 0 then
+      SetAyumiRegisters(AyumiChip0, r)
+    else if Chip = 1 then
       SetAyumiRegisters(AyumiChip1, r)
     else if Chip = 2 then
       SetAyumiRegisters(AyumiChip2, r)
@@ -1934,10 +1935,11 @@ begin
   AY_Tiks_In_Interrupt := round(AY_Freq / (Interrupt_Freq / 1000 * 8));
   CalcFiltKoefs;
 
-  if (RenderEngine = 2) and (AyumiChip1 <> nil) and (AyumiChip2 <> nil) and (AyumiChip3 <> nil) then begin
-    AyumiChip1.SetChipFreq(AY_Freq);
-    AyumiChip2.SetChipFreq(AY_Freq);
-    AyumiChip3.SetChipFreq(AY_Freq);
+  if (RenderEngine = 2) then begin
+    if AyumiChip0 <> nil then AyumiChip0.SetChipFreq(AY_Freq);
+    if AyumiChip1 <> nil then AyumiChip1.SetChipFreq(AY_Freq);
+    if AyumiChip2 <> nil then AyumiChip2.SetChipFreq(AY_Freq);
+    if AyumiChip3 <> nil then AyumiChip3.SetChipFreq(AY_Freq);
   end;
 
   if R then

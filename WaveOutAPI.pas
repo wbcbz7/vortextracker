@@ -386,6 +386,13 @@ begin
   end;
 
   // Init Ayumi Engine
+  AyumiChip0 := TAyumi.Create;
+  AyumiChip0.Configure(Emulating_Chip = YM_Chip, AY_Freq, SampleRate, DCType);
+  AyumiChip0.SetDCCutoff(DCCutOff);
+  AyumiChip0.SetPan(0, Panoram[0]/255, False);
+  AyumiChip0.SetPan(1, Panoram[1]/255, False);
+  AyumiChip0.SetPan(2, Panoram[2]/255, False);
+
   AyumiChip1 := TAyumi.Create;
   AyumiChip1.Configure(Emulating_Chip = YM_Chip, AY_Freq, SampleRate, DCType);
   AyumiChip1.SetDCCutoff(DCCutOff);
@@ -419,9 +426,11 @@ begin
   WaitForWOThreadExit;
   StopTrackSlider;
 
+  AyumiChip0.Free;
   AyumiChip1.Free;
   AyumiChip2.Free;
   AyumiChip3.Free;
+  AyumiChip0 := nil;
   AyumiChip1 := nil;
   AyumiChip2 := nil;
   AyumiChip3 := nil;
@@ -482,6 +491,9 @@ begin
     Noise.Seed := $FFFF;
     Noise.Val := 0;
   end;
+
+  if (chip = 0) and (AyumiChip0 <> nil) then
+    AyumiChip0.ResetChip;
 
   if (chip = 1) and (AyumiChip1 <> nil) then
     AyumiChip1.ResetChip;
@@ -812,7 +824,7 @@ var
   PrevPosNum3, PrevPatNum3: Integer;
 
   TMPFileName: string;
-  ayumi1, ayumi2, ayumi3: TAyumi;
+  ayumi0, ayumi1, ayumi2, ayumi3: TAyumi;
 
   CurChan: Integer;
   Separate: Boolean;

@@ -1,6 +1,6 @@
 object MDIChild: TMDIChild
-  Left = 815
-  Top = 92
+  Left = 810
+  Top = 122
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
@@ -1319,6 +1319,12 @@ object MDIChild: TMDIChild
         Width = 345
         Height = 51
         TabOrder = 0
+        object SpeedButton1: TSpeedButton
+          Left = 200
+          Top = 16
+          Width = 23
+          Height = 22
+        end
         object SaveSampleBtn: TButton
           Left = 282
           Top = 14

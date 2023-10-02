@@ -2921,12 +2921,20 @@ begin
 
     DCType := Saved_DCType;
     DCCutOff := Saved_DCCutOff;
-    if (AyumiChip1 <> nil) and (AyumiChip2 <> nil) and (AyumiChip3 <> nil) then begin
+    if (AyumiChip0 <> nil) then begin
+      AyumiChip0.SetDCType(DCType);
+      AyumiChip0.SetDCCutoff(DCCutOff);
+    end;
+    if (AyumiChip1 <> nil) then begin
       AyumiChip1.SetDCType(DCType);
-      AyumiChip2.SetDCType(DCType);
-      AyumiChip3.SetDCType(DCType);
       AyumiChip1.SetDCCutoff(DCCutOff);
+    end;
+    if (AyumiChip2 <> nil) then begin
+      AyumiChip2.SetDCType(DCType);
       AyumiChip2.SetDCCutoff(DCCutOff);
+    end;
+    if (AyumiChip3 <> nil) then begin
+      AyumiChip3.SetDCType(DCType);
       AyumiChip3.SetDCCutoff(DCCutOff);
     end;
 
@@ -3525,7 +3533,8 @@ begin
 
   if (RenderEngine = 2) and (AyumiChip1 <> nil) then
   begin
-    AyumiChip1.SetChipType(Emulating_Chip = YM_Chip);
+    if (AyumiChip0 <> nil) then AyumiChip0.SetChipType(Emulating_Chip = YM_Chip);
+    if (AyumiChip1 <> nil) then AyumiChip1.SetChipType(Emulating_Chip = YM_Chip);
     if (AyumiChip2 <> nil) then AyumiChip2.SetChipType(Emulating_Chip = YM_Chip);
     if (AyumiChip3 <> nil) then AyumiChip3.SetChipType(Emulating_Chip = YM_Chip);
   end
