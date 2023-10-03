@@ -646,7 +646,7 @@ type
     ClearOrnament1: TMenuItem;
     CutSample1: TMenuItem;
     CutOrnament1: TMenuItem;
-    SpeedButton1: TSpeedButton;
+    PlaySampleBtn: TPanel;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -2936,8 +2936,10 @@ begin
 
 
   // Samples Testline
-  LoadSampleBtn.Left := SampleTestLine.Left + SampleTestLine.Width + 7;
+  PlaySampleBtn.Left := SampleTestLine.Left+ SampleTestLine.Width + 7;
+  LoadSampleBtn.Left := PlaySampleBtn.Left + PlaySampleBtn.Width + 7;
   SaveSampleBtn.Left := LoadSampleBtn.Left + LoadSampleBtn.Width + 4;
+  PlaySampleBtn.Height := SampleTestLine.Height-2;
   LoadSampleBtn.Height := SampleTestLine.Height;
   SaveSampleBtn.Height := SampleTestLine.Height;
 
@@ -8071,9 +8073,9 @@ begin
 
 
   // Change octave: Alt + 1..8
-  if (Shift = [ssAlt]) and (Key >= 49) and (Key <= 56) then
+  if (Shift = [ssAlt]) and (Key >= ord('1')) and (Key <= ord('8')) then
   begin
-    OctaveUpDown.Position := Key - 48;
+    OctaveUpDown.Position := Key - ord('0');
     Exit;
   end;
 
@@ -8110,8 +8112,8 @@ begin
     Exit;
   end;
 
-  Incr := (Key = 187);
-  Decr := (Key = 189);
+  Incr := (Key = 187); //+
+  Decr := (Key = 189); //-
 
   if Tracks.IsSelected and (Incr or Decr) then begin
 
@@ -8211,7 +8213,7 @@ begin
       else
         DoMuteDismuteChannels;
 
-    220:
+    220: // backslash \
       if (ssCtrl in Shift) and (ssShift in Shift) then
       begin
         DoDiffSlide;
@@ -8505,7 +8507,7 @@ begin
       else
         DoClearLine;
 
-    192:
+    192: // key ~
       begin
         if Shift = [] then
         begin
@@ -8791,13 +8793,13 @@ var
 
 begin
 
-  // Change octave: Alt + 0..9
-  if (Shift = [ssAlt]) and (Key >= 49) and (Key <= 56) then
+  // Change octave: Alt + 0..8
+  if (Shift = [ssAlt]) and (Key >= ord('1')) and (Key <= ord('8')) then
   begin
     if KeyPressed = Key then Exit;
     KeyPressed := Key;
 
-    TestOct := Key - 48;
+    TestOct := Key - ord('0');
     Note := (TMDIChild(ParWind).VTMP.Patterns[-1].Items[Ord(TestSample)].Channel[0].Note mod 12) + (TestOct - 1) * 12;
 
     if TestSample then
@@ -9542,8 +9544,8 @@ var
     with Samples do
     begin
       GetSamParams(l, i);
-      if i >= l then
-        exit;
+//      if i >= l then
+//        exit;
       SongChanged := True;
       BackupSongChanged := True;
       ValidateSample2(SamNum);
@@ -9815,9 +9817,9 @@ begin
 
 
   // Alt+1..8 - change octave
-  if (Shift = [ssAlt]) and (Key >= 49) and (Key <= 56) then
+  if (Shift = [ssAlt]) and (Key >= ord('1')) and (Key <= ord('8')) then
   begin
-    SamOctaveNum.Position  := Key - 48;
+    SamOctaveNum.Position  := Key - ord('0');
     SampleTestLine.TestOct := SamOctaveNum.Position;
     Exit;
   end;
@@ -10058,9 +10060,9 @@ begin
         DoToggle(TgMaskEnv);
       Ord(' '):
         DoToggleSpace;
-      $BB, VK_ADD:
+      $BB, VK_ADD: //+
         DoTogglePlus;
-      $BD, VK_SUBTRACT:
+      $BD, VK_SUBTRACT: //-
         DoToggleMinus;
       Ord('0')..Ord('9'):
         DoDigit(Key - Ord('0'));
@@ -10069,7 +10071,7 @@ begin
           DoDigit(Key - Ord('A') + 10)
         else
           Exit;
-      192:
+      192: // '~'
         if SampleTestLine.CanFocus then
           SampleTestLine.SetFocus
     end
@@ -10293,11 +10295,11 @@ begin
   else if Shift = [ssShift] then
     case Key of
 
-      Ord('6'):
+      Ord('6'): // Shift + 6
         DoToggleAccA;
-      $BB:
+      $BB: // Shift +
         DoTogglePlus;
-      $BD:
+      $BD: // Shift -
         DoToggle_;
 
       // Shift + Home
@@ -10966,8 +10968,8 @@ var
 
 begin
 
-  Incr := (Key = VK_ADD) or (Key = 187);
-  Decr := (Key = VK_SUBTRACT) or (Key = 189);
+  Incr := (Key = VK_ADD) or (Key = 187); // +
+  Decr := (Key = VK_SUBTRACT) or (Key = 189); // -
 
   // Increase/Decrease
   if Incr or Decr then begin
@@ -11001,9 +11003,9 @@ begin
     Ornaments.InputONumber := 0;
 
   // Alt+1..8 - change octave
-  if (Shift = [ssAlt]) and (Key >= 49) and (Key <= 56) then
+  if (Shift = [ssAlt]) and (Key >= ord('1')) and (Key <= ord('8')) then
   begin
-    OrnOctaveNum.Position := Key - 48;
+    OrnOctaveNum.Position := Key - ord('0');
     OrnamentTestLine.TestOct := OrnOctaveNum.Position;
     Exit;
   end;
@@ -11138,9 +11140,9 @@ begin
         end;
       Ord(' '):
         DoToggleSpace;
-      $BB, VK_ADD:
+      $BB, VK_ADD: // +
         DoTogglePlus;
-      $BD, VK_SUBTRACT:
+      $BD, VK_SUBTRACT: // -
         DoToggleMinus;
       Ord('0')..Ord('9'):
         DoDigit(Key - Ord('0'));
@@ -11228,7 +11230,7 @@ begin
         end;
     else
       begin
-        if (Key >= 256) or (Key = 16) or (Key = 17) then Exit;
+        if (Key >= 256) or (Key = 16) or (Key = 17) then Exit; // shift / ctrl
         
         ValidateOrnament(OrnNum);
         GetOrnParams(ll, ii, cc);
@@ -11333,7 +11335,7 @@ begin
     end
   else if Shift = [ssShift] then
     case Key of
-      $BB:
+      $BB: // +
         DoTogglePlus;
       VK_HOME:
         begin
@@ -11461,7 +11463,7 @@ begin
 
     else
       begin
-        if (Key = 16) or (Key = 17) then Exit;
+        if (Key = 16) or (Key = 17) then Exit; // shift / ctrl
         
         Ornaments.isLineTesting := True;
         OrnamentTestLine.CursorX := 8;
@@ -11473,7 +11475,7 @@ begin
     end
   else if Shift = [ssShift, ssCtrl] then
   begin
-    if (Key >= 256) or (Key = 16) or (Key = 17) then Exit;
+    if (Key >= 256) or (Key = 16) or (Key = 17) then Exit; // shift / ctrl
       
     ValidateOrnament(OrnNum);
     GetOrnParams(ll, ii, cc);
@@ -17361,7 +17363,7 @@ begin
         ToggleAutoEnv;
       Ord('R'):
         ToggleAutoStep;
-      192:
+      192: // '~'
         begin
 {        case PageControl1.TabIndex of
           0: PageControl1.TabIndex:=1;
@@ -17480,7 +17482,7 @@ end;
 procedure TMDIChild.StringGrid1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var sel: TGridRect;
 begin
-  if (Shift = []) and (Key = 192) then
+  if (Shift = []) and (Key = 192) then // '~'
     if Tracks.CanFocus then
       Tracks.SetFocus;
 
@@ -21828,6 +21830,7 @@ procedure TMDIChild.SamplePreview;
 begin
   if IsPlaying and (PlayMode in [PMPlayPattern, PMPlayModule]) then Exit;
   if Samples.ShownSample=nil then Exit;
+  if IsPlaying then ResetPlaying;
   StopPlayTimer.Enabled := False;
   SampleTestLine.PlayCurrentNote;
   StopPlayTimer.Enabled := True;
@@ -22659,7 +22662,7 @@ begin
   begin
     ChangeSample(ACol+1, True, False);
     SetStringGrid2Scroll(ACol);
-    SamplePreview;
+    if StringGrid2.Focused then SamplePreview;
   end
 end;
 
@@ -22671,7 +22674,7 @@ begin
   begin
     ChangeOrnament(ACol+1, True, False);
     SetStringGrid3Scroll(ACol);
-    OrnamentPreview;
+    if StringGrid3.Focused then OrnamentPreview;
   end
 
 end;
@@ -22782,8 +22785,6 @@ begin
   RRect.Right:=Rect_orig.Right-Rect_orig.Left;
   RRect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
 
-//  p := SelectObject(DC1, Font.Handle);
-
   with Samples.fBitmapThumb do
   begin
     if (Width <> RRect.Right) or (Height <> RRect.Bottom) then
@@ -22888,7 +22889,6 @@ begin
       end;
     end;
 
-//    CSamOrnBackground
     if SampUsage[ACol+1] then
     begin
       Canvas.Brush.Color := clRed;
@@ -22896,14 +22896,11 @@ begin
     end;
 
     SavedAlign := SetTextAlign(Canvas.Handle, TA_CENTER);
-//    PosNumberX := (Rect.Left + (Rect.Right - Rect.Left) div 2) + StringGridTextHShift;
-//    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
     Canvas.Font:=StringGrid2.Font;
     PosNumberX := RRect.Left+((RRect.Right - RRect.Left) div 2);
     PosNumberY := RRect.Bottom+round(Font.Height*1.3)-1;
     Canvas.Brush.Style := bsClear;
     SetTextColor(Canvas.Handle, FontColor);
-//    Canvas.Font:=StringGrid2.Font;
     Canvas.TextRect(RRect, PosNumberX, PosNumberY, S);
     SetTextAlign(Canvas.Handle, SavedAlign);
   end;
@@ -22959,8 +22956,6 @@ begin
   RRect.Top:=0;
   RRect.Right:=Rect_orig.Right-Rect_orig.Left;
   RRect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
-
-//  p := SelectObject(DC1, Font.Handle);
 
   with Samples.fBitmapThumb do
   begin
@@ -23018,7 +23013,6 @@ begin
     MaxY:=StringGrid3.DefaultRowHeight-1;
     x1:=RRect.Left;
     y1:=RRect.Bottom;
-//    Canvas.Pen.Color:=$404040;
     Canvas.Brush.Color:=$000000;
     Canvas.Brush.Style:=bsSolid;
     nx:=(MaxX- (26-1)) div 2;
@@ -23073,14 +23067,11 @@ begin
     end;
 
     SavedAlign := SetTextAlign(Canvas.Handle, TA_CENTER);
-//    PosNumberX := (Rect.Left + (Rect.Right - Rect.Left) div 2) + StringGridTextHShift;
-//    PosNumberY := Rect.Top + 5 + StringGridTextVShift;
     Canvas.Font:=StringGrid3.Font;
     PosNumberX := RRect.Left+((RRect.Right - RRect.Left) div 2);
     PosNumberY := RRect.Bottom+round(Font.Height*1.3)-1;
     Canvas.Brush.Style := bsClear;
     SetTextColor(Canvas.Handle, FontColor);
-//    Canvas.Font:=StringGrid2.Font;
     Canvas.TextRect(RRect, PosNumberX, PosNumberY, S);
     SetTextAlign(Canvas.Handle, SavedAlign);
   end;
@@ -23113,7 +23104,6 @@ begin
     if xx1>30 then xx1:=30;
     StringGrid2.Col := xx1;
     StringGrid2.Update;
-//    SampleListPopupMenu.Items[0].Caption := StringGrid2.Cells[StringGrid2.Col,0];
     pf:=StringGrid2.ClientToScreen(Point(X,Y));
     SampleListPopupMenu.Popup(pf.X, pf.Y);
   end;
@@ -23132,7 +23122,6 @@ begin
     if xx1>30 then xx1:=30;
     StringGrid3.Col := xx1;
     StringGrid3.Update;
-//    SampleListPopupMenu.Items[0].Caption := StringGrid3.Cells[StringGrid2.Col,0];
     pf:=StringGrid3.ClientToScreen(Point(X,Y));
     OrnamentListPopupMenu.Popup(pf.X, pf.Y);
   end;

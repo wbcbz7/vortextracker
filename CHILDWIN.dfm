@@ -1319,14 +1319,8 @@ object MDIChild: TMDIChild
         Width = 345
         Height = 51
         TabOrder = 0
-        object SpeedButton1: TSpeedButton
-          Left = 200
-          Top = 16
-          Width = 23
-          Height = 22
-        end
         object SaveSampleBtn: TButton
-          Left = 282
+          Left = 290
           Top = 14
           Width = 49
           Height = 27
@@ -1338,7 +1332,7 @@ object MDIChild: TMDIChild
           OnClick = SaveSampleBtnClick
         end
         object LoadSampleBtn: TButton
-          Left = 229
+          Left = 237
           Top = 14
           Width = 49
           Height = 27
@@ -1354,6 +1348,15 @@ object MDIChild: TMDIChild
           ShowHint = True
           TabOrder = 0
           OnClick = LoadSampleBtnClick
+        end
+        object PlaySampleBtn: TPanel
+          Left = 188
+          Top = 15
+          Width = 46
+          Height = 24
+          Caption = 'Play'
+          TabOrder = 2
+          Visible = False
         end
       end
       object SampleScrollBox: TScrollBox
