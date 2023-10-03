@@ -20,7 +20,7 @@ uses
   Windows, Messages, Types, Classes, Graphics, Forms, Controls, StdCtrls, Menus,
   SysUtils, trfuncs, ComCtrls, WaveOutAPI, Grids, AY, Buttons, ExtCtrls, Dialogs,
   Math, ColorThemes, ExportWavOpts, StrUtils, RegExpr, RichEdit, ShellApi,
-  ExceptionLog;
+  ExceptionLog, dpMemBmp;
 
 
 const
@@ -189,7 +189,7 @@ type
   TSamples = class(TWinControl)
   public
     fBitmap: TBitmap;
-    fBitmapThumb: TBitmap;
+    fBitmapThumb: TdMemBmp;
     ArrowsFont: TFont;
     ArrowsFontW, ArrowsFontH: Integer;
     InputSNumber, CelW, CelH: Integer;
@@ -228,6 +228,7 @@ type
   TOrnaments = class(TWinControl)
   public
     fBitmap: TBitmap;
+    fBitmapThumb: TdMemBmp;
     InputONumber, CelW, CelH: Integer;
     CursorX, CursorY {,SelW,SelH}: Integer;
     ShownFrom, NOfLines: Integer;
@@ -2680,7 +2681,9 @@ begin
   SampleLoopUpDown.DoubleBuffered := True;
   SampleNumUpDown.DoubleBuffered := True;
   SampleScrollBox.DoubleBuffered := True;
+  StringGrid2.DoubleBuffered := True;
   OrnamentScrollBox.DoubleBuffered := True;
+  StringGrid3.DoubleBuffered := True;
   LoadSampleBtn.DoubleBuffered := True;
   SaveSampleBtn.DoubleBuffered := True;
   HideSamBrowserBtn.DoubleBuffered := True;
@@ -3517,7 +3520,7 @@ begin
   Parent := TWinControl(AOwner);
   ControlStyle := [csOpaque, csClickEvents, csSetCaption, csFixedHeight];
   fBitmap := TBitmap.Create;
-  fBitmapThumb := TBitmap.Create;
+  fBitmapThumb := TdMemBmp.Create(0,0);
   TabStop := True;
   ParentColor := False;
   BevelKind := bkTile;
@@ -3591,8 +3594,8 @@ begin
 
   Samples.fBitmap.Free;
   Samples.fBitmap := TBitmap.Create;
-  Samples.fBitmapThumb.Free;
-  Samples.fBitmapThumb := TBitmap.Create;
+//  Samples.fBitmapThumb.Free;
+//  Samples.fBitmapThumb := TdMemBmp.Create(StringGrid2.Width,StringGrid2.Height);
 
   Samples.ClientWidth := Samples.CelW * 40;
   if Samples.ClientWidth < 320 then Samples.ClientWidth := 320;
@@ -3646,6 +3649,7 @@ begin
   inherited Create(AOwner);
   Parent := TWinControl(AOwner);
   fBitmap := TBitmap.Create;
+  fBitmapThumb := TdMemBmp.Create(0,0);
   ControlStyle := [csOpaque, csClickEvents, csSetCaption, csFixedHeight];
   TabStop := True;
   ParentColor := False;
@@ -15246,8 +15250,8 @@ begin
   FonSize := GetWidthText('XXXX',StringGrid2.Font);
   K:= (FonSize*10) div 16;
   StringGrid2.DefaultColWidth:=K;
-  StringGrid2.DefaultRowHeight:=FonSize+4;
-  StringGrid2.Height:=FonSize+4;
+  StringGrid2.DefaultRowHeight:=round(FonSize*1.35/2)*2;
+  StringGrid2.Height:=StringGrid2.DefaultRowHeight;
 
   StringGrid2.Width := (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth) * StringGrid2.ColCount ;
   SampleScrollBox.AutoScroll := False;
@@ -15257,8 +15261,8 @@ begin
   FonSize := GetWidthText('XXXX',StringGrid3.Font);
   K:= (FonSize*10) div 16;
   StringGrid3.DefaultColWidth:=K+4;
-  StringGrid3.DefaultRowHeight:=FonSize+4;
-  StringGrid3.Height:=FonSize+4;
+  StringGrid3.DefaultRowHeight:=round(FonSize*1.35/2)*2;
+  StringGrid3.Height:=StringGrid2.DefaultRowHeight;
 
   StringGrid3.Width := (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth) * StringGrid3.ColCount ;
   OrnamentScrollBox.AutoScroll := False;
@@ -16705,6 +16709,8 @@ procedure TMDIChild.ChangeSample(n: Integer; UpdateUpDown: Boolean; UpdateGrid: 
 var
   l: Integer;
 begin
+  if n<1 then n:=1;
+  if n>31 then n:=31;
 
   if SamNum <> n then
   begin
@@ -22845,10 +22851,14 @@ var
   Samp:PSample;
   Tail:Boolean;
   rect1,rect2,rect_orig:TRect;
-  DC1: HDC;
   mx:integer;
+  pal:integer;
+const
+  Cols:array[0..1,0..2] of TColor =(($a0a0a0,$808080,$e0e0e0),($808080,$a0a0a0,$303030));
 begin
-  DC1 := GetDC(StringGrid2.Handle);
+  if CSamOrnBackground and $ff + (CSamOrnBackground shr 8 ) and $ff  + (CSamOrnBackground shr 16 ) and $ff > $180
+  then pal:=1
+  else pal:=0;
 
   Rect_orig:=RRect;
   RRect.Left:=0;
@@ -22859,10 +22869,7 @@ begin
   with Samples.fBitmapThumb do
   begin
     if (Width <> RRect.Right) or (Height <> RRect.Bottom) then
-    begin
-      Width := RRect.Right;
-      Height := RRect.Bottom;
-    end;
+      Recreate(RRect.Right,RRect.Bottom);
     Canvas.Font := Font;
 
     Canvas.Brush.Color := clBtnFace;
@@ -22888,7 +22895,7 @@ begin
       Canvas.Pen.Color:=Canvas.Brush.Color;
       Canvas.Rectangle(Rect1);
       Canvas.FillRect(Rect2);
-      Canvas.Brush.Color:=clWhite;
+      Canvas.Brush.Color:=CSamOrnBackground;
       Rect1.Top:=Rect1.Top+1;
       Rect1.Left:=Rect1.Left+1;
       Rect1.Right:=Rect1.Right-1;
@@ -22897,7 +22904,7 @@ begin
     else
     begin
       Canvas.FillRect(Rect2);
-      Canvas.Brush.Color:=clWhite;
+      Canvas.Brush.Color:=CSamOrnBackground;
       Canvas.FillRect(Rect1);
       Canvas.Pen.Color:=$c0c0c0;
       Canvas.MoveTo(0,Rect1.Bottom);
@@ -22910,7 +22917,7 @@ begin
     MaxY:=StringGrid2.DefaultRowHeight-1;
     x1:=RRect.Left;
     y1:=RRect.Bottom;
-    Canvas.Pen.Color:=$808080;
+    Canvas.Pen.Color:=cols[pal,0];
     nx:=(MaxX- (22-1)) div 2;
     if Samp<>nil then
     begin
@@ -22947,7 +22954,7 @@ begin
         if mt<-3 then mt:=((mt+3) div 48)-3;
         if mt<-mx then mt:=-mx
         else if mt>mx then mt:=mx;
-        if Samp.Items[yy].Mixer_Ton then Canvas.Pixels[nx+x1+11-mt,y1-MaxY+y]:=$404040;
+        if Samp.Items[yy].Mixer_Ton then Canvas.Pixels[nx+x1+11-mt,y1-MaxY+y]:=cols[pal,2];
         if Samp.Items[yy].Mixer_Noise then Canvas.Pixels[nx+x1+2,y1-MaxY+y]:=$ffa040;
         if Samp.Items[yy].Envelope_Enabled then Canvas.Pixels[nx+x1+3,y1-MaxY+y]:=$60ff60;
         inc(yy);
@@ -22955,7 +22962,7 @@ begin
         begin
           yy:=Samp.Loop;
           Tail:=True;
-          Canvas.Pen.Color:=$a0a0a0;
+          Canvas.Pen.Color:=cols[pal,1];
         end;
       end;
     end;
@@ -22975,8 +22982,7 @@ begin
     Canvas.TextRect(RRect, PosNumberX, PosNumberY, S);
     SetTextAlign(Canvas.Handle, SavedAlign);
   end;
-  BitBlt(DC1, Rect_orig.Left, Rect_orig.Top, RRect.Right, RRect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
-  ReleaseDC(Handle, DC1);
+  BitBlt(StringGrid2.Canvas.Handle, Rect_orig.Left, Rect_orig.Top, RRect.Right, RRect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
 end;
 
 procedure TMDIChild.StringGrid3Redraw(ACol:integer;Active:Boolean);
@@ -23007,20 +23013,24 @@ var
   oct:integer;
   Tail:Boolean;
   rect1,rect2,rect_orig:TRect;
-  DC1: HDC;
   mx:integer;
+  pal:integer;
 const
-  NoteCol: array[0..11] of TColor=(
+  NoteCol: array[0..1,0..11] of TColor=((
+  $f8f8f8, $0000ff, $00c0ff, $ff5000, $00b008, $0080ff,
+  $909090, $ff0080, $80e000, $ffb000, $00e0a0, $a040ff),(
   $000000, $0000ff, $00c0ff, $ff6000, $00c010, $0080ff,
-  $909090, $ff0080, $90f000, $ffb000, $00f0b0, $d000ff
-  );
-  OctCol: array[-4..4] of TColor=(
-  $404040,$6090a0,$80a0c0,$b0c0d0,
-  0,
-  $d0c0b0,$c0a080,$a09060,$404040);
+  $909090, $ff0080, $90f000, $ffb000, $00e0b0, $d000ff));
+  OctCol: array[0..1,-4..4] of TColor=((
+  $a0a0a0,$907050,$806040,$504030, 0,
+  $304050,$406080,$507090,$a0a0a0),(
+  $404040,$6090a0,$80a0c0,$b0c0d0, 0,
+  $d0c0b0,$c0a080,$a09060,$404040));
 
 begin
-  DC1 := GetDC(StringGrid3.Handle);
+  if CSamOrnBackground and $ff + (CSamOrnBackground shr 8 ) and $ff  + (CSamOrnBackground shr 16 ) and $ff > $180
+  then pal:=1
+  else pal:=0;
 
   Rect_orig:=RRect;
   RRect.Left:=0;
@@ -23028,17 +23038,14 @@ begin
   RRect.Right:=Rect_orig.Right-Rect_orig.Left;
   RRect.Bottom:=Rect_orig.Bottom-Rect_orig.Top;
 
-  with Samples.fBitmapThumb do
+  with Ornaments.fBitmapThumb do
   begin
     if (Width <> RRect.Right) or (Height <> RRect.Bottom) then
-    begin
-      Width := RRect.Right;
-      Height := RRect.Bottom;
-    end;
+      Recreate(RRect.Right,RRect.Bottom);
     Canvas.Font := Font;
 
     Canvas.Brush.Color := clBtnFace;
-    Canvas.Brush.Style:=bsSolid;
+    Canvas.Brush.Style := bsSolid;
 
     LightBg := not (gdSelected in State);
 
@@ -23062,7 +23069,7 @@ begin
       Canvas.Pen.Color:=Canvas.Brush.Color;
       Canvas.Rectangle(Rect1);
       Canvas.FillRect(Rect2);
-      Canvas.Brush.Color:=clWhite;
+      Canvas.Brush.Color:=CSamOrnBackground;
       Rect1.Top:=Rect1.Top+1;
       Rect1.Left:=Rect1.Left+1;
       Rect1.Right:=Rect1.Right-1;
@@ -23071,13 +23078,12 @@ begin
     else
     begin
       Canvas.FillRect(Rect2);
-      Canvas.Brush.Color:=clWhite;
+      Canvas.Brush.Color:=CSamOrnBackground;
       Canvas.FillRect(Rect1);
       Canvas.Pen.Color:=$c0c0c0;
       Canvas.MoveTo(0,Rect1.Bottom);
       Canvas.LineTo(Rect1.Right,Rect1.Bottom);
     end;
-
 
     Orn := VTMP.Ornaments[ACol+1];
     MaxX:=StringGrid3.DefaultColWidth-1;
@@ -23099,9 +23105,10 @@ begin
         else x := 0;
         note:= x mod 12;
         oct:=x div 12;
-        if (oct<-3) or (oct>3) then oct:=3;
+        if (oct<-4) then oct:=-4
+        else if (oct>4) then oct:=4;
         if oct<>0 then
-        Canvas.Brush.Color:=OctCol[oct];
+        Canvas.Brush.Color:=OctCol[pal,oct];
         if oct>0 then
           Canvas.FillRect(Rect(nx+x1+12,y1-MaxY+y*2,nx+x1+14+11,y1-MaxY+y*2+2))
         else if oct<0 then
@@ -23111,8 +23118,8 @@ begin
         else
           Canvas.Brush.Color:=$000000;
   }
-        if note>=0 then Canvas.Brush.Color:=NoteCol[note]
-        else Canvas.Brush.Color:=NoteCol[note+12];
+        if note>=0 then Canvas.Brush.Color:=NoteCol[pal,note]
+        else Canvas.Brush.Color:=NoteCol[pal,note+12];
         Canvas.FillRect(Rect(nx+x1+12+note,y1-MaxY+y*2,nx+x1+14+note,y1-MaxY+y*2+2));
         inc(yy);
         if Orn<>nil then
@@ -23146,8 +23153,7 @@ begin
     Canvas.TextRect(RRect, PosNumberX, PosNumberY, S);
     SetTextAlign(Canvas.Handle, SavedAlign);
   end;
-  BitBlt(DC1, Rect_orig.Left, Rect_orig.Top, RRect.Right, RRect.Bottom, Samples.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
-  ReleaseDC(Handle, DC1);
+  BitBlt(StringGrid3.Canvas.Handle, Rect_orig.Left, Rect_orig.Top, RRect.Right, RRect.Bottom, Ornaments.fBitmapThumb.Canvas.Handle, 0, 0, SRCCOPY);
 end;
 
 
@@ -23208,7 +23214,6 @@ procedure TMDIChild.PasteSample1Click(Sender: TObject);
 begin
   if LastClipboard = LCNone then Exit;
 
-//  StopAndRestoreControls;
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
 
@@ -23229,8 +23234,6 @@ end;
 
 procedure TMDIChild.ClearSample1Click(Sender: TObject);
 begin
-//  StopAndRestoreControls;
-
   SaveSampleUndo(Samples.ShownSample);
   ClearShownSample;
   SamplesSelectionOff;
@@ -23253,7 +23256,6 @@ procedure TMDIChild.PasteOrnament1Click(Sender: TObject);
 begin
   if LastClipboard in [LCNone, LCSamples] then Exit;
 
-//  StopAndRestoreControls;
   SaveOrnamentUndo;
   ClearShownOrnament;
 
@@ -23273,7 +23275,6 @@ end;
 
 procedure TMDIChild.ClearOrnament1Click(Sender: TObject);
 begin
-//  StopAndRestoreControls;
   SaveOrnamentUndo;
 
   ClearShownOrnament;
