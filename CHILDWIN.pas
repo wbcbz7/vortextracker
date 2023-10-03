@@ -164,9 +164,9 @@ type
     TestSample: Boolean;
     ParWind: TForm;
     CurrentMidiNote: Integer;
-    NoteCounter: Integer;
+//    NoteCounter: Integer;
     Preview: Boolean;
-    Arp: array[0..96] of Integer;
+//    Arp: array[0..96] of Integer;
     constructor Create(AOwner: TComponent); override;
     procedure DefaultHandler(var Message); override;
     procedure RedrawTestLine(DC: HDC);
@@ -678,6 +678,7 @@ type
     procedure ChangeTracks(Pat, Line, Chan, CursorX, n: Integer; Keyboard: Boolean);
     procedure TLArpMidiOn(note: Integer);
     procedure TLArpMidiOff(note: Integer);
+    function UpdateArpOrn(Note: Byte): boolean;
     procedure OrnamentsMidiNoteOn(note: Byte);
     procedure OrnamentsMidiNoteOff(note: Byte);
     procedure SamplesMidiNoteOn(note: Byte);
@@ -1286,6 +1287,15 @@ begin
   // empty body
   // don't delete this code!
 end;
+
+procedure ClearArp;
+var f: Integer;
+begin
+  for f := 0 to 96 do
+    Arp[f] := 0;
+  MaxNote := 0;
+end;
+
 
 function IsHexValid(HexValue: string): Boolean;
 const
@@ -3672,7 +3682,8 @@ begin
   Ornaments.OnMouseWheelUp := OrnamentsMouseWheelUp;
   Ornaments.OnMouseWheelDown := OrnamentsMouseWheelDown;
   NoteCounter := 0;
-  MaxNote := 0;
+  MaxNote := 8;
+  ClearArp;
 
   OrnamentsBrowser := TFileBrowser.Create(OrnamentsBrowserBox);
   OrnamentsBrowser.ParentWin := Self;
@@ -6536,13 +6547,6 @@ var
   Orn: array[0..96] of Integer;
 
 
-  procedure ClearArp;
-  var f: Integer;
-  begin
-    for f := 0 to 96 do
-      Arp[f] := 0;
-    MaxNote := 0;
-  end;
 
 begin
   NoteCounter := NoteCounter - 1;
@@ -6598,6 +6602,59 @@ begin
 
 end;
 
+function IsKeyPressed(vKey: Integer): Boolean;
+begin
+   Result := not (GetAsyncKeyState(vKey) in [0, 1]);
+end;
+
+function TMDIChild.UpdateArpOrn(Note: Byte): Boolean;
+var
+  f, i, Base, Len:integer;
+  Orn: array[0..96] of byte;
+  fix: Boolean;
+begin
+  fix:=IsKeyPressed(VK_SHIFT);
+  Result:=False;
+  if fix then begin
+    Base := 0; //find base
+    Len := 0;
+    for i := 0 to 96 do
+      if Arp[i] = 1 then begin
+        if Base = 0 then Base := i;
+        Orn[Len]:=i-Base;
+        Len := Len+1;
+      end;
+
+    Result := True;
+    if Len<>0 then begin
+      ClearShownOrnament;
+      Ornaments.ShownOrnament.Length := len;
+      Ornaments.ShownOrnament.Loop := 0;
+
+      for f := 0 to Len - 1 do
+        Ornaments.ShownOrnament.Items[f] := Orn[f];
+
+      OrnamentLenUpDown.Position  := Ornaments.ShownOrnament.Length;
+      OrnamentLoopUpDown.Position := Ornaments.ShownOrnament.Loop;
+
+      Result := VTMP.Patterns[-1].Items[0].Channel[0].Note <> Base;
+      Note := Base;
+    end;
+  end;
+
+  VTMP.Patterns[-1].Items[0].Channel[0].Note := Note;
+
+  HideCaret(OrnamentTestLine.Handle);
+  OrnamentTestLine.RedrawTestLine(0);
+  ShowCaret(OrnamentTestLine.Handle);
+
+  Ornaments.HideMyCaret;
+  Ornaments.RedrawOrnaments(0);
+  Ornaments.ShowMyCaret;
+
+end;
+
+
 procedure TMDIChild.OrnamentsMidiNoteOn(Note: Byte);
 begin
   Ornaments.isLineTesting := True;
@@ -6608,18 +6665,18 @@ begin
     if not IsPlaying or (PlayMode = PMPlayLine) then
       PlVars[1].ParamsOfChan[MidChan].Note := VTMP.Patterns[-1].Items[0].Channel[0].Note;
 
-  VTMP.Patterns[-1].Items[0].Channel[0].Note := Note;
+  Arp[Note] := 1;
+  NoteCounter := NoteCounter + 1;
+
   DoAutoEnv(-1, 0, 0);
 
-  HideCaret(OrnamentTestLine.Handle);
-  OrnamentTestLine.RedrawTestLine(0);
-  ShowCaret(OrnamentTestLine.Handle);
+  UpdateArpOrn(Note);
 
   RestartPlayingLine(-Ord(OrnamentTestLine.TestSample) - 1);
   Ornaments.CurrentMidiNote := Note;
   PlayStopState := BStop;
 
-  if Ornaments.ToneShiftAsNote then begin
+ if Ornaments.ToneShiftAsNote then begin
     Ornaments.HideMyCaret;
     Ornaments.RedrawOrnaments(0);
     Ornaments.ShowMyCaret;
@@ -6627,9 +6684,23 @@ begin
 end;
 
 procedure TMDIChild.OrnamentsMidiNoteOff(note: Byte);
+var
+  rest:boolean;
+  Fix:Boolean;
 begin
-  if Ornaments.CurrentMidiNote <> note then
-    Exit;
+  NoteCounter := NoteCounter - 1;
+  Arp[Note] := 0;
+  Fix:=isKeyPressed(VK_SHIFT);
+  if not Fix then begin
+    if (Ornaments.CurrentMidiNote <> note) then Exit;
+    Note := VTMP.Patterns[-1].Items[0].Channel[0].Note;
+  end;
+  rest := UpdateArpOrn(Note);
+  if Fix and (NoteCounter<>0) then begin
+    if rest then RestartPlayingLine(-Ord(OrnamentTestLine.TestSample) - 1);
+    exit;
+  end
+  else
   OrnamentTestLine.TestLineExit(Self);
   Ornaments.isLineTesting := False;
   ResetPlaying;
@@ -7836,20 +7907,20 @@ type
         GetColsToEdit(E, N, T, AllPat);
         if E then
         begin
-          for j := MaxPatLen - 1 downto i do
+          for j := MaxPatLen - 1 downto i + 1 do
             Tracks.ShownPattern.Items[j].Envelope := Tracks.ShownPattern.Items[j - 1].Envelope;
           Tracks.ShownPattern.Items[i].Envelope := 0
         end;
         if N then
         begin
-          for j := MaxPatLen - 1 downto i do
+          for j := MaxPatLen - 1 downto i + 1 do
             Tracks.ShownPattern.Items[j].Noise := Tracks.ShownPattern.Items[j - 1].Noise;
           Tracks.ShownPattern.Items[i].Noise := 0
         end;
         for c := 0 to 2 do
           if T[c] then
           begin
-            for j := MaxPatLen - 1 downto i do
+            for j := MaxPatLen - 1 downto i + 1 do
               Tracks.ShownPattern.Items[j].Channel[c] := Tracks.ShownPattern.Items[j - 1].Channel[c];
             Tracks.ShownPattern.Items[i].Channel[c] := EmptyChannelLine
           end;
