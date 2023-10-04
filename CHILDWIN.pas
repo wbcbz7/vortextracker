@@ -12418,7 +12418,7 @@ begin
         SetCaretPosition;
 
         // Change sign for ornament item
-        if (LineNum < ShownOrnament.Length) and (ShownOrnament.Items[LineNum] <> 0) then
+        if {(LineNum < ShownOrnament.Length) and }(ShownOrnament.Items[LineNum] <> 0) then
         begin
           SongChanged := True;
           BackupSongChanged := True;
