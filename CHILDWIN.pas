@@ -10529,6 +10529,20 @@ begin
         end;
     else
       begin
+        if key = Ord('A') then
+        begin
+          if (Samples.CursorX in [4, 5, 8]) then
+            begin
+              DoToggle(TgSgnTone);
+              exit;
+            end;
+          if (Samples.CursorX in [10, 11, 14, 17]) then
+            begin
+              DoToggle(TgSgnNoise);
+              exit;
+            end;
+        end;
+
         if NoteKeys[Key] <= -2 then Exit;
         Samples.isLineTesting := True;
         Shift := [];
@@ -10939,7 +10953,7 @@ begin
   if Shift = []        then Dec(Ornaments.ShownOrnament.Items[Line]);
   if Shift = [ssShift] then Dec(Ornaments.ShownOrnament.Items[Line], 3);
   if Shift = [ssCtrl]  then Dec(Ornaments.ShownOrnament.Items[Line], 12);
-  if Shift = [ssCtrl,ssShift]  then Dec(Ornaments.ShownOrnament.Items[Line], 5);  
+  if Shift = [ssCtrl,ssShift]  then Dec(Ornaments.ShownOrnament.Items[Line], 5);
 
   if Ornaments.ShownOrnament.Items[Ornaments.CurrentLine] < -96 then
      Ornaments.ShownOrnament.Items[Ornaments.CurrentLine] := -96;
@@ -10951,55 +10965,66 @@ end;
 
 procedure TMDIChild.OrnamentsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 type
-  TOrnToggles = (TgSgn, TgSgnP, TgSgnM);
+  TOrnToggles = (TgSgn, TgSgnP, TgSgnM, IncVal, DecVal);
 var
   ff, ii, ll, cc: Integer;
   Incr, Decr: Boolean;
   oo: Integer;
 
-  procedure DoToggles(n: TOrnToggles);
+  procedure DoChanges(n: TOrnToggles; Shift: TShiftState);
   var
     c, i, l, o: Integer;
   begin
     with Ornaments do
     begin
-      GetOrnParams(l, i, c);
-//      if i >= l then
-//        exit;
-      SongChanged := True;
-      BackupSongChanged := True;
-      ValidateOrnament(OrnNum);
-      o := ShownOrnament.Items[i];
-      case n of
-        TgSgn:
-          ShownOrnament.Items[i] := -ShownOrnament.Items[i];
-        TgSgnP:
-          ShownOrnament.Items[i] := Abs(ShownOrnament.Items[i]);
-        TgSgnM:
-          ShownOrnament.Items[i] := -Abs(ShownOrnament.Items[i])
+      if IsSelecting then begin
+        SaveOrnamentUndo;
+        for i := selStart to selEnd do begin
+          case n of
+            TgSgn:
+              ShownOrnament.Items[i] := -ShownOrnament.Items[i];
+            TgSgnP:
+              ShownOrnament.Items[i] := Abs(ShownOrnament.Items[i]);
+            TgSgnM:
+              ShownOrnament.Items[i] := -Abs(ShownOrnament.Items[i]);
+            IncVal:
+              IncreaseOrnamentValue(i, Shift);
+            DecVal:
+              IncreaseOrnamentValue(i, Shift);
+          end;
+        end;
+        SaveOrnamentRedo;
+      end
+      else begin
+        GetOrnParams(l, i, c);
+  // you can edit everywhere
+  //      if i >= l then
+  //        exit;
+        SongChanged := True;
+        BackupSongChanged := True;
+        ValidateOrnament(OrnNum);
+        o := ShownOrnament.Items[i];
+        case n of
+          TgSgn:
+            ShownOrnament.Items[i] := -ShownOrnament.Items[i];
+          TgSgnP:
+            ShownOrnament.Items[i] := Abs(ShownOrnament.Items[i]);
+          TgSgnM:
+            ShownOrnament.Items[i] := -Abs(ShownOrnament.Items[i]);
+          IncVal:
+            IncreaseOrnamentValue(i, Shift);
+          DecVal:
+            DecreaseOrnamentValue(i, Shift);
+        end;
+        AddUndo(CAChangeOrnamentValue, o, ShownOrnament.Items[i]);
+        ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := c;
+        ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := ShownFrom;
       end;
-      AddUndo(CAChangeOrnamentValue, o, ShownOrnament.Items[i]);
-      ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := c;
-      ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := ShownFrom;
+
       HideMyCaret;
       RedrawOrnaments(0);
       ShowMyCaret;
     end
-  end;
-
-  procedure DoToggleSpace;
-  begin
-    DoToggles(TgSgn)
-  end;
-
-  procedure DoTogglePlus;
-  begin
-    DoToggles(TgSgnP)
-  end;
-
-  procedure DoToggleMinus;
-  begin
-    DoToggles(TgSgnM)
   end;
 
   procedure DoNumber;
@@ -11051,37 +11076,13 @@ begin
 
   // Increase/Decrease
   if Incr or Decr then begin
-
-    // Increase/Decrease selected values
-    if Ornaments.isSelecting then begin
-      SaveOrnamentUndo;
-      for ii := Ornaments.selStart to Ornaments.selEnd do
-        if Incr then
-          IncreaseOrnamentValue(ii, Shift)
-        else
-          DecreaseOrnamentValue(ii, Shift);
-      SaveOrnamentRedo;
-    end
-
-    // Increase/Decrease current line only
-    else begin
-      GetOrnParams(ll, ii, cc);
-      oo := Ornaments.ShownOrnament.Items[ii];
-      if Incr then IncreaseOrnamentValue(Ornaments.CurrentLine, Shift);
-      if Decr then DecreaseOrnamentValue(Ornaments.CurrentLine, Shift);
-      AddUndo(CAChangeOrnamentValue, oo, Ornaments.ShownOrnament.Items[ii]);
-      ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := cc;
-      ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := Ornaments.ShownFrom;
-    end;
-
-    Ornaments.HideMyCaret;
-    Ornaments.RedrawOrnaments(0);
-    Ornaments.ShowMyCaret;
-
+    if Incr then DoChanges(IncVal,Shift)
+    else
+    if Decr then DoChanges(DecVal,Shift);
     Exit;
   end;
 
-  
+
   if (Shift <> []) or not (Key in [Ord('0')..Ord('9')]) then
     Ornaments.InputONumber := 0;
 
@@ -11223,11 +11224,11 @@ begin
         end;
 //below is unreachable code
       Ord(' '):
-        DoToggleSpace;
+        DoChanges(TgSgn,[]);
       $BB, VK_ADD: // +
-        DoTogglePlus;
+        DoChanges(TgSgnP,[]);
       $BD, VK_SUBTRACT: // -
-        DoToggleMinus;
+        DoChanges(TgSgnM,[]);
 //above is unreachable code
       Ord('0')..Ord('9'):
         DoDigit(Key - Ord('0'));
@@ -11316,34 +11317,14 @@ begin
     else
       begin
         if (Key >= 256) or (Key = 16) or (Key = 17) then Exit; // shift / ctrl
-        
-        ValidateOrnament(OrnNum);
-        GetOrnParams(ll, ii, cc);
 
-        if Key = Ord('A') then begin
-          if Ornaments.IsSelecting then begin
-            SaveOrnamentUndo;
-            for ii := Ornaments.selStart to Ornaments.selEnd do
-              Ornaments.ShownOrnament.Items[ii] := -Ornaments.ShownOrnament.Items[ii];
-            SaveOrnamentRedo;
-          end
-          else begin
-            SongChanged := True;
-            BackupSongChanged := True;
-            oo := Ornaments.ShownOrnament.Items[ii];
-            Ornaments.ShownOrnament.Items[ii] := -Ornaments.ShownOrnament.Items[ii];
-            AddUndo(CAChangeOrnamentValue, oo, Ornaments.ShownOrnament.Items[ii]);
-            ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := cc;
-            ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := Ornaments.ShownFrom;
-          end;
-
-          Ornaments.HideMyCaret;
-          Ornaments.RedrawOrnaments(0);
-          Ornaments.ShowMyCaret;
-        end
+        if Key = Ord('A') then
+          DoChanges(TgSgn,[])
         else
         if NoteKeys[Key] >= 0 then
         begin
+          ValidateOrnament(OrnNum);
+          GetOrnParams(ll, ii, cc);
           SongChanged := True;
           BackupSongChanged := True;
           oo := Ornaments.ShownOrnament.Items[ii];
@@ -11450,7 +11431,7 @@ begin
   else if Shift = [ssShift] then
     case Key of
       $BB: // +
-        DoTogglePlus;
+        DoChanges(TgSgnP,[]);
       VK_HOME:
         begin
           ValidateOrnament(OrnNum);
@@ -11578,7 +11559,22 @@ begin
     else
       begin
         if (Key = 16) or (Key = 17) then Exit; // shift / ctrl
-        
+
+        if Key=Ord('A') then //Shift+A
+        begin
+          if Ornaments.isSelecting then begin
+            Incr:=False;
+            for ii:=Ornaments.selStart to Ornaments.selEnd do begin
+              if Ornaments.ShownOrnament.Items[ii]=0 then Continue;
+              Incr := Ornaments.ShownOrnament.Items[ii]<0;
+              break;
+            end;
+            if Incr then DoChanges(TgSgnP,[])
+            else DoChanges(TgSgnM,[]);
+          end;
+          exit;
+        end;
+
         Ornaments.isLineTesting := True;
         OrnamentTestLine.CursorX := 8;
         if (Key <> VK_LEFT) and (Key <> VK_RIGHT) then
