@@ -207,6 +207,7 @@ type
     ParentWin: TForm;
     UndoSaved: Boolean;
     HintLastX, HintLastY: Integer;
+    CopiedSample: Integer;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure DefaultHandler(var Message); override;
@@ -251,6 +252,7 @@ type
     ParentWin: TForm;
     Browser: TFileBrowser;
     SavedSampleTestLine: TChannelLine;
+    CopiedOrnament: Integer;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure DefaultHandler(var Message); override;
@@ -288,7 +290,8 @@ type
                    CAPatternInsertLine, CAPatternDeleteLine, CAPatternClearLine,
                    CAPatternClearSelection, CATransposePattern,
                    CATracksManagerCopy, CAExpandCompressPattern,
-                   CAChangePositionsAndPatterns, CAChangePatternContent);
+                   CAChangePositionsAndPatterns, CAChangePatternContent,
+                   CASwapSamples, CASwapOrnaments);
 
   TChangeParams = record
     CurrentPattern, CurrentPosition, PatternShownFrom, PatternCursorX, PatternCursorY,
@@ -419,6 +422,10 @@ type
           (EntireSample: PChangeSample);
         CAChangeEntireOrnament:
           (EntireOrnament: PChangeOrnament);
+        CASwapOrnaments:
+          (Orn1, Orn2: Integer);
+        CASwapSamples:
+          (Samp1, Samp2: Integer);
     end;
     OldParams, NewParams: TChangeParameters;
     OtherMDI: Integer;
@@ -648,6 +655,10 @@ type
     CutSample1: TMenuItem;
     CutOrnament1: TMenuItem;
     PlaySampleBtn: TPanel;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    SwapSamples1: TMenuItem;
+    SwapOrnaments1: TMenuItem;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -1073,6 +1084,10 @@ type
     procedure ActivateSheet(ASheetIndex : Integer);
     procedure CutOrnament1Click(Sender: TObject);
     procedure CutSample1Click(Sender: TObject);
+    procedure SwapSamples1Click(Sender: TObject);
+    procedure SwapSamples(s1,s2:integer);
+    procedure SwapOrnaments1Click(Sender: TObject);
+    procedure SwapOrnaments(o1,o2:integer);
 
 
 
@@ -3532,6 +3547,7 @@ begin
   CaretVisible := False;
   ArrowsFont := TFont.Create;
   ArrowsFont.Name := 'Arrows';
+  CopiedSample := -1;
 end;
 
 
@@ -3661,6 +3677,7 @@ begin
   ShownFrom := 0;
   ShownOrnament := nil;
   CaretVisible := False;
+  CopiedOrnament := -1;
 end;
 
 destructor TOrnaments.Destroy;
@@ -9255,6 +9272,7 @@ begin
   begin
     SampleLength := Samples.ShownSample.Length;
     Samples.selStart := 0;
+    Samples.CopiedSample := SamNum;
   end
   else
     SampleLength := Samples.selEnd - Samples.selStart + 1;
@@ -10686,6 +10704,7 @@ begin
     MainForm.BuffOrnament.Items  := Ornaments.ShownOrnament.Items;
     MainForm.BuffOrnament.Loop   := Ornaments.ShownOrnament.Loop;
     MainForm.BuffOrnament.Length := Ornaments.ShownOrnament.Length;
+    Ornaments.CopiedOrnament := OrnNum;
   end
 
   else
@@ -19641,7 +19660,7 @@ begin
     Action := CA;
     OtherMDI := 0;
     case CA of
-      CAChangeSpeed, CAChangeToneTable, CAChangePositionListLoop, CAChangeFeatures, CAChangeHeader:
+      CAChangeSpeed, CAChangeToneTable, CAChangePositionListLoop, CAChangeFeatures, CAChangeHeader, CASwapOrnaments, CASwapSamples:
         begin
           OldParams.prm.Value := par1;
           NewParams.prm.Value := par2
@@ -19855,6 +19874,7 @@ var
   OrnamentState: TChangeOrnament;
   TMPOtherMDI: TMDIChild;
   TMPi, TMPj, TMPund: Integer;
+  o1, o2: Integer;
   
 begin
   UndoWorking := True;
@@ -20078,6 +20098,42 @@ begin
               CalcTotLen;
               InputPNumber := 0;
               SetF(0, StringGrid1);
+            end;
+
+          CASwapSamples:
+            begin
+              SwapSamples(NewParams.prm.Value,OldParams.prm.Value);
+
+              if PageControl1.ActivePage = PatternsSheet then
+                Tracks.RedrawTracks(0);
+
+              if PageControl1.ActivePage = SamplesSheet then
+                StringGrid2.Invalidate;
+
+              if Samples.Focused then
+                Samples.HideMyCaret;
+              Samples.RedrawSamples(0);
+              Samples.SetCaretPosition;
+              if Samples.Focused then
+                Samples.ShowMyCaret;
+            end;
+
+          CASwapOrnaments:
+            begin
+              SwapOrnaments(NewParams.prm.Value,OldParams.prm.Value);
+
+              if PageControl1.ActivePage = PatternsSheet then
+                Tracks.RedrawTracks(0);
+
+              if PageControl1.ActivePage = OrnamentsSheet then
+                StringGrid3.Invalidate;
+
+              if Ornaments.Focused then
+                Ornaments.HideMyCaret;
+              Ornaments.RedrawOrnaments(0);
+              Ornaments.SetCaretPosition;
+              if Ornaments.Focused then
+                Ornaments.ShowMyCaret;
             end;
 
           CAChangePatternContent:
@@ -23181,6 +23237,10 @@ end;
 
 procedure TMDIChild.UpdateTimerTimer(Sender: TObject);
 begin
+  if PageControl1.ActivePage <> SamplesSheet then
+    Samples.CopiedSample := -1;
+  if PageControl1.ActivePage <> OrnamentsSheet then
+    Ornaments.CopiedOrnament := -1;
 {
   if PageControl1.ActivePage = PatternsSheet then
   begin
@@ -23195,7 +23255,7 @@ procedure TMDIChild.StringGrid2MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   pf: TPoint;
-  xx1,yy1: Integer;
+  xx1,yy1,s1,s2: Integer;
 begin
   if (Button = mbRight) then
   begin
@@ -23205,6 +23265,16 @@ begin
     StringGrid2.Col := xx1;
     StringGrid2.Update;
     pf:=StringGrid2.ClientToScreen(Point(X,Y));
+    s1:=SamNum;
+    s2:=Samples.CopiedSample;
+    if Samples.CopiedSample>=0 then begin
+      SwapSamples1.Caption:='Swap samples '+StringGrid3.Cells[s1-1,0]+'<>'+StringGrid3.Cells[s2-1,0];
+      SwapSamples1.Enabled := s1 <> s2;
+    end
+    else begin
+      SwapSamples1.Caption := 'Swap samples ...';
+      SwapSamples1.Enabled := False;
+    end;
     SampleListPopupMenu.Popup(pf.X, pf.Y);
   end;
 end;
@@ -23213,7 +23283,7 @@ procedure TMDIChild.StringGrid3MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   pf: TPoint;
-  xx1,yy1: Integer;
+  xx1,yy1,o1,o2: Integer;
 begin
   if (Button = mbRight) then
   begin
@@ -23223,6 +23293,16 @@ begin
     StringGrid3.Col := xx1;
     StringGrid3.Update;
     pf:=StringGrid3.ClientToScreen(Point(X,Y));
+    o1:=OrnNum;
+    o2:=Ornaments.CopiedOrnament;
+    if Ornaments.CopiedOrnament>=0 then begin
+      SwapOrnaments1.Caption:='Swap ornaments '+StringGrid3.Cells[o1-1,0]+'<>'+StringGrid3.Cells[o2-1,0];
+      SwapOrnaments1.Enabled := o1 <> o2;
+    end
+    else begin
+      SwapOrnaments1.Caption := 'Swap ornaments ...';
+      SwapOrnaments1.Enabled := False;
+    end;
     OrnamentListPopupMenu.Popup(pf.X, pf.Y);
   end;
 end;
@@ -23306,6 +23386,119 @@ begin
   Ornaments.HideMyCaret;
   Ornaments.RedrawOrnaments(0);
   Ornaments.ShowMyCaret;
+end;
+
+procedure TMDIChild.SwapSamples(s1,s2:integer);
+var
+  t,i,j,k: Integer;
+  tb: Boolean;
+  tt: TSampleTick;
+begin
+  if (s1=0) or (s2=0) then exit;
+  ValidateSample(s1,VTMP);
+  ValidateSample(s2,VTMP);
+
+  t:=VTMP.Samples[s1].Length;
+  VTMP.Samples[s1].Length := VTMP.Samples[s2].Length;
+  VTMP.Samples[s2].Length:=t;
+
+  t:=VTMP.Ornaments[s1].Loop;
+  VTMP.Samples[s1].Loop := VTMP.Samples[s2].Loop;
+  VTMP.Samples[s2].Loop:=t;
+
+  for i:=0 to 63 do begin
+    tt:=VTMP.Samples[s1].Items[i];
+    VTMP.Samples[s1].Items[i] := VTMP.Samples[s2].Items[i];
+    VTMP.Samples[s2].Items[i]:=tt;
+  end;
+  for i := 0 to High(VTMP.Patterns) do
+  begin
+    if VTMP.Patterns[i] = nil then continue;
+    for j := 0 to VTMP.Patterns[i].Length - 1 do
+    begin
+      for k := 2 downto 0 do
+        with VTMP.Patterns[i].Items[j].Channel[k] do
+        begin
+          if Sample=s1 then Sample:=s2
+          else
+          if Sample=s2 then Sample:=s1;
+        end;
+    end
+  end;
+  RecalcSampOrnUsage;
+end;
+
+procedure TMDIChild.SwapOrnaments(o1,o2:integer);
+var
+  t,i,j,k: Integer;
+  tb: Boolean;
+begin
+  if (o1=0) or (o2=0) then exit;
+  ValidateOrnament(o1);
+  ValidateOrnament(o2);
+
+  t:=VTMP.Ornaments[o1].Length;
+  VTMP.Ornaments[o1].Length := VTMP.Ornaments[o2].Length;
+  VTMP.Ornaments[o2].Length:=t;
+
+  t:=VTMP.Ornaments[o1].Loop;
+  VTMP.Ornaments[o1].Loop := VTMP.Ornaments[o2].Loop;
+  VTMP.Ornaments[o2].Loop:=t;
+
+  tb:=VTMP.Ornaments[o1].CopyAll;
+  VTMP.Ornaments[o1].CopyAll := VTMP.Ornaments[o2].CopyAll;
+  VTMP.Ornaments[o2].CopyAll:=tb;
+
+  for i:=0 to 254 do begin
+    t:=VTMP.Ornaments[o1].Items[i];
+    VTMP.Ornaments[o1].Items[i] := VTMP.Ornaments[o2].Items[i];
+    VTMP.Ornaments[o2].Items[i]:=t;
+  end;
+  for i := 0 to High(VTMP.Patterns) - 1 do
+  begin
+    if VTMP.Patterns[i] = nil then continue;
+    for j := 0 to VTMP.Patterns[i].Length - 1 do
+    begin
+      for k := 2 downto 0 do
+        with VTMP.Patterns[i].Items[j].Channel[k] do
+        begin
+          if Ornament=o1 then Ornament:=o2
+          else
+          if Ornament=o2 then Ornament:=o1;
+        end;
+    end
+  end;
+  RecalcSampOrnUsage;
+end;
+
+procedure TMDIChild.SwapSamples1Click(Sender: TObject);
+var
+  s1,s2:integer;
+begin
+  s1:=Samples.CopiedSample;
+  s2:=SamNum;
+  AddUndo(CASwapSamples, s1, s2);
+  SwapSamples(s1,s2);
+  Samples.HideMyCaret;
+  Samples.RedrawSamples(0);
+  StringGrid2.Invalidate;
+  Samples.ShowMyCaret;
+  Samples.CopiedSample:=-1;
+end;
+
+procedure TMDIChild.SwapOrnaments1Click(Sender: TObject);
+var
+  o1,o2:integer;
+begin
+  o1:=Ornaments.CopiedOrnament;
+  o2:=OrnNum;
+  AddUndo(CASwapOrnaments, o1, o2);
+  SwapOrnaments(o1,o2);
+  Ornaments.HideMyCaret;
+  Ornaments.RedrawOrnaments(0);
+  StringGrid3.Invalidate;
+  Ornaments.ShowMyCaret;
+  Ornaments.CopiedOrnament:=-1;
 end;
 
 end.

@@ -2284,6 +2284,10 @@ begin
 
   for i := 0 to 5 do RecentFiles[i] := '';
   FillChar(NoteKeys, SizeOf(NoteKeys), -3);
+  //qwertyuiop[]
+  //Asd ghjKl;
+  //zxcvbnm,./
+  //A= R-- K= ---
   NoteKeys[ORD('A')] := -2;
   NoteKeys[ORD('K')] := -1;
   NoteKeys[ORD('Z')] := 0;
@@ -2298,11 +2302,11 @@ begin
   NoteKeys[ORD('N')] := 9;
   NoteKeys[ORD('J')] := 10;
   NoteKeys[ORD('M')] := 11;
-  NoteKeys[188] := 12;
+  NoteKeys[188] := 12; // ',<'
   NoteKeys[ORD('L')] := 13;
-  NoteKeys[190] := 14;
-  NoteKeys[186] := 15;
-  NoteKeys[191] := 16;
+  NoteKeys[190] := 14; // '.>'
+  NoteKeys[186] := 15; // ';:'
+  NoteKeys[191] := 16; // '/?'
   NoteKeys[ORD('Q')] := 12;
   NoteKeys[ORD('2')] := 13;
   NoteKeys[ORD('W')] := 14;
@@ -2320,9 +2324,9 @@ begin
   NoteKeys[ORD('O')] := 26;
   NoteKeys[ORD('0')] := 27;
   NoteKeys[ORD('P')] := 28;
-  NoteKeys[219] := 29;
-  NoteKeys[187] := 30;
-  NoteKeys[221] := 31;
+  NoteKeys[219] := 29; // '[{'
+  NoteKeys[187] := 30; // '=+'
+  NoteKeys[221] := 31; // ']}'
   NoteKeys[VK_NUMPAD1] := 33;
   NoteKeys[VK_NUMPAD2] := 34;
   NoteKeys[VK_NUMPAD3] := 35;

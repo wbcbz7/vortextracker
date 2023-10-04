@@ -2221,9 +2221,17 @@ object MDIChild: TMDIChild
       Caption = 'Paste sample'
       OnClick = PasteSample1Click
     end
+    object N3: TMenuItem
+      Caption = '-'
+    end
     object ClearSample1: TMenuItem
       Caption = 'Clear sample'
       OnClick = ClearSample1Click
+    end
+    object SwapSamples1: TMenuItem
+      Caption = 'Swap samples ...'
+      Enabled = False
+      OnClick = SwapSamples1Click
     end
   end
   object OrnamentListPopupMenu: TPopupMenu
@@ -2244,9 +2252,17 @@ object MDIChild: TMDIChild
       Caption = 'Paste ornament'
       OnClick = PasteOrnament1Click
     end
+    object N2: TMenuItem
+      Caption = '-'
+    end
     object Clearornament1: TMenuItem
       Caption = 'Clear ornament'
       OnClick = ClearOrnament1Click
+    end
+    object SwapOrnaments1: TMenuItem
+      Caption = 'Swap ornaments ...'
+      Enabled = False
+      OnClick = SwapOrnaments1Click
     end
   end
 end
