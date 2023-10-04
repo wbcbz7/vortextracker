@@ -2949,8 +2949,8 @@ begin
 
 
   // Samples Testline
-  PlaySampleBtn.Left := SampleTestLine.Left+ SampleTestLine.Width + 7;
-  LoadSampleBtn.Left := PlaySampleBtn.Left + PlaySampleBtn.Width + 7;
+  PlaySampleBtn.Left := SampleTestLine.Left+ SampleTestLine.Width + 4;
+  LoadSampleBtn.Left := PlaySampleBtn.Left + PlaySampleBtn.Width + 4;
   SaveSampleBtn.Left := LoadSampleBtn.Left + LoadSampleBtn.Width + 4;
   PlaySampleBtn.Height := SampleTestLine.Height-2;
   LoadSampleBtn.Height := SampleTestLine.Height;
@@ -3053,10 +3053,6 @@ begin
     Tracks.Height := SheetHeight - Tracks.Top - InterfaceOpts.Height;
     Tracks.FitNumberOfLines;
   end;
-
-  // Mute/solo
-  Panel17.Left := ClientWidth - Panel17.Width - 8;
-  Panel16.Left := Panel17.Left - Panel16.Width - 2;
 
   if WidthChanged then begin
 
@@ -3350,6 +3346,9 @@ begin
 
   EnableAlign;
 
+  // Mute/solo
+  Panel17.Left := SheetWidth - Panel17.Width - 8;
+  Panel16.Left := Panel17.Left - Panel16.Width - 2;
 end;
 
 
@@ -14163,59 +14162,37 @@ end;
 procedure TMDIChild.SetStringGrid2Scroll(ACol: Integer);
 var
   ScrollPos, ColPos, VisibleArea, SelRows, VisibleColCount: Integer;
-  Shift: Boolean;
-
 begin
   VisibleColCount := SampleScrollBox.ClientWidth div (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth);
   SelRows := StringGrid2.Selection.Right - StringGrid2.Selection.Left + 1;
-
-  Shift := False;
-  if ACol = -1 then begin
-    if SelRows = 1 then
-      ACol := StringGrid2.Selection.Left + 1
-    else begin
-      ACol := StringGrid2.Selection.Left - (VisibleColCount div 2) + (SelRows div 2);
-      Shift := True;
-    end;
-  end;
 
   ScrollPos := SampleScrollBox.HorzScrollBar.Position;
   ColPos := ACol * (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth);
   VisibleArea := ScrollPos + SampleScrollBox.ClientWidth;
 
-  if (ColPos < ScrollPos) or (ColPos >= VisibleArea) or Shift then
-    ScrollPos := ColPos;
+  if (ColPos < ScrollPos) then
+    SampleScrollBox.HorzScrollBar.Position := ColPos;
 
-  SampleScrollBox.HorzScrollBar.Position := ScrollPos;
+  if (ColPos + StringGrid2.DefaultColWidth > VisibleArea) then
+    SampleScrollBox.HorzScrollBar.Position := ColPos + StringGrid2.DefaultColWidth - SampleScrollBox.ClientWidth;
 end;
 
 procedure TMDIChild.SetStringGrid3Scroll(ACol: Integer);
 var
   ScrollPos, ColPos, VisibleArea, SelRows, VisibleColCount: Integer;
-  Shift: Boolean;
-
 begin
   VisibleColCount := OrnamentScrollBox.ClientWidth div (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth);
   SelRows := StringGrid3.Selection.Right - StringGrid3.Selection.Left + 1;
-
-  Shift := False;
-  if ACol = -1 then begin
-    if SelRows = 1 then
-      ACol := StringGrid3.Selection.Left + 1
-    else begin
-      ACol := StringGrid3.Selection.Left - (VisibleColCount div 2) + (SelRows div 2);
-      Shift := True;
-    end;
-  end;
 
   ScrollPos := OrnamentScrollBox.HorzScrollBar.Position;
   ColPos := ACol * (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth);
   VisibleArea := ScrollPos + OrnamentScrollBox.ClientWidth;
 
-  if (ColPos < ScrollPos) or (ColPos >= VisibleArea) or Shift then
-    ScrollPos := ColPos;
+  if (ColPos < ScrollPos) then
+    OrnamentScrollBox.HorzScrollBar.Position := ColPos;
 
-  OrnamentScrollBox.HorzScrollBar.Position := ScrollPos;
+  if (ColPos + StringGrid3.DefaultColWidth > VisibleArea) then
+    OrnamentScrollBox.HorzScrollBar.Position := ColPos + StringGrid3.DefaultColWidth - SampleScrollBox.ClientWidth;
 end;
 
 
@@ -15248,23 +15225,23 @@ begin
   //125=44
   //150=52
   FonSize := GetWidthText('XXXX',StringGrid2.Font);
-  K:= (FonSize*10) div 16;
+  K:= ((FonSize*10) div 16) + 2;
   StringGrid2.DefaultColWidth:=K;
   StringGrid2.DefaultRowHeight:=round(FonSize*1.35/2)*2;
   StringGrid2.Height:=StringGrid2.DefaultRowHeight;
 
-  StringGrid2.Width := (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth) * StringGrid2.ColCount ;
+  StringGrid2.Width := (StringGrid2.DefaultColWidth+StringGrid2.GridLineWidth) * StringGrid2.ColCount;
   SampleScrollBox.AutoScroll := False;
   SampleScrollBox.HorzScrollBar.Range := StringGrid2.Width-FonSize div 2 +StringGrid2.GridLineWidth +1 -StringGrid2.GridLineWidth;
   SampleScrollBox.Height := StringGrid2.DefaultRowHeight + HScrollbarSize + 5;
 
   FonSize := GetWidthText('XXXX',StringGrid3.Font);
-  K:= (FonSize*10) div 16;
-  StringGrid3.DefaultColWidth:=K+4;
+  K:= ((FonSize*10) div 16) + 2;
+  StringGrid3.DefaultColWidth:=K+3;
   StringGrid3.DefaultRowHeight:=round(FonSize*1.35/2)*2;
   StringGrid3.Height:=StringGrid2.DefaultRowHeight;
 
-  StringGrid3.Width := (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth) * StringGrid3.ColCount ;
+  StringGrid3.Width := (StringGrid3.DefaultColWidth+StringGrid3.GridLineWidth) * StringGrid3.ColCount;
   OrnamentScrollBox.AutoScroll := False;
   OrnamentScrollBox.HorzScrollBar.Range := StringGrid3.Width-FonSize div 2 +StringGrid3.GridLineWidth +1 -StringGrid3.GridLineWidth;
   OrnamentScrollBox.Height := StringGrid3.DefaultRowHeight + HScrollbarSize + 5;
@@ -22844,7 +22821,6 @@ var
   SavedAlign: word;
   FontColor, PrevColor: TColor;
   PosNumberX, PosNumberY: Integer;
-  LightBg: Boolean;
   S: string;
   MasterVol,MasterTon:integer;
   MaxX,MaxYY,MaxY,I,X,Y,x1,y1,nx,yy,mt: Integer;
@@ -22855,10 +22831,16 @@ var
   pal:integer;
 const
   Cols:array[0..1,0..2] of TColor =(($a0a0a0,$808080,$e0e0e0),($808080,$a0a0a0,$303030));
+  GridCol:array[0..1] of TColor = ($303030,$d0d0d0);
 begin
   if CSamOrnBackground and $ff + (CSamOrnBackground shr 8 ) and $ff  + (CSamOrnBackground shr 16 ) and $ff > $180
   then pal:=1
   else pal:=0;
+
+  RRect.Left:=ACol*(StringGrid2.DefaultColWidth + StringGrid2.GridLineWidth);
+  RRect.Right:=(ACol+1)*(StringGrid2.DefaultColWidth + StringGrid2.GridLineWidth);
+  RRect.Top:=0;
+  RRect.Bottom:=StringGrid2.DefaultRowHeight + StringGrid2.GridLineWidth;
 
   Rect_orig:=RRect;
   RRect.Left:=0;
@@ -22873,12 +22855,6 @@ begin
     Canvas.Font := Font;
 
     Canvas.Brush.Color := clBtnFace;
-    LightBg := not (gdSelected in State);
-
-    if (Canvas.Brush.Color < clGray) then// or LightBg then
-      FontColor := clBlack
-    else
-      FontColor := clWhite;
 
     S := StringGrid2.Cells[ACol, ARow]; // cell content
 
@@ -22888,6 +22864,13 @@ begin
     MaxYY:=Rect1.Bottom;
     Rect2.Top:=Rect1.Bottom-1;
 
+    //vertical grid line
+    Canvas.Pen.Color:=$c0c0c0;
+    Canvas.MoveTo(Rect2.Right-1,Rect2.Bottom);
+    Canvas.LineTo(Rect2.Right-1,Rect2.Top);
+    Canvas.Pen.Color:=GridCol[pal];
+    Canvas.LineTo(Rect2.Right-1,Rect1.Top-1);
+
     if gdSelected in State then
     begin
       FontColor := clWhite;
@@ -22896,21 +22879,20 @@ begin
       Canvas.Rectangle(Rect1);
       Canvas.FillRect(Rect2);
       Canvas.Brush.Color:=CSamOrnBackground;
-      Rect1.Top:=Rect1.Top+1;
-      Rect1.Left:=Rect1.Left+1;
-      Rect1.Right:=Rect1.Right-1;
-      Canvas.FillRect(Rect1);
+      Canvas.FillRect(Rect(Rect1.Left+1,Rect1.Top+1,Rect1.Right-1,Rect1.Bottom));
     end
     else
     begin
+      Rect2.Right:=Rect2.Right-1;
+      Rect1.Right:=Rect1.Right-1;
+      FontColor := clBlack;
       Canvas.FillRect(Rect2);
       Canvas.Brush.Color:=CSamOrnBackground;
       Canvas.FillRect(Rect1);
       Canvas.Pen.Color:=$c0c0c0;
       Canvas.MoveTo(0,Rect1.Bottom);
-      Canvas.LineTo(Rect1.Right,Rect1.Bottom);
+      Canvas.LineTo(Rect1.Right+1,Rect1.Bottom);
     end;
-
 
     Samp := VTMP.Samples[ACol+1];
     MaxX:=StringGrid2.DefaultColWidth-1;
@@ -23005,7 +22987,6 @@ var
   SavedAlign: word;
   FontColor, PrevColor: TColor;
   PosNumberX, PosNumberY: Integer;
-  LightBg: Boolean;
   S: string;
   MaxX,MaxYY,MaxY,I,X,Y,x1,y1,nx,yy,mt: Integer;
   Orn:POrnament;
@@ -23026,11 +23007,16 @@ const
   $304050,$406080,$507090,$a0a0a0),(
   $404040,$6090a0,$80a0c0,$b0c0d0, 0,
   $d0c0b0,$c0a080,$a09060,$404040));
-
+  GridCol:array[0..1] of TColor = ($303030,$d0d0d0);
 begin
   if CSamOrnBackground and $ff + (CSamOrnBackground shr 8 ) and $ff  + (CSamOrnBackground shr 16 ) and $ff > $180
   then pal:=1
   else pal:=0;
+
+  RRect.Left:=ACol*(StringGrid3.DefaultColWidth + StringGrid3.GridLineWidth);
+  RRect.Right:=(ACol+1)*(StringGrid3.DefaultColWidth + StringGrid3.GridLineWidth);
+  RRect.Top:=0;
+  RRect.Bottom:=StringGrid3.DefaultRowHeight + StringGrid3.GridLineWidth;
 
   Rect_orig:=RRect;
   RRect.Left:=0;
@@ -23047,13 +23033,6 @@ begin
     Canvas.Brush.Color := clBtnFace;
     Canvas.Brush.Style := bsSolid;
 
-    LightBg := not (gdSelected in State);
-
-    if (Canvas.Brush.Color < clGray) then// or LightBg then
-      FontColor := clBlack
-    else
-      FontColor := clWhite;
-
     S := StringGrid3.Cells[ACol, ARow]; // cell content
 
     Rect1:=RRect;
@@ -23061,6 +23040,13 @@ begin
     Rect1.Bottom:=StringGrid3.DefaultRowHeight-1+round(Font.Height*1.3);
     MaxYY:=Rect1.Bottom;
     Rect2.Top:=Rect1.Bottom-1;
+
+    //vertical grid line
+    Canvas.Pen.Color:=$c0c0c0;
+    Canvas.MoveTo(Rect2.Right-1,Rect2.Bottom);
+    Canvas.LineTo(Rect2.Right-1,Rect2.Top);
+    Canvas.Pen.Color:=GridCol[pal];
+    Canvas.LineTo(Rect2.Right-1,Rect1.Top-1);
 
     if gdSelected in State then
     begin
@@ -23070,19 +23056,19 @@ begin
       Canvas.Rectangle(Rect1);
       Canvas.FillRect(Rect2);
       Canvas.Brush.Color:=CSamOrnBackground;
-      Rect1.Top:=Rect1.Top+1;
-      Rect1.Left:=Rect1.Left+1;
-      Rect1.Right:=Rect1.Right-1;
-      Canvas.FillRect(Rect1);
+      Canvas.FillRect(Rect(Rect1.Left+1,Rect1.Top+1,Rect1.Right-1,Rect1.Bottom));
     end
     else
     begin
+      Rect2.Right:=Rect2.Right-1;
+      Rect1.Right:=Rect1.Right-1;
+      FontColor := clBlack;
       Canvas.FillRect(Rect2);
       Canvas.Brush.Color:=CSamOrnBackground;
       Canvas.FillRect(Rect1);
       Canvas.Pen.Color:=$c0c0c0;
       Canvas.MoveTo(0,Rect1.Bottom);
-      Canvas.LineTo(Rect1.Right,Rect1.Bottom);
+      Canvas.LineTo(Rect1.Right+1,Rect1.Bottom);
     end;
 
     Orn := VTMP.Ornaments[ACol+1];
@@ -23159,12 +23145,13 @@ end;
 
 procedure TMDIChild.UpdateTimerTimer(Sender: TObject);
 begin
+{
   if PageControl1.ActivePage = PatternsSheet then
   begin
     Panel17.Left := ClientWidth - Panel17.Width - 8;
     Panel16.Left := Panel17.Left - Panel16.Width - 2;
   end;
-
+}
 
 end;
 

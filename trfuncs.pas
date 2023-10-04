@@ -9118,6 +9118,7 @@ begin
   else
     for j := 0 to Line - 1 do
     begin
+      if j > 255 then exit;
       for k := 2 downto 0 do
         with VTM.Patterns[p].Items[j].Channel[k].Additional_Command do
           if (Number = 11) and (Parameter <> 0) then

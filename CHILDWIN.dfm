@@ -41,7 +41,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = SamplesSheet
+    ActivePage = PatternsSheet
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -1352,9 +1352,9 @@ object MDIChild: TMDIChild
         object PlaySampleBtn: TPanel
           Left = 188
           Top = 15
-          Width = 46
+          Width = 17
           Height = 24
-          Caption = 'Play'
+          Caption = '>'
           TabOrder = 2
           Visible = False
         end
@@ -1386,7 +1386,7 @@ object MDIChild: TMDIChild
           BorderStyle = bsNone
           Color = clWhite
           ColCount = 31
-          DefaultColWidth = 22
+          DefaultColWidth = 24
           DefaultRowHeight = 48
           DefaultDrawing = False
           FixedCols = 0
@@ -1397,6 +1397,7 @@ object MDIChild: TMDIChild
           Font.Height = -12
           Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
+          GridLineWidth = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColMoving, goThumbTracking]
           ParentFont = False
           ScrollBars = ssNone
@@ -1785,7 +1786,7 @@ object MDIChild: TMDIChild
           BorderStyle = bsNone
           Color = clWhite
           ColCount = 31
-          DefaultColWidth = 26
+          DefaultColWidth = 27
           DefaultRowHeight = 48
           DefaultDrawing = False
           FixedCols = 0
@@ -1796,6 +1797,7 @@ object MDIChild: TMDIChild
           Font.Height = -12
           Font.Name = 'Microsoft Sans Serif'
           Font.Style = [fsBold]
+          GridLineWidth = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColMoving, goThumbTracking]
           ParentFont = False
           ScrollBars = ssNone
