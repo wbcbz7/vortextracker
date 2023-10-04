@@ -352,7 +352,7 @@ var
   TxtString: string;
   MidChan: integer = 1;
   CurChip: integer;
-  PlVars: array[1..MaxNumberOfSoundChips] of record
+  PlVars: array[0..MaxNumberOfSoundChips] of record
     CurrentPosition: integer;
     CurrentPattern: integer;
     CurrentLine: Integer;

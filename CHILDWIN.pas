@@ -2802,11 +2802,11 @@ begin
     ChanButtons[i].Mute_But.Width := ChanButtons[i].T_But.Left - ChanButtons[i].Mute_But.Left + 1;
     ch := chr(ord('A')+i);
     if ChanButtons[i].Mute_But.Width > 67 then
-      ChanButtons[i].Mute_But.Caption := 'Channel '+ch
+      ChanButtons[i].Mute_But.Caption := 'Mute '+ch
     else if ChanButtons[i].Mute_But.Width < 43 then
       ChanButtons[i].Mute_But.Caption := ch
     else
-      ChanButtons[i].Mute_But.Caption := 'Chan '+ch;
+      ChanButtons[i].Mute_But.Caption := 'Mute '+ch;
   end;
 end;
 
@@ -5845,6 +5845,8 @@ end;
 
 
 procedure TOrnaments.CutToClipBoard;
+var
+  i:integer;
 begin
   if not isSelecting then Exit;
   CopyToClipBoard;
@@ -5852,6 +5854,7 @@ begin
     SaveOrnamentUndo;
     ShownOrnament.Loop := 0;
     ShownOrnament.Length := 1;
+    for i := 0 to 253 do ShownOrnament.Items[i] := 0;
     OrnamentLoopUpDown.Position := 0;
     OrnamentLenUpDown.Position  := 1;
     SaveOrnamentRedo;
@@ -10952,6 +10955,7 @@ type
 var
   ff, ii, ll, cc: Integer;
   Incr, Decr: Boolean;
+  oo: Integer;
 
   procedure DoToggles(n: TOrnToggles);
   var
@@ -10960,8 +10964,8 @@ var
     with Ornaments do
     begin
       GetOrnParams(l, i, c);
-      if i >= l then
-        exit;
+//      if i >= l then
+//        exit;
       SongChanged := True;
       BackupSongChanged := True;
       ValidateOrnament(OrnNum);
@@ -11050,19 +11054,24 @@ begin
 
     // Increase/Decrease selected values
     if Ornaments.isSelecting then begin
-
+      SaveOrnamentUndo;
       for ii := Ornaments.selStart to Ornaments.selEnd do
         if Incr then
           IncreaseOrnamentValue(ii, Shift)
         else
           DecreaseOrnamentValue(ii, Shift);
-          
+      SaveOrnamentRedo;
     end
 
     // Increase/Decrease current line only
     else begin
+      GetOrnParams(ll, ii, cc);
+      oo := Ornaments.ShownOrnament.Items[ii];
       if Incr then IncreaseOrnamentValue(Ornaments.CurrentLine, Shift);
       if Decr then DecreaseOrnamentValue(Ornaments.CurrentLine, Shift);
+      AddUndo(CAChangeOrnamentValue, oo, Ornaments.ShownOrnament.Items[ii]);
+      ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := cc;
+      ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := Ornaments.ShownFrom;
     end;
 
     Ornaments.HideMyCaret;
@@ -11212,15 +11221,17 @@ begin
           Ornaments.RedrawOrnaments(0);
           Ornaments.ShowMyCaret;
         end;
+//below is unreachable code
       Ord(' '):
         DoToggleSpace;
       $BB, VK_ADD: // +
         DoTogglePlus;
       $BD, VK_SUBTRACT: // -
         DoToggleMinus;
+//above is unreachable code
       Ord('0')..Ord('9'):
         DoDigit(Key - Ord('0'));
-      192:
+      192: // '~'
         if OrnamentTestLine.CanFocus then
           OrnamentTestLine.SetFocus;
       VK_DELETE:
@@ -11254,7 +11265,7 @@ begin
               Ornaments.ShownOrnament.Loop := Ornaments.ShownOrnament.Loop - 1;
           end;
 
-          for ff := ii to 62 do
+          for ff := ii to 253 do
           begin
             Ornaments.ShownOrnament.Items[ff] := Ornaments.ShownOrnament.Items[ff + 1];
           end;
@@ -11309,9 +11320,38 @@ begin
         ValidateOrnament(OrnNum);
         GetOrnParams(ll, ii, cc);
 
+        if Key = Ord('A') then begin
+          if Ornaments.IsSelecting then begin
+            SaveOrnamentUndo;
+            for ii := Ornaments.selStart to Ornaments.selEnd do
+              Ornaments.ShownOrnament.Items[ii] := -Ornaments.ShownOrnament.Items[ii];
+            SaveOrnamentRedo;
+          end
+          else begin
+            SongChanged := True;
+            BackupSongChanged := True;
+            oo := Ornaments.ShownOrnament.Items[ii];
+            Ornaments.ShownOrnament.Items[ii] := -Ornaments.ShownOrnament.Items[ii];
+            AddUndo(CAChangeOrnamentValue, oo, Ornaments.ShownOrnament.Items[ii]);
+            ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := cc;
+            ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := Ornaments.ShownFrom;
+          end;
+
+          Ornaments.HideMyCaret;
+          Ornaments.RedrawOrnaments(0);
+          Ornaments.ShowMyCaret;
+        end
+        else
         if NoteKeys[Key] >= 0 then
         begin
+          SongChanged := True;
+          BackupSongChanged := True;
+          oo := Ornaments.ShownOrnament.Items[ii];
           Ornaments.ShownOrnament.Items[ii] := NoteKeys[Key];
+          AddUndo(CAChangeOrnamentValue, oo, Ornaments.ShownOrnament.Items[ii]);
+          ChangeList[ChangeCount - 1].OldParams.prm.OrnamentCursor := cc;
+          ChangeList[ChangeCount - 1].OldParams.prm.OrnamentShownFrom := Ornaments.ShownFrom;
+
           Ornaments.HideMyCaret;
           Ornaments.RedrawOrnaments(0);
           Ornaments.ShowMyCaret;

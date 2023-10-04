@@ -130,7 +130,7 @@ object MDIChild: TMDIChild
           Caption = 'Chan A'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -9
+          Font.Height = -11
           Font.Name = 'Microsoft Sans Serif'
           Font.Pitch = fpVariable
           Font.Style = []
@@ -211,7 +211,7 @@ object MDIChild: TMDIChild
           Caption = 'Chan B'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -9
+          Font.Height = -11
           Font.Name = 'Microsoft Sans Serif'
           Font.Pitch = fpVariable
           Font.Style = []
@@ -280,7 +280,7 @@ object MDIChild: TMDIChild
           Caption = 'Chan C'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -9
+          Font.Height = -11
           Font.Name = 'Microsoft Sans Serif'
           Font.Pitch = fpVariable
           Font.Style = []
