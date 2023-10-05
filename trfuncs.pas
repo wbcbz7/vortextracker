@@ -501,6 +501,8 @@ procedure GetTimeParams(VTM: PModule; Time: integer; var Pos, Line: integer);
 procedure FreeVTMP(var VTMP: PModule);
 procedure NewVTMP(var VTMP: PModule);
 
+function isSampleEmpty(VTMP:PModule; i: integer):boolean;
+function isOrnamentEmpty(VTMP:PModule; i: integer):boolean;
 
 type
   PT3ToneTable = array[0..95] of word;
@@ -9266,7 +9268,95 @@ begin
   VTMP.VortexModule_Header := VortexModuleHeader;
 end;
 
+function isSampleEmpty(VTMP:PModule; i: integer):boolean;
+var
+  p1: PSample;
+  j: Integer;
+begin
+//1 0
+//0 False 0 False False False False 0 False False
+  Result:=True;
+  p1:=VTMP.Samples[i];
+  if p1<>nil then begin
+    if p1.Length<>1 then begin
+      Result:=False;
+      exit;
+     end;
+    if p1.Loop<>0 then begin
+      Result:=False;
+      exit;
+     end;
+    for j:=0 to 63 do begin
+      if p1.Items[j].Add_to_Ton<>0 then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Ton_Accumulation<>False then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Amplitude<>0 then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Amplitude_Sliding<>False then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Amplitude_Slide_Up<>False then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Envelope_Enabled<>False then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Envelope_or_Noise_Accumulation<>False then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Add_to_Envelope_or_Noise<>0 then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Mixer_Ton<>False then begin
+        Result:=False;
+        exit;
+      end;
+      if p1.Items[j].Mixer_Noise<>False then begin
+        Result:=False;
+        exit;
+      end;
+    end;
+  end
+end;
 
+function isOrnamentEmpty(VTMP:PModule; i: integer):boolean;
+var
+  p1: POrnament;
+  j: Integer;
+begin
+//1 0
+//0
+  Result:=True;
+  p1:=VTMP.Ornaments[i];
+  if p1<>nil then begin
+    if p1.Length<>1 then begin
+      Result:=False;
+      exit;
+     end;
+    if p1.Loop<>0 then begin
+      Result:=False;
+      exit;
+     end;
+    for j:=0 to 254 do begin
+      if p1.Items[j]<>0 then begin
+        Result:=False;
+        exit;
+      end;
+    end;
+  end
+end;
 
 
 

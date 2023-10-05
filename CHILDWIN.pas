@@ -659,6 +659,10 @@ type
     N3: TMenuItem;
     SwapSamples1: TMenuItem;
     SwapOrnaments1: TMenuItem;
+    PackSamples1: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
+    PackOrnaments1: TMenuItem;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -1088,6 +1092,8 @@ type
     procedure SwapSamples(s1,s2:integer);
     procedure SwapOrnaments1Click(Sender: TObject);
     procedure SwapOrnaments(o1,o2:integer);
+    procedure PackSamples1Click(Sender: TObject);
+    procedure PackOrnaments1Click(Sender: TObject);
 
 
 
@@ -3362,7 +3368,7 @@ begin
   EnableAlign;
 
   // Mute/solo
-  Panel17.Left := SheetWidth - Panel17.Width - 8;
+  Panel17.Left := PageControl1.Left + SheetWidth - Panel17.Width - 8;
   Panel16.Left := Panel17.Left - Panel16.Width - 2;
 end;
 
@@ -23402,7 +23408,7 @@ begin
   VTMP.Samples[s1].Length := VTMP.Samples[s2].Length;
   VTMP.Samples[s2].Length:=t;
 
-  t:=VTMP.Ornaments[s1].Loop;
+  t:=VTMP.Samples[s1].Loop;
   VTMP.Samples[s1].Loop := VTMP.Samples[s2].Loop;
   VTMP.Samples[s2].Loop:=t;
 
@@ -23494,6 +23500,80 @@ begin
   o2:=OrnNum;
   AddUndo(CASwapOrnaments, o1, o2);
   SwapOrnaments(o1,o2);
+  Ornaments.HideMyCaret;
+  Ornaments.RedrawOrnaments(0);
+  StringGrid3.Invalidate;
+  Ornaments.ShowMyCaret;
+  Ornaments.CopiedOrnament:=-1;
+end;
+
+procedure TMDIChild.PackSamples1Click(Sender: TObject);
+var
+  i,k,kz,knz:integer;
+begin
+  k:=0;
+  While True do begin
+
+    kz:=k;
+    for i:=1 to 31 do begin
+      if isSampleEmpty(VTMP,i) then begin
+        kz:=i;
+        break;
+      end;
+    end;
+    if kz=0 then break;
+
+    knz:=0;
+    k:=kz+1;
+    for i:=k to 31 do begin
+      if not isSampleEmpty(VTMP,i) then begin
+        knz:=i;
+        break;
+      end;
+    end;
+    if knz=0 then break;
+
+    AddUndo(CASwapSamples, kz, knz);
+    SwapSamples(kz,knz);
+  end;
+
+  Samples.HideMyCaret;
+  Samples.RedrawSamples(0);
+  StringGrid2.Invalidate;
+  Samples.ShowMyCaret;
+  Samples.CopiedSample:=-1;
+end;
+
+procedure TMDIChild.PackOrnaments1Click(Sender: TObject);
+var
+  i,k,kz,knz:integer;
+begin
+  k:=0;
+  While True do begin
+
+    kz:=k;
+    for i:=1 to 31 do begin
+      if isOrnamentEmpty(VTMP,i) then begin
+        kz:=i;
+        break;
+      end;
+    end;
+    if kz=0 then break;
+
+    knz:=0;
+    k:=kz+1;
+    for i:=k to 31 do begin
+      if not isOrnamentEmpty(VTMP,i) then begin
+        knz:=i;
+        break;
+      end;
+    end;
+    if knz=0 then break;
+
+    AddUndo(CASwapOrnaments, kz, knz);
+    SwapOrnaments(kz,knz);
+  end;
+
   Ornaments.HideMyCaret;
   Ornaments.RedrawOrnaments(0);
   StringGrid3.Invalidate;
