@@ -23412,6 +23412,10 @@ begin
   VTMP.Samples[s1].Loop := VTMP.Samples[s2].Loop;
   VTMP.Samples[s2].Loop:=t;
 
+  tb:=VTMP.Samples[s1].Enabled;
+  VTMP.Samples[s1].Enabled := VTMP.Samples[s2].Enabled;
+  VTMP.Samples[s2].Enabled:=tb;
+
   for i:=0 to 63 do begin
     tt:=VTMP.Samples[s1].Items[i];
     VTMP.Samples[s1].Items[i] := VTMP.Samples[s2].Items[i];
@@ -23490,6 +23494,7 @@ begin
   StringGrid2.Invalidate;
   Samples.ShowMyCaret;
   Samples.CopiedSample:=-1;
+  if ToglSams.Visible then ToglSams.CheckUsedSamples;
 end;
 
 procedure TMDIChild.SwapOrnaments1Click(Sender: TObject);
@@ -23542,6 +23547,7 @@ begin
   StringGrid2.Invalidate;
   Samples.ShowMyCaret;
   Samples.CopiedSample:=-1;
+  if ToglSams.Visible then ToglSams.CheckUsedSamples;
 end;
 
 procedure TMDIChild.PackOrnaments1Click(Sender: TObject);
