@@ -28,6 +28,8 @@ const
   POS_COPY   = 2;
   POS_DELETE = 3;
 
+  LLTemplates: array [1..9] of string = ('+ ',' +','+  ',' + ','  +','+   ',' +  ','  + ','   +');
+
 type
   
   TScrollBox = class(Forms.TScrollBox)
@@ -663,6 +665,18 @@ type
     N4: TMenuItem;
     N5: TMenuItem;
     PackOrnaments1: TMenuItem;
+    AutoLL: TPanel;
+    LowLightMenu1: TPopupMenu;
+    Disabled1: TMenuItem;
+    N6: TMenuItem;
+    N7: TMenuItem;
+    N31: TMenuItem;
+    N431: TMenuItem;
+    N51: TMenuItem;
+    N61: TMenuItem;
+    N71: TMenuItem;
+    N81: TMenuItem;
+    N91: TMenuItem;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -1094,6 +1108,9 @@ type
     procedure SwapOrnaments(o1,o2:integer);
     procedure PackSamples1Click(Sender: TObject);
     procedure PackOrnaments1Click(Sender: TObject);
+    procedure AutoLLMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure LLAutoMenuClick(Sender: TObject);
 
 
 
@@ -1182,6 +1199,7 @@ type
     ChanButtons_s: array[0..2] of TChannelButtonsState;
     SampUsage: array [0..31] of Boolean;
     OrnUsage: array [0..31] of Boolean;
+    LLTemplate: integer;
 
   published
      //    destructor Destroy; override;
@@ -2612,6 +2630,8 @@ begin
   AutoEnv1 := 1;
   AutoStep := False;
 
+  LLTemplate:=0;
+
   for i:=1 to 31 do
   begin
     cs:=char(ord('0')+i);
@@ -2805,7 +2825,8 @@ begin
   AutoHLBox.Width := Tracks.SepCX[0] - AutoHLBox.Left + 3;
   UpDown15.Left := AutoHLBox.Width - UpDown15.Width - 5;
   Edit17.Left   := UpDown15.Left - Edit17.Width;
-  AutoHL.Left  := 5;
+  AutoLL.Left := 5;
+  AutoHL.Left  := AutoLL.Left+AutoLL.Width+2;
   AutoHL.Width := Edit17.Left - AutoHL.Left - 2 ;
 
   // Channels
@@ -4315,7 +4336,7 @@ end;
 
 
 
-//перерисовка
+//Redrawing
 
 procedure TTracks.InitMetrix;
 var
@@ -4370,6 +4391,25 @@ begin
 
 end;
 
+function BlendColor(Color1, Color2: TColor;
+  Ratio: Double): TColor;
+var
+	r, g, b, r0, g0, b0, r1, g1, b1: Integer;
+begin
+  if Integer(Color1) < 0 then Color1 := GetSysColor(Color1 and $000000FF);
+  if Integer(Color2) < 0 then Color2 := GetSysColor(Color2 and $000000FF);
+	r0 := GetRValue(Color1);
+	g0 := GetGValue(Color1);
+	b0 := GetBValue(Color1);
+	r1 := GetRValue(Color2);
+	g1 := GetGValue(Color2);
+	b1 := GetBValue(Color2);
+	r := round(Ratio * r1 + (1 - Ratio) * R0);
+	g := round(Ratio * g1 + (1 - Ratio) * g0);
+	b := round(Ratio * b1 + (1 - Ratio) * b0);
+	Result := RGB(r, g, b);
+end;
+
 
 procedure TTracks.RedrawTracks(DC: HDC);
 var
@@ -4391,6 +4431,11 @@ var
   sz: tagSIZE;
   PositionNumber: Integer;
 
+  LLDown: Boolean;
+  TemLen: Integer;
+  TTextCol: TColor;
+  LLStr: string;
+  Lin2: Integer;
 
   procedure Print(X, Y: Integer; Str: string);
   begin
@@ -4408,6 +4453,8 @@ var
   end;
 
 
+const
+  LLd=0.8;
 begin
   if RedrawDisabled then Exit;
   if not TMDIChild(ParentWin).Visible then Exit;
@@ -4479,6 +4526,11 @@ begin
   BgColor(CBackground);
   fBitmap.Canvas.FillRect(Rect(0, 0, ClientWidth, ClientHeight));
 
+  if TMDIChild(ParentWin).LLTemplate = 0 then
+    LLStr:=''
+  else
+    LLStr:=LLTemplates[TMDIChild(ParentWin).LLTemplate];
+  TemLen:=length(LLStr);
 
   // Draw previous pattern lines
   PrevPatSepTop := 0;
@@ -4486,28 +4538,32 @@ begin
   if (PrevPatNum <> -1) and (Y > 0) then
   begin
     Top := 0;
-    TextColor(COutText);
-
     for Line := Y downto 1 do
     begin
-
       s := GetOutPatternLineString(PrevPatNum, PrevPat, Line, ChanAlloc, True);
+      Lin2:=PrevPat.Length-Line;
 
-      if (Line mod HLStep = 0) and (PrevPatNum >= 0) and (Trim(s) <> '') and (HLStep <> 256) then
+      if (Lin2 mod HLStep = 0) and (PrevPatNum >= 0) and (Trim(s) <> '') and (HLStep <> 256) then
         BgColor(COutHlBackground)
       else if PrevPatNum < 0 then
         BgColor(CBackground)
       else
         BgColor(COutBackground);
 
+      TTextCol:=COutText;
+      LLDown := False;
+      if (TemLen<>0)  and (Y<>CurY) and (LLStr[Lin2 mod TemLen +1]=' ') then LLDown:=True;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
+
       Print(0, Top, s);
 
       // Line numbers
       if (PrevPatNum <> -1) and (Trim(s) <> '') then
         if DecBaseLinesOn then
-          Print(3, Top, Format('%.3d', [PrevPat.Length - Line]))
+          Print(3, Top, Format('%.3d', [Lin2]))
         else
-          Print(3, Top, IntToHex(PrevPat.Length - Line, 2));
+          Print(3, Top, IntToHex(Lin2, 2));
 
       // Fill last 2 pixels
       fBitmap.Canvas.FillRect(Rect(PatWidth-2, Top, PatWidth+1, Top + CelH));
@@ -4552,21 +4608,26 @@ begin
       // Draw pattern line
       s := GetPatternLineString(ShownPattern, Line, ChanAlloc, False, False);
 
+      LLDown := False;
+      if (TemLen<>0)  and (Y<>CurY) and (LLStr[Line mod TemLen +1]=' ') then LLDown:=True;
+
       if Y = CurY then
       begin
         BgColor(CSelLineBackground);
-        TextColor(CSelLineText);
+        TTextCol:=CSelLineText;
       end
       else if (Line mod HLStep = 0) and (HLStep <> 256) then
       begin
         BgColor(COutHlBackground);
-        TextColor(COutText);
+        TTextCol:=COutText;
       end
       else
       begin
         BgColor(COutBackground);
-        TextColor(COutText);
+        TTextCol:=COutText;
       end;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
 
       Print(0, Y, s);
 
@@ -4588,25 +4649,29 @@ begin
   // Not all channels muted
   for Line := i1 to i1 + n - 1 do
   begin
+    LLDown := False;
+    if (TemLen<>0)  and (Y<>CurY) and (LLStr[Line mod TemLen +1]=' ') then LLDown:=True;
 
     if Y = CurY then
     begin
       // Selected line
       BgColor(CSelLineBackground);
-      TextColor(CSelLineText);
+      TTextCol:=CSelLineText;
     end
     else if (Line mod HLStep = 0)  and (HLStep <> 256) then
     begin
       // Highlighted line
       BgColor(CHighlBackground);
-      TextColor(CHighlText);
+      TTextCol:=CHighlText;
     end
     else
     begin
       // Default line
       BgColor(CBackground);
-      TextColor(CText);
+      TTextCol:=CText;
     end;
+    if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+    TextColor(TTextCol);
 
     // Fill last 2 pixels
     fBitmap.Canvas.FillRect(Rect(PatWidth-2, Y, PatWidth+1, Y + CelH));
@@ -4618,24 +4683,28 @@ begin
     begin
       Print(0, Y, ' ' + s);
       if Y = CurY then
-        TextColor(CSelLineNum)
+        TTextCol:=CSelLineNum
       else
       if (Line mod HLStep = 0) and (HLStep <> 256) then
-        TextColor(CHighlLineNum)
+        TTextCol:=CHighlLineNum
       else
-        TextColor(CLineNum);
+        TTextCol:=CLineNum;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
       Print(3, Y, Format('%.3d', [Line]));
     end
     else
     begin
       Print(0, Y, s);
       if Y = CurY then
-        TextColor(CSelLineNum)
+        TTextCol:=CSelLineNum
       else
       if (Line mod HLStep = 0) and (HLStep <> 256) then
-        TextColor(CHighlLineNum)
+        TTextCol:=CHighlLineNum
       else
-        TextColor(CLineNum);
+        TTextCol:=CLineNum;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
       Print(3, Y, IntToHex(Line, 2));
     end;
 
@@ -4670,9 +4739,11 @@ begin
       // Shift - 1/0 char
       X := (3 + 4 - Length(s) + Shift) * CelW;
       if Y = CurY then
-        TextColor(CSelEnvelope)
+        TTextCol:=CSelEnvelope
       else
-        TextColor(CEnvelope);
+        TTextCol:=CEnvelope;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
       Print(X, Y, s);
     end;
 
@@ -4697,9 +4768,11 @@ begin
       // Shift - 1/0 char
       X := (8 + 2 - Length(s) + Shift) * CelW;
       if Y = CurY then
-        TextColor(CSelNoise)
+        TTextCol:=CSelNoise
       else
-        TextColor(CNoise);
+        TTextCol:=CNoise;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
       Print(X, Y, s);
     end;
 
@@ -4778,6 +4851,12 @@ begin
         end;
       end;
 
+      if LLDown then begin
+        CChanText:=BlendColor(CChanText,CChanBg,LLd);
+        CChanNote:=BlendColor(CChanNote,CChanBg,LLd);
+        CChanNoteParams:=BlendColor(CChanNoteParams,CChanBg,LLd);
+        CChanText:=BlendColor(CChanText,CChanBg,LLd);
+      end;
       TextColor(CChanText);
       BgColor(CChanBg);
 
@@ -4965,8 +5044,6 @@ begin
     ToLine := NOfLines - (Y div CelH);
     NextPatSepTop := Y;
 
-    TextColor(COutText);
-
     for Line := 0 to ToLine do
     begin
       s := GetOutPatternLineString(NextPatNum, NextPat, Line, ChanAlloc, False);
@@ -4978,6 +5055,12 @@ begin
       else
         BgColor(COutBackground);
 
+      TTextCol:=COutText;
+      LLDown := False;
+      if (TemLen<>0)  and (Y<>CurY) and (LLStr[Line mod TemLen +1]=' ') then LLDown:=True;
+      if LLDown then TTextCol:=BlendColor(TTextCol,CBackground,LLd);
+      TextColor(TTextCol);
+      
       Print(0, Top, s);
 
       if (NextPatNum <> -1) and (Trim(s) <> '') then
@@ -23585,6 +23668,42 @@ begin
   StringGrid3.Invalidate;
   Ornaments.ShowMyCaret;
   Ornaments.CopiedOrnament:=-1;
+end;
+
+procedure TMDIChild.AutoLLMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  pf: TPoint;
+  xx1,yy1,o1,o2: Integer;
+begin
+  if (Button = mbLeft) then
+  begin
+    pf:=AutoLL.ClientToScreen(Point(X,Y));
+    LowLightMenu1.Popup(pf.X, pf.Y);
+  end
+  else
+  if (Button = mbRight) then
+  begin
+    LLAutoMenuClick(Disabled1);
+  end;
+end;
+
+procedure TMDIChild.LLAutoMenuClick(Sender: TObject);
+var
+  s:string;
+begin
+  s:=TMenuItem(Sender).Caption;
+  s:=copy(s,1,pos(':',s)-1);
+  LLTemplate:=strtoint(s);
+  AutoLL.Caption:=s;
+  With Tracks do begin
+    HideMyCaret;
+    ShowSelection;
+    RedrawTracks(0);
+    RecreateCaret;
+    SetCaretPosition;
+    ShowMyCaret;
+  end;
 end;
 
 end.

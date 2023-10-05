@@ -79,9 +79,9 @@ object MDIChild: TMDIChild
         ParentColor = False
         TabOrder = 10
         object AutoHL: TSpeedButton
-          Left = 4
+          Left = 32
           Top = 9
-          Width = 45
+          Width = 25
           Height = 20
           Hint = 'Highlight step'
           AllowAllUp = True
@@ -91,9 +91,9 @@ object MDIChild: TMDIChild
           OnClick = AutoHLCheckClick
         end
         object Edit17: TEdit
-          Left = 48
+          Left = 60
           Top = 9
-          Width = 25
+          Width = 17
           Height = 20
           Hint = 'Highlight step'
           AutoSize = False
@@ -103,7 +103,7 @@ object MDIChild: TMDIChild
           OnKeyPress = Edit17KeyPress
         end
         object UpDown15: TUpDown
-          Left = 73
+          Left = 77
           Top = 9
           Width = 16
           Height = 20
@@ -113,6 +113,19 @@ object MDIChild: TMDIChild
           TabOrder = 1
           OnChangingEx = UpDown15ChangingEx
           OnClick = UpDown15Click
+        end
+        object AutoLL: TPanel
+          Left = 4
+          Top = 9
+          Width = 25
+          Height = 20
+          Hint = 'Switch Shadowed lines pattern'
+          BevelOuter = bvSpace
+          BorderWidth = 1
+          BorderStyle = bsSingle
+          Caption = '0'
+          TabOrder = 2
+          OnMouseDown = AutoLLMouseDown
         end
       end
       object Channel1Box: TGroupBox
@@ -2277,6 +2290,55 @@ object MDIChild: TMDIChild
     object PackOrnaments1: TMenuItem
       Caption = 'Pack ornaments'
       OnClick = PackOrnaments1Click
+    end
+  end
+  object LowLightMenu1: TPopupMenu
+    AutoHotkeys = maManual
+    AutoLineReduction = maManual
+    AutoPopup = False
+    OwnerDraw = True
+    TrackButton = tbLeftButton
+    Left = 496
+    Top = 672
+    object Disabled1: TMenuItem
+      Caption = '0: Disabled'
+      OnClick = LLAutoMenuClick
+    end
+    object N6: TMenuItem
+      Caption = '1: [x][ ]'
+      OnClick = LLAutoMenuClick
+    end
+    object N7: TMenuItem
+      Caption = '2: [ ][x]'
+      OnClick = LLAutoMenuClick
+    end
+    object N31: TMenuItem
+      Caption = '3: [x][ ][ ]'
+      OnClick = LLAutoMenuClick
+    end
+    object N431: TMenuItem
+      Caption = '4: [ ][x][ ]'
+      OnClick = LLAutoMenuClick
+    end
+    object N51: TMenuItem
+      Caption = '5: [ ][ ][x]'
+      OnClick = LLAutoMenuClick
+    end
+    object N61: TMenuItem
+      Caption = '6: [x][ ][ ][ ]'
+      OnClick = LLAutoMenuClick
+    end
+    object N71: TMenuItem
+      Caption = '7: [ ][x][ ][ ]'
+      OnClick = LLAutoMenuClick
+    end
+    object N81: TMenuItem
+      Caption = '8: [ ][ ][x][ ]'
+      OnClick = LLAutoMenuClick
+    end
+    object N91: TMenuItem
+      Caption = '9: [ ][ ][ ][x]'
+      OnClick = LLAutoMenuClick
     end
   end
 end
