@@ -8751,7 +8751,7 @@ begin
         DoInsertLine(True)
 
       // Note, Noise, Envelope keys, etc...
-      else if Tracks.KeyPressed <> Key then
+      else if AutoStep or (Tracks.KeyPressed <> Key) then begin
         if Tracks.CursorX in NotePoses then
           DoNoteKey
         else if Tracks.CursorX in EnvelopePoses then
@@ -8763,6 +8763,7 @@ begin
         end
         else
           DoOtherKeys;
+      end;
     end;
   end;
 end;
