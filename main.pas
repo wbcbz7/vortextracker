@@ -328,6 +328,7 @@ type
     GlobalTranspositionAct: TAction;
     Newturbosoudtrack3: TMenuItem;
     CenteringTimer: TTimer;
+    Clearpatterns1: TMenuItem;
     function IsFileWritable(FilePath: String): Boolean;
     function VScrollVisible(NewHeight: Integer): Boolean;
     function HScrollVisible(NewLeft: Integer): Boolean;
@@ -600,6 +601,7 @@ type
     procedure StatusBarDblClick(Sender: TObject);
     procedure File1Click(Sender: TObject);
     procedure CenteringTimerTimer(Sender: TObject);
+    procedure Clearpatterns1Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -7679,6 +7681,13 @@ begin
     CenteringTimer.Enabled := False;
     DialogWinHandle := nil;
   end;
+end;
+
+procedure TMainForm.Clearpatterns1Click(Sender: TObject);
+begin
+  if MDIChildCount = 0 then exit;
+  if IsPlaying and (PlayMode = PMPlayModule) then exit;
+  TMDIChild(ActiveMDIChild).CleanPatterns;
 end;
 
 end.

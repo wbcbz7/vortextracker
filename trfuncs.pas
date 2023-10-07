@@ -435,7 +435,7 @@ procedure InitTrackerParameters(All: boolean);
 {Вызвать для инициализации внутренних переменных}
 {All = True => 1F.F => Sam=1,Env=15,Orn=0,Vol=15}
 
-
+procedure CleanPattern(var Pat: PPattern);
 procedure ValidatePattern(pat: integer; VTM: PModule);
 function LoadPatternDataTxt(OnePat: PPattern; DecNoise: Boolean): integer;
 function LoadSampleDataTxt(Sam: PSample; DecNoise: Boolean): string;
@@ -1407,11 +1407,10 @@ begin
   end;
 end;
 
-procedure NewPattern(var Pat: PPattern);
+procedure CleanPattern(var Pat: PPattern);
 var
   i: integer;
 begin
-  New(Pat);
   for i := 0 to MaxPatLen - 1 do
     with Pat.Items[i] do
     begin
@@ -1422,6 +1421,12 @@ begin
       Channel[2] := EmptyChannelLine;
     end;
   Pat.Length := DefPatLen;
+end;
+
+procedure NewPattern(var Pat: PPattern);
+begin
+  New(Pat);
+  CleanPattern(Pat);
 end;
 
 procedure ValidatePattern;

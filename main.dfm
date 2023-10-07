@@ -5278,6 +5278,10 @@ object MainForm: TMainForm
       Caption = 'Fill empty positions'
       OnClick = AutoNumeratePatternsClick
     end
+    object Clearpatterns1: TMenuItem
+      Caption = 'Clean selected pattern(s)'
+      OnClick = Clearpatterns1Click
+    end
   end
   object SaveDialogSNDH: TSaveDialog
     Filter = 'Atari ST'#39's SNDH files (SND, SNDH)|*.snd;*.sndh|Any file|*.*'

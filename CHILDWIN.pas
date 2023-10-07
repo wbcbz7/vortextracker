@@ -960,6 +960,7 @@ type
     procedure SampleCopyToEditContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
     procedure ChangePatternsLength(PatternsLength: Integer);
     procedure RenumberPatterns;
+    procedure CleanPatterns;
     procedure SplitPattern;
     procedure ExpandPattern;
     procedure CompressPattern;
@@ -21322,6 +21323,51 @@ begin
   // Renumber patterns
   for i := 0 to VTMP.Positions.Length-1 do
     ChangePositionValueNoUndo(i, GetNewPatternNumber1(VTMP.Positions.Value[i]));
+
+end;
+
+
+procedure TMDIChild.CleanPatterns;
+var
+  i, j, k, SelectLeft, SelectRight, PN: Integer;
+  pats:array[0..255] of integer;
+  uniq:boolean;
+  patcnt:integer;
+begin
+  // Shortcuts
+  SelectLeft := StringGrid1.Selection.Left;
+  SelectRight := StringGrid1.Selection.Right;
+
+  // Save positions and patterns for UNDO
+  SaveTrackUndo;
+
+  SongChanged := True;
+  BackupSongChanged := True;
+
+  patcnt := 0;
+
+  // Gather patterns
+  for i := SelectLeft to SelectRight do begin
+    PN := VTMP.Positions.Value[i];
+    uniq := true;
+    for j := 0 to patcnt-1 do begin
+      if pats[j]=pn then begin uniq := false; break; end;
+    end;
+    if uniq then begin
+      pats[patcnt]:=PN;
+      inc(patcnt);
+      if patcnt>255 then break; //shouldn't happen ever
+    end;
+  end;
+
+  for pn:=0 to patcnt-1 do
+    CleanPattern(VTMP.Patterns[pats[pn]]);
+
+  CalcTotLen;
+  Tracks.RedrawTracks(0);
+
+  // Save new patterns for REDO
+  SaveTrackRedo;
 
 end;
 
