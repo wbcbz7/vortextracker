@@ -20,7 +20,7 @@ uses
   Windows, Messages, Types, Classes, Graphics, Forms, Controls, StdCtrls, Menus,
   SysUtils, trfuncs, ComCtrls, WaveOutAPI, Grids, AY, Buttons, ExtCtrls, Dialogs,
   Math, ColorThemes, ExportWavOpts, StrUtils, RegExpr, RichEdit, ShellApi,
-  ExceptionLog, dpMemBmp;
+  ExceptionLog, dpMemBmp, VKeys;
 
 
 const
@@ -8251,7 +8251,7 @@ begin
   end;
 
   // Ctrl+R -> Toggle autostep
-  if (Shift = [ssCtrl]) and (Key = Ord('R')) then begin
+  if (Shift = [ssCtrl]) and (Key = ord('R')) then begin
     Exit;
   end;
 
@@ -8296,8 +8296,8 @@ begin
     Exit;
   end;
 
-  Incr := (Key = 187); //+
-  Decr := (Key = 189); //-
+  Incr := (Key = VK_Equal); //=
+  Decr := (Key = VK_Minus); //-
 
   if Tracks.IsSelected and (Incr or Decr) then begin
 
@@ -8397,7 +8397,7 @@ begin
       else
         DoMuteDismuteChannels;
 
-    220: // backslash \
+    VK_Backslash:
       if (ssCtrl in Shift) and (ssShift in Shift) then
       begin
         DoDiffSlide;
@@ -8691,7 +8691,7 @@ begin
       else
         DoClearLine;
 
-    192: // key ~
+    VK_BackQuote: // key ~
       begin
         if Shift = [] then
         begin
@@ -9210,7 +9210,7 @@ begin
           CreateMyCaret;
           ShowCaret(Handle);
         end;
-      192:
+      VK_BackQuote:
         begin
           if TestSample then
           begin
@@ -9970,8 +9970,8 @@ var
 
 begin
 
-  Incr := (Key = VK_ADD) or (Key = 187);
-  Decr := (Key = VK_SUBTRACT) or (Key = 189);
+  Incr := (Key = VK_ADD) or (Key = VK_Equal);
+  Decr := (Key = VK_SUBTRACT) or (Key = VK_Minus);
 
   // Increase/Descrease selected columns
   if Incr or Decr then begin
@@ -10246,9 +10246,9 @@ begin
         DoToggle(TgMaskEnv);
       Ord(' '):
         DoToggleSpace;
-      $BB, VK_ADD: //+
+      VK_Equal, VK_ADD: //+
         DoTogglePlus;
-      $BD, VK_SUBTRACT: //-
+      VK_Minus, VK_SUBTRACT: //-
         DoToggleMinus;
       Ord('0')..Ord('9'):
         DoDigit(Key - Ord('0'));
@@ -10257,7 +10257,7 @@ begin
           DoDigit(Key - Ord('A') + 10)
         else
           Exit;
-      192: // '~'
+      VK_BackQuote: // '~'
         if SampleTestLine.CanFocus then
           SampleTestLine.SetFocus
     end
@@ -10483,9 +10483,9 @@ begin
 
       Ord('6'): // Shift + 6
         DoToggleAccA;
-      $BB: // Shift +
+      VK_Equal: // Shift +
         DoTogglePlus;
-      $BD: // Shift -
+      VK_Minus: // Shift -
         DoToggle_;
 
       // Shift + Home
@@ -11181,8 +11181,8 @@ var
 
 begin
 
-  Incr := (Key = VK_ADD) or (Key = 187); // +
-  Decr := (Key = VK_SUBTRACT) or (Key = 189); // -
+  Incr := (Key = VK_ADD) or (Key = VK_Equal); // +
+  Decr := (Key = VK_SUBTRACT) or (Key = VK_Minus); // -
 
   // Increase/Decrease
   if Incr or Decr then begin
@@ -11335,14 +11335,14 @@ begin
 //below is unreachable code
       Ord(' '):
         DoChanges(TgSgn,[]);
-      $BB, VK_ADD: // +
+      VK_Equal, VK_ADD: // +
         DoChanges(TgSgnP,[]);
-      $BD, VK_SUBTRACT: // -
+      VK_Minus, VK_SUBTRACT: // -
         DoChanges(TgSgnM,[]);
 //above is unreachable code
       Ord('0')..Ord('9'):
         DoDigit(Key - Ord('0'));
-      192: // '~'
+      VK_BackQuote: // '~'
         if OrnamentTestLine.CanFocus then
           OrnamentTestLine.SetFocus;
       VK_DELETE:
@@ -11426,7 +11426,7 @@ begin
         end;
     else
       begin
-        if (Key >= 256) or (Key = 16) or (Key = 17) then Exit; // shift / ctrl
+        if (Key >= 256) or (Key = VK_Shift) or (Key = VK_Ctrl) then Exit;
 
         if Key = Ord('A') then
           DoChanges(TgSgn,[])
@@ -11540,7 +11540,7 @@ begin
     end
   else if Shift = [ssShift] then
     case Key of
-      $BB: // +
+      VK_Equal: // +
         DoChanges(TgSgnP,[]);
       VK_HOME:
         begin
@@ -11668,7 +11668,7 @@ begin
 
     else
       begin
-        if (Key = 16) or (Key = 17) then Exit; // shift / ctrl
+        if (Key = VK_Shift) or (Key = VK_Ctrl) then Exit; // shift / ctrl
 
         if Key=Ord('A') then //Shift+A
         begin
@@ -11695,7 +11695,7 @@ begin
     end
   else if Shift = [ssShift, ssCtrl] then
   begin
-    if (Key >= 256) or (Key = 16) or (Key = 17) then Exit; // shift / ctrl
+    if (Key >= 256) or (Key = VK_Shift) or (Key = VK_Ctrl) then Exit; // shift / ctrl
       
     ValidateOrnament(OrnNum);
     GetOrnParams(ll, ii, cc);
@@ -17563,7 +17563,7 @@ begin
         ToggleAutoEnv;
       Ord('R'):
         ToggleAutoStep;
-      192: // '~'
+      VK_BackQuote: // '~'
         begin
 {        case PageControl1.TabIndex of
           0: PageControl1.TabIndex:=1;
@@ -17682,7 +17682,7 @@ end;
 procedure TMDIChild.StringGrid1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var sel: TGridRect;
 begin
-  if (Shift = []) and (Key = 192) then // '~'
+  if (Shift = []) and (Key = VK_BackQuote) then // '~'
     if Tracks.CanFocus then
       Tracks.SetFocus;
 
@@ -21806,7 +21806,7 @@ end;
 
 procedure TMDIChild.UnsetFocus(var Key: Char; Control: TWinControl);
 begin
-  if Key = Chr(13) then
+  if Key = Chr(VK_Escape) then
   begin
     if Control.CanFocus then Control.SetFocus
     else

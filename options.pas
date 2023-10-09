@@ -1792,7 +1792,7 @@ end;
 procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if (Key = 27) and (OpsPages.ActivePage <> HotKeys) then
+  if (Key = VK_Escape) and (OpsPages.ActivePage <> HotKeys) then
     Button2.Click;  
 end;
 
