@@ -34,9 +34,9 @@ const
 
 
   AppName = 'Vortex Tracker';
-  VersionString = '2.6';
-  IsBeta = ' dev';
-  BetaNumber = ' 22.ts3';
+  VersionString = '2.6.1';
+  IsBeta = '';
+  BetaNumber = '';
 
   VersionFullString = VersionString + IsBeta + BetaNumber;
 

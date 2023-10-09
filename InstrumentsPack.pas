@@ -11,7 +11,8 @@ interface
 
 const
 
-  SongResources: array[0..11] of string = (
+  SongResources: array[0..12] of string = (
+    '2022_nq_Vradarks_Revenge_intro_ts3',
     '2019_MmcM_Conversions',
     '2019_EA_Road_to_Summer',
     '2019_nq_TESTOTUNOHARDOCORE',
