@@ -2511,10 +2511,10 @@ end;
 function TMDIChild.ModuleInPlayingWindow: Boolean;
 begin
   Result := False;
-  if PlayingWindow[3] <> nil then
+  if (NumberOfSoundChips >= 3) and (PlayingWindow[3] <> nil) then
     Result := (PlayingWindow[3] = Self) or (PlayingWindow[3].TSWindow[0] = Self) or (PlayingWindow[3].TSWindow[1] = Self)
   else
-  if PlayingWindow[2] <> nil then
+  if (NumberOfSoundChips >= 2) and (PlayingWindow[2] <> nil) then
     Result := (PlayingWindow[2] = Self) or (PlayingWindow[2].TSWindow[0] = Self) or (PlayingWindow[2].TSWindow[1] = Self)
   else
   if PlayingWindow[1] <> nil then
@@ -13825,7 +13825,7 @@ begin
 
   RerollToLineNum(1, Tracks.CurrentPatLine, True);
 
-  if TSWindow[0] = nil then
+  if (TSWindow[0] = nil) and (TSWindow[1] = nil) then
     RestartPlayingLine(Line)
   else
     RestartPlayingTS(True, True);
