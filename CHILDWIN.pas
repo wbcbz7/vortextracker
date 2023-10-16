@@ -8000,7 +8000,7 @@ type
     end
   end;
 
-  procedure DoInsertLine(AllPat: Boolean);
+  procedure DoInsertLine(AllPat: Boolean; NE: Boolean);
   var
     i, j, c: Integer;
     E, N: Boolean;
@@ -8018,6 +8018,11 @@ type
         New(ChangeList[ChangeCount - 1].Pattern);
         ChangeList[ChangeCount - 1].Pattern^ := Tracks.ShownPattern^;
         GetColsToEdit(E, N, T, AllPat);
+        if NE then
+        begin
+          N := True;
+          E := True;
+        end;
         if E then
         begin
           for j := MaxPatLen - 1 downto i + 1 do
@@ -8156,7 +8161,7 @@ type
       SpeedButton12.Down := State;
     end;
 }
-  procedure DoRemoveLine;
+  procedure DoRemoveLine(NE: Boolean);
   var
     i, j, c: Integer;
     E, N: Boolean;
@@ -8174,6 +8179,11 @@ type
         New(ChangeList[ChangeCount - 1].Pattern);
         ChangeList[ChangeCount - 1].Pattern^ := Tracks.ShownPattern^;
         GetColsToEdit(E, N, T, ssCtrl in Shift);
+        if NE then
+        begin
+          N := True;
+          E := True;
+        end;
         if E then
         begin
           for j := i + 1 to MaxPatLen - 1 do
@@ -8649,7 +8659,9 @@ begin
 
     VK_INSERT:
       if Shift = [] then
-        DoInsertLine(False)
+        DoInsertLine(False,False)
+      else if Shift = [ssAlt] then
+        DoInsertLine(False,True)
       else if Shift = [ssShift] then
         Tracks.PasteFromClipboard(False)
       else if Shift = [ssCtrl] then
@@ -8666,8 +8678,10 @@ begin
             RedrawTrs;
           end;
       end
+      else if Shift = [ssAlt] then
+        DoRemoveLine(True)
       else
-        DoRemoveLine;
+        DoRemoveLine(False);
 
     VK_DELETE:
       if Shift = [ssShift] then
@@ -8741,7 +8755,7 @@ begin
     begin
       // Ctrl + Y
       if (Shift = [ssCtrl]) and (Key = Ord('Y')) then
-        DoRemoveLine
+        DoRemoveLine(False)
 
       // Ctrl + A or Numpad 5
       else if (Shift = [ssCtrl]) and ((Key = Ord('A')) or (Key = VK_NUMPAD5)) then
@@ -8749,7 +8763,7 @@ begin
 
       // Ctrl + I
       else if (Shift = [ssCtrl]) and (Key = Ord('I')) then
-        DoInsertLine(True)
+        DoInsertLine(True,False)
 
       // Note, Noise, Envelope keys, etc...
       else if AutoStep or (Tracks.KeyPressed <> Key) then begin
