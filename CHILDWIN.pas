@@ -22026,7 +22026,21 @@ begin
   while (Module_PlayCurrentLine() <> 3) do begin
     Write(f, fByte);
     for iReg := 0 to 13 do begin
-      if (currRegs[iReg] <> SoundChip[Chip].AYRegisters.Index[iReg]) then begin
+      if (currRegs[iReg] <> SoundChip[Chip].AYRegisters.Index[iReg])
+        or ((iReg=13) and (SoundChip[Chip].AYRegisters.Index[iReg]<>0)) then begin
+        if (iReg=13) then begin // proper envelope retrigger when value is set
+          if not ((SoundChip[Chip].First_Period) and
+            (SoundChip[Chip].Envelope_Counter.Hi=0)) then continue;
+          SoundChip[Chip].First_Period := False;
+        end;
+
+        if (SoundChip[Chip].AYRegisters.Index[8] and 16) = 16 then
+          SoundChip[Chip].AYRegisters.Index[8] := 16;
+        if (SoundChip[Chip].AYRegisters.Index[9] and 16) = 16 then
+          SoundChip[Chip].AYRegisters.Index[9] := 16;
+        if (SoundChip[Chip].AYRegisters.Index[10] and 16) = 16 then
+          SoundChip[Chip].AYRegisters.Index[10] := 16;
+
         if ((SoundChip[Chip].AYRegisters.Index[8]=0) or
           (SoundChip[Chip].AYRegisters.Index[7] and 1=1)) and
           ((iReg=0) or (iReg=1)) then continue;
