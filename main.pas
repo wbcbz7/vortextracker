@@ -753,6 +753,7 @@ var
 
   ChanAlloc: TChansArray;
   ChanAllocIndex: integer;
+  ChanRemapPan: Boolean;
 
   SysCmd: Integer;
   WindowSnap, WindowUnsnap: Boolean;
@@ -2341,6 +2342,7 @@ begin
   ChanAlloc[1] := 1;
   ChanAlloc[2] := 2;
   ChanAllocIndex := 0;
+  ChanRemapPan := False;
   Enabled := True;
   FileMode := 0;
   OpenDialog.InitialDir := ExtractFilePath(ParamStr(0));
@@ -2546,6 +2548,7 @@ var
     Saved_DetectFeaturesLevel,
     Saved_VortexModuleHeader,
     Saved_DetectModuleHeader: boolean;
+    Saved_ChanRemapPan,
     Saved_IsFilt: boolean;
     Saved_Filt_M: integer;
     Saved_Prior: DWORD;
@@ -2640,6 +2643,8 @@ begin
 
   Form1.ChanVisAlloc.ItemIndex := ChanAllocIndex;
 
+  Form1.RemapOnlyPan1.Checked := ChanRemapPan;
+  Saved_ChanRemapPan := ChanRemapPan;
 
   Form1.chkHS.Checked := HighlightSpeedOn;
   Saved_HighlightSpeedOn := HighlightSpeedOn;
@@ -2874,9 +2879,11 @@ begin
     end;
 
 
-    if Saved_ChanAllocIndex <> ChanAllocIndex then
+    if (Saved_ChanAllocIndex <> ChanAllocIndex)
+     or (Saved_ChanRemapPan <> ChanRemapPan) then
     begin
       SetChannelsAllocation(Saved_ChanAllocIndex);
+      ChanRemapPan := Saved_ChanRemapPan;
       PanoramChanged := True;
     end;
 
@@ -3582,6 +3589,12 @@ begin
     5: begin ChanAlloc[0] := 2; ChanAlloc[1] := 0; ChanAlloc[2] := 1; Caption := 'CAB' end;
     6: begin ChanAlloc[0] := 2; ChanAlloc[1] := 1; ChanAlloc[2] := 0; Caption := 'CBA' end
   end;
+  if ChanRemapPan then
+  begin
+    ChanAlloc[0] := 0;
+    ChanAlloc[1] := 1;
+    ChanAlloc[2] := 2;
+  end;
   MainForm.ToggleChanAlloc.Caption := Caption;
   for i := 0 to MDIChildCount - 1 do
     with TMDIChild(MDIChildren[i]) do
@@ -3989,6 +4002,7 @@ begin
     SetIntParam('PanoramA', Panoram[0]);
     SetIntParam('PanoramB', Panoram[1]);
     SetIntParam('PanoramC', Panoram[2]);
+    SetBoolParam('ChanRemapPan', ChanRemapPan);
     SetIntParam('DefaultChipFreq', DefaultChipFreq);
     SetIntParam('ManualChipFreq', ManualChipFreq);
     SetIntParam('DefaultIntFreq', DefaultIntFreq);
@@ -4202,6 +4216,7 @@ begin
       DupNoteParams      := GetBoolParam('DupNoteParams', False);
       TrackBar1.Position := GetIntParam('GlobalVolume', 56);
       ChanAllocIndex     := GetIntParam('ChanAllocIndex', 1);
+      ChanRemapPan       := GetBoolParam('ChanRemapPan', False);
       SetChannelsAllocation(ChanAllocIndex);
       Panoram[0]         := GetIntParam('PanoramA', 64);
       Panoram[1]         := GetIntParam('PanoramB', 128);

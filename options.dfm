@@ -29,7 +29,7 @@ object Form1: TForm1
     Top = 0
     Width = 545
     Height = 561
-    ActivePage = ColorThemesTab
+    ActivePage = AYEmu
     Align = alTop
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -1512,28 +1512,28 @@ object Form1: TForm1
         TabOrder = 1
         object APanLabel: TLabel
           Left = 11
-          Top = 25
+          Top = 20
           Width = 7
           Height = 13
           Caption = 'A'
         end
         object BPanLabel: TLabel
           Left = 11
-          Top = 54
+          Top = 44
           Width = 7
           Height = 13
           Caption = 'B'
         end
         object CPanLabel: TLabel
           Left = 11
-          Top = 83
+          Top = 68
           Width = 7
           Height = 13
           Caption = 'C'
         end
         object APan: TTrackBar
           Left = 20
-          Top = 24
+          Top = 19
           Width = 91
           Height = 17
           LineSize = 3
@@ -1545,7 +1545,7 @@ object Form1: TForm1
         end
         object BPan: TTrackBar
           Left = 20
-          Top = 53
+          Top = 43
           Width = 91
           Height = 17
           Max = 255
@@ -1556,7 +1556,7 @@ object Form1: TForm1
         end
         object CPan: TTrackBar
           Left = 20
-          Top = 82
+          Top = 67
           Width = 91
           Height = 17
           Max = 255
@@ -1567,7 +1567,7 @@ object Form1: TForm1
         end
         object APanValue: TEdit
           Left = 113
-          Top = 27
+          Top = 22
           Width = 26
           Height = 19
           AutoSize = False
@@ -1578,7 +1578,7 @@ object Form1: TForm1
         end
         object BPanValue: TEdit
           Left = 113
-          Top = 56
+          Top = 46
           Width = 26
           Height = 19
           AutoSize = False
@@ -1589,7 +1589,7 @@ object Form1: TForm1
         end
         object CPanValue: TEdit
           Left = 113
-          Top = 85
+          Top = 70
           Width = 26
           Height = 19
           AutoSize = False
@@ -1597,6 +1597,15 @@ object Form1: TForm1
           TabOrder = 5
           Text = '255'
           OnKeyUp = CPanValueKeyUp
+        end
+        object RemapOnlyPan1: TCheckBox
+          Left = 11
+          Top = 90
+          Width = 134
+          Height = 17
+          Caption = 'Remap only panoram'
+          TabOrder = 6
+          OnClick = RemapOnlyPan1Click
         end
       end
       object ChanVisAlloc: TRadioGroup

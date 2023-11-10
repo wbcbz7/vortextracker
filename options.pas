@@ -224,6 +224,7 @@ type
     CenterOffInt: TUpDown;
     LoadCustomNoteTable: TBitBtn;
     OpenCustomNoteTableDialog1: TOpenDialog;
+    RemapOnlyPan1: TCheckBox;
     procedure StopAndStart;
     procedure ChipSelClick(Sender: TObject);
     procedure IntSelClick(Sender: TObject);
@@ -399,6 +400,7 @@ type
     procedure IncPositionsSizeClick(Sender: TObject);
     procedure CenterOffChange(Sender: TObject);
     procedure LoadCustomNoteTableClick(Sender: TObject);
+    procedure RemapOnlyPan1Click(Sender: TObject);
 
 
 
@@ -587,6 +589,15 @@ begin
   else if IsPlaying then
     PlayingWindow[1].StopAndRestart
 end;
+
+procedure TForm1.RemapOnlyPan1Click(Sender: TObject);
+begin
+  MainForm.RedrawOff;
+  ChanRemapPan := RemapOnlyPan1.Checked;
+  MainForm.SetChannelsAllocation(ChanVisAlloc.ItemIndex);
+  MainForm.RedrawOn;
+end;
+
 
 procedure TForm1.RadioGroup1Click(Sender: TObject);
 begin
