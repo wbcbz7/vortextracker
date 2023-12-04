@@ -6262,10 +6262,11 @@ var
   s: string;
 begin
   {$IFDEF DEBUG}Exit;{$ENDIF}
-  if IsSelected then begin
+(*  if IsSelected then begin
     ShowHint := False;
     Exit;
   end;
+*)
   Application.HintHidePause := 9000;
   case CursorX of
     0..3:
