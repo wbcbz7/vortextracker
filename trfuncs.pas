@@ -1741,7 +1741,7 @@ var
           Result := 2;
           exit
         end;
-        if not (i in [0..4]) then
+        if not (i in [0..5]) then
         begin
           Result := 3;
           exit
