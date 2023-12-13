@@ -12685,6 +12685,10 @@ begin
   // Accept means mouse Y coordinate more than Y +- MouseShift const
   Accept := (Y <= Ornaments.ClickMouseCursorY - MouseShift) or (Y >= Ornaments.ClickMouseCursorY + MouseShift);
 
+  // Check limits, because mouse pointer can be out of the TOrnaments box
+  if LineNum > MaxOrnLen - 1 then LineNum := MaxOrnLen - 1;
+  if LineNum < 0             then LineNum := 0;
+  
   // Change ornament length & loop
   if (Shift = [ssRight]) and Accept then
   begin
