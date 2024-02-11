@@ -29,7 +29,7 @@ object Form1: TForm1
     Top = 0
     Width = 545
     Height = 561
-    ActivePage = AYEmu
+    ActivePage = WOAPITAB
     Align = alTop
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -1747,10 +1747,11 @@ object Form1: TForm1
         end
         object midibtn3: TButton
           Left = 16
-          Top = 96
+          Top = 80
           Width = 217
           Height = 25
           Caption = 'Stop MIDI'
+          Enabled = False
           TabOrder = 3
           Visible = False
           OnClick = midibtn3Click
@@ -1763,6 +1764,15 @@ object Form1: TForm1
           Enabled = False
           TabOrder = 0
           Text = '(none)'
+        end
+        object optMidiEnable: TCheckBox
+          Left = 16
+          Top = 104
+          Width = 97
+          Height = 17
+          Caption = 'Enable MIDI'
+          TabOrder = 4
+          OnClick = optMidiEnableClick
         end
       end
       object SR: TRadioGroup

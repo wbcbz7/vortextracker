@@ -225,6 +225,7 @@ type
     LoadCustomNoteTable: TBitBtn;
     OpenCustomNoteTableDialog1: TOpenDialog;
     RemapOnlyPan1: TCheckBox;
+    optMidiEnable: TCheckBox;
     procedure StopAndStart;
     procedure ChipSelClick(Sender: TObject);
     procedure IntSelClick(Sender: TObject);
@@ -401,6 +402,7 @@ type
     procedure CenterOffChange(Sender: TObject);
     procedure LoadCustomNoteTableClick(Sender: TObject);
     procedure RemapOnlyPan1Click(Sender: TObject);
+    procedure optMidiEnableClick(Sender: TObject);
 
 
 
@@ -1059,6 +1061,7 @@ end;
 
 procedure TForm1.midibtn4Click(Sender: TObject);
 begin
+{ //not used
   if MainForm.midiin1.DeviceCount > 0 then
   begin
     try
@@ -1068,6 +1071,7 @@ begin
         'Vortex Tracker II', MB_OK + MB_ICONWARNING + MB_TOPMOST);
     end;
   end;
+}
 end;
 
 
@@ -1931,6 +1935,12 @@ begin
      end;
     CloseFile(TxtFile);
   end;
+end;
+
+procedure TForm1.optMidiEnableClick(Sender: TObject);
+begin
+  DisableMidi := not optMidiEnable.Checked;
+  if DisableMidi then MainForm.midiin1.StopAndClose;
 end;
 
 end.

@@ -743,6 +743,7 @@ var
   DisableHints: Boolean;
   DisableCtrlClick: Boolean;
   DisableInfoWin: Boolean;
+  DisableMidi: Boolean;
   VortexFirstStart: Boolean;
   ManualChipFreq: Integer;
   DefaultChipFreq: Integer;
@@ -2251,16 +2252,6 @@ begin
 
   DragAcceptFiles(Self.Handle, True);
 
-  if midiin1.NumDevs > 0 then
-  begin
-    try
-      midiin1.OpenAndStart;
-    except
-//      Application.MessageBox('Sorry, MIDI keyboard busy or... something else happened :)',
-//        'Vortex Tracker II', MB_OK + MB_ICONWARNING + MB_TOPMOST);
-    end;
-  end;
-
   // Init syncronization
   SyncMessageFile :=  VortexDir + '\sync';
   if FileExists(SyncMessageFile) then
@@ -2369,6 +2360,16 @@ begin
   LoadOptions;
   SetFileAssociations;
   InitColorThemes;
+
+  if (midiin1.NumDevs > 0) and not DisableMidi then
+  begin
+    try
+      midiin1.OpenAndStart;
+    except
+//      Application.MessageBox('Sorry, MIDI keyboard busy or... something else happened :)',
+//        'Vortex Tracker II', MB_OK + MB_ICONWARNING + MB_TOPMOST);
+    end;
+  end;
 
   initBuffSample;
   initBuffOrnament;
@@ -2570,6 +2571,7 @@ var
     Saved_TemplateSongPath: String;
     Saved_StartupAction: byte;
     Saved_WinThemeIndex: Integer;
+    Saved_DisableMidi: Boolean;
     Saved_DisableCtrlClick: Boolean;
     Saved_DisableInfoWin: Boolean;    
     Saved_ManualChipFreq: Integer;
@@ -2669,6 +2671,8 @@ begin
   Saved_WinThemeIndex := WinThemeIndex;
   Form1.WinColorsBox.ItemIndex := WinThemeIndex;
 
+  Form1.optMidiEnable.Checked := not DisableMidi;
+  Saved_DisableMidi := DisableMidi;
 
   Saved_ManualChipFreq := ManualChipFreq;
   if ManualChipFreq > 0 then
@@ -2852,6 +2856,7 @@ begin
     AutoBackupsOn      := Saved_AutoBackupsOn;
     AutoBackupsMins    := Saved_AutoBackupsMins;
     DisableHints       := Saved_DisableHints;
+    DisableMidi        := Saved_DisableMidi;
     SetColorThemeByName(Saved_ThemeName);
 
 
@@ -4079,6 +4084,7 @@ begin
     SetBoolParam('DisableHints', DisableHints);
     SetBoolParam('DisableCtrlClick', DisableCtrlClick);
     SetBoolParam('DisableInfoWin', DisableInfoWin);
+    SetBoolParam('DisableMidi',DisableMidi);
 
     SetBoolParam('SampleBrowserVisible', SampleBrowserVisible);
     SetBoolParam('OrnamentsBrowserVisible', OrnamentsBrowserVisible);
@@ -4418,7 +4424,8 @@ begin
 
     DisableHints := GetBoolParam('DisableHints', False);
     DisableCtrlClick := GetBoolParam('DisableCtrlClick', False);
-    DisableInfoWin := GetBoolParam('DisableInfoWin', False);    
+    DisableInfoWin := GetBoolParam('DisableInfoWin', False);
+    DisableMidi := GetBoolParam('DisableMidi', False);
     SampleBrowserVisible := GetBoolParam('SampleBrowserVisible', True);
     OrnamentsBrowserVisible := GetBoolParam('OrnamentsBrowserVisible', True);
 
@@ -7521,6 +7528,8 @@ begin
     Exit;
   end;
 
+  if DisableMidi then exit;
+  
   // Try to detect newly connected MIDI keyboard
   if (midiin1.State = misClosed) and (midiin1.DeviceCount > 0) then
     try
