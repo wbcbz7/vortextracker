@@ -20,7 +20,7 @@ uses
   Windows, Messages, Types, Classes, Graphics, Forms, Controls, StdCtrls, Menus,
   SysUtils, trfuncs, ComCtrls, WaveOutAPI, Grids, AY, Buttons, ExtCtrls, Dialogs,
   Math, ColorThemes, ExportWavOpts, StrUtils, RegExpr, RichEdit, ShellApi,
-  ExceptionLog, dpMemBmp, VKeys;
+  ExceptionLog, dpMemBmp, VKeys, ShlObj, HotKeys;
 
 
 const
@@ -21703,6 +21703,60 @@ begin
 
 end;
 
+/////////// open folder with files //////////////
+
+const
+  OFASI_EDIT = $0001;
+  OFASI_OPENDESKTOP = $0002;
+
+{$IFDEF UNICODE}
+function ILCreateFromPath(pszPath: PChar): PItemIDList stdcall; external shell32
+  name 'ILCreateFromPathW';
+{$ELSE}
+function ILCreateFromPath(pszPath: PChar): PItemIDList stdcall; external shell32
+  name 'ILCreateFromPathA';
+{$ENDIF}
+procedure ILFree(pidl: PItemIDList) stdcall; external shell32;
+function SHOpenFolderAndSelectItems(pidlFolder: PItemIDList; cidl: Cardinal;
+  apidl: pointer; dwFlags: DWORD): HRESULT; stdcall; external shell32;
+
+function OpenFolderAndSelectFiles(FileNames: string): boolean;
+var
+  IIDL: PItemIDList;
+  AList : array of PItemIDList;
+  Files : TStrings;
+  i,j : integer;
+begin
+  Delete(Filenames,1,1); //trim first |
+
+  Files := Split('|', FileNames);
+  result := false;
+
+  j:=0;
+  for i := 0 to Files.Count-1 do
+  begin
+    if FileExists(Files[i]) then
+    begin
+      SetLength(AList, Length(AList)+1);
+      AList[j]:=ILCreateFromPath(PChar(Files[i]));
+      inc(j);
+    end;
+  end;
+
+  if j>0 then
+    IIDL := ILCreateFromPath(PChar(ExtractFilePath(Files[0])));
+    try
+      result := SHOpenFolderAndSelectItems(IIDL, j, PItemIDList(AList), 0) = S_OK;
+    finally
+      ILFree(IIDL);
+      for i := 0 to j-1 do
+        ILFree(AList[i]);
+    end;
+  SetLength(AList,0);
+  FreeAndNil(Files)
+end;
+
+/////////////////////////////////////////////////
 
 procedure TMDIChild.ExportToWavFile;
 
@@ -21721,8 +21775,12 @@ procedure TMDIChild.ExportToWavFile;
       CloseHandle(HFileRes);
   end;
 
+var
+  trying: Boolean;
+  Created: string;
 begin
 
+  trying := True;
   PlayingWindow[1] := Self;
   if PlayingWindow[1] = PlayingWindow[2] then
     PlayingWindow[2] := nil;
@@ -21750,42 +21808,48 @@ begin
     NumberOfSoundChips := 1;
   end;
 
-  ExportOptions := TExportOptions.Create(MainForm);
-
-  ExportOptions.ExportSelected.Checked :=
-    (PlayingWindow[1].StringGrid1.Selection.Right > PlayingWindow[1].StringGrid1.Selection.Left)
-    or
-    ((NumberOfSoundChips >= 2) and (PlayingWindow[2].StringGrid1.Selection.Right > PlayingWindow[2].StringGrid1.Selection.Left))
-    or
-    ((NumberOfSoundChips = 3) and (PlayingWindow[3].StringGrid1.Selection.Right > PlayingWindow[3].StringGrid1.Selection.Left));
-
-
-  if ExportOptions.ShowModal = mrCancel then
-    Exit;
-
-
-  PrepareExportDialog(ExportWavDialog, '.wav', ExportPath);
-
-  CenterWinHandle := self.handle;
-  DialogWinHandle := @ExportWavDialog.Handle;
-  MainForm.CenteringTimer.Enabled := True;
-
-  if ExportWavDialog.Execute then
+  while Trying do
   begin
+    ExportOptions := TExportOptions.Create(MainForm);
 
-    if IsOpen(ExportWavDialog.FileName) then
-    begin
-      MessageDlg('Can''t open file. File is already opened in another application.', mtWarning, [mbOK], 0);
+    ExportOptions.ExportSelected.Checked :=
+      (PlayingWindow[1].StringGrid1.Selection.Right > PlayingWindow[1].StringGrid1.Selection.Left)
+      or
+      ((NumberOfSoundChips >= 2) and (PlayingWindow[2].StringGrid1.Selection.Right > PlayingWindow[2].StringGrid1.Selection.Left))
+      or
+      ((NumberOfSoundChips = 3) and (PlayingWindow[3].StringGrid1.Selection.Right > PlayingWindow[3].StringGrid1.Selection.Left));
+
+
+    if ExportOptions.ShowModal = mrCancel then
       Exit;
-    end;
-    ExportWavDialog.InitialDir := ExtractFilePath(ExportWavDialog.FileName);
-    ExportPath := ExportWavDialog.InitialDir;
 
-    //CreateWave(ExportWavDialog.FileName);
-    CreateWaveAyumi(ExportWavDialog.FileName);
-  end
-  else
-    Self.PageControl1.Repaint;
+
+    PrepareExportDialog(ExportWavDialog, '.wav', ExportPath);
+
+    CenterWinHandle := self.handle;
+    DialogWinHandle := @ExportWavDialog.Handle;
+    MainForm.CenteringTimer.Enabled := True;
+
+    if ExportWavDialog.Execute then
+    begin
+
+      if IsOpen(ExportWavDialog.FileName) then
+      begin
+        MessageDlg('Can''t open file. File is already opened in another application.', mtWarning, [mbOK], 0);
+        Exit;
+      end;
+      ExportWavDialog.InitialDir := ExtractFilePath(ExportWavDialog.FileName);
+      ExportPath := ExportWavDialog.InitialDir;
+
+      //CreateWave(ExportWavDialog.FileName);
+      Created := CreateWaveAyumi(ExportWavDialog.FileName);
+      if ExportOptions.OpenFolder.Checked then OpenFolderAndSelectFiles(Created);
+    end
+    else
+      continue;
+    Trying := False;
+  end;
+//    Self.PageControl1.Repaint;
 
 end;
 

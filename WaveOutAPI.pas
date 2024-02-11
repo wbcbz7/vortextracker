@@ -79,7 +79,7 @@ procedure ResetPlaying;
 procedure UnresetPlaying;
 procedure CreateWaveHeader(Length, SampleRate: Integer;
   BitsPerSample, Channels: Smallint; var WaveHeader: TWaveHeader);
-procedure CreateWaveAyumi(FileName: string);
+function CreateWaveAyumi(FileName: string):string;
 
 
 implementation
@@ -799,7 +799,7 @@ end;
 
 
 
-procedure CreateWaveAyumi(FileName: string);
+function CreateWaveAyumi(FileName: string):string;
 type
   T24Bit = record
      b1, b2, b3: Byte
@@ -825,6 +825,7 @@ var
 
   TMPFileName: string;
   ayumi0, ayumi1, ayumi2, ayumi3: TAyumi;
+  CurName, Names: string;
 
   CurChan: Integer;
   Separate: Boolean;
@@ -1097,6 +1098,7 @@ begin
   end
   else Separate := False;
   CurChan := 0;
+  Names := '';
 mainloop:
 //===================
   if Separate then
@@ -1341,19 +1343,20 @@ mainloop:
   // Save wav
   CreateWaveHeader(TMPFileStream.Size, ExportOptions.GetSampleRate, BitRate, NumChannels, WaveHeader);
 
+  CurName := FileName;
   if Separate then
   begin
     fn2:=ExtractFileExt(Filename);
     fn1:=ExtractFilePath(Filename)+ExtractFileName(FileName);
     fn1:=copy(fn1,1,length(fn1)-length(fn2));
-    FileStream := TFileStream.Create(fn1+'('+inttostr(CurChan+1)+')'+fn2, fmCreate)
-  end
-  else
-    FileStream := TFileStream.Create(FileName, fmCreate);
+    CurName := fn1+'('+inttostr(CurChan+1)+')'+fn2;
+  end;
+  FileStream := TFileStream.Create(CurName, fmCreate);
   FileStream.Seek(0, soFromBeginning);
   FileStream.Write(WaveHeader, SizeOf(WaveHeader));
   TMPFileStream.Position := 0;
   FileStream.CopyFrom(TMPFileStream, TMPFileStream.Size);
+  Names:=Names +'|'+ CurName;
 
   FileStream.Free;
   TMPFileStream.Free;
@@ -1370,6 +1373,7 @@ mainloop:
   end;
 //========================
 
+  Result := Names;
   // Set child positions
   RestorePositionAndPattern(LeadWindow, PrevPosNum1, PrevPatNum1);
   if LeadWindow.TSWindow[0] <> nil then

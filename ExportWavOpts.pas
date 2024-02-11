@@ -28,6 +28,7 @@ type
     Channels: TRadioGroup;
     ExportSelected: TCheckBox;
     ExportSeparate: TCheckBox;
+    OpenFolder: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
