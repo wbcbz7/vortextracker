@@ -823,6 +823,9 @@ var
   PrevPosNum1, PrevPosNum2, PrevPatNum1, PrevPatNum2: Integer;
   PrevPosNum3, PrevPatNum3: Integer;
 
+  IsPlaying_old: Boolean;
+  Reseted_old: Boolean;
+
   TMPFileName: string;
   ayumi0, ayumi1, ayumi2, ayumi3: TAyumi;
   CurName, Names: string;
@@ -874,15 +877,22 @@ var
 
   procedure ChangePositions(PlayWindow: TMDIChild);
   begin
-{
+
     if PlayWindow <> LeadWindow then begin
-      if LeadWindow.PositionNumber > PlayWindow.VTMP.Positions.Length - 1 then
-        Module_SetCurrentPosition(PlayWindow.VTMP.Positions.Length - 1)
-      else
-        Module_SetCurrentPosition(LeadWindow.PositionNumber);
+//      if LeadWindow.PositionNumber > PlayWindow.VTMP.Positions.Length - 1 then
+//        Module_SetCurrentPosition(PlayWindow.VTMP.Positions.Length - 1)
+//      else
+//        Module_SetCurrentPosition(LeadWindow.PositionNumber);
+
+        if PlayWindow.PositionNumber > PlayWindow.VTMP.Positions.Length - 1 then
+          Module_SetCurrentPosition(PlayWindow.VTMP.Positions.Loop)
+        else
+          Module_SetCurrentPosition(PlVars[CurChip].CurrentPosition+1);
+      PlayWindow.PositionNumber := PlVars[CurChip].CurrentPosition;
       Exit;
     end;
-}
+
+    //Lead:
     if PlVars[CurChip].CurrentPosition = ToPosition then begin
 
       if PlayAll then
@@ -894,12 +904,11 @@ var
         Dec(ExportLoops)
       else
         ExportFinished := True;
-
     end
     else
       Module_SetCurrentPosition(PlVars[CurChip].CurrentPosition+1);
 
-//    LeadWindow.PositionNumber := PlVars[CurChip].CurrentPosition;
+    LeadWindow.PositionNumber := PlVars[CurChip].CurrentPosition;
   end;
 
 
@@ -1200,19 +1209,36 @@ mainloop:
   end;
 
 
-
   // Init pointer, position, delay
   InitForAllTypes(True);
-  for i := 1 to NumberOfSoundChips do
-  begin
-    Module_SetPointer(PlayingWindow[i].VTMP, i);
-    Module_SetDelay(PlayingWindow[i].VTMP.Initial_Delay);
-
+//  for i := 1 to NumberOfSoundChips do
+//  begin
+//    Module_SetPointer(PlayingWindow[i].VTMP, i);
+//    Module_SetDelay(PlayingWindow[i].VTMP.Initial_Delay);
+{
     if (PlayingWindow[i] = LeadWindow) or (FromPosition <= PlayingWindow[i].VTMP.Positions.Length-1) then
       Module_SetCurrentPosition(FromPosition)
     else
       Module_SetCurrentPosition(PlayingWindow[i].VTMP.Positions.Length-1);
+}
+//    if (PlayingWindow[i] = LeadWindow) then
+//      Module_SetCurrentPosition(FromPosition)
+//    else
+//      Module_SetCurrentPosition(PlayingWindow[i].VTMP.Positions.Length-1);
+//  end;
+
+  for i := 1 to NumberOfSoundChips do
+  begin
+    Module_SetPointer(PlayingWindow[i].VTMP, i);
+    Module_SetDelay(PlayingWindow[i].VTMP.Initial_Delay);
   end;
+  IsPlaying_old:=IsPlaying;
+  Reseted_old:=Reseted;
+  IsPlaying:=True;
+  Reseted:=True;
+  LeadWindow.RestartPlayingPos(FromPosition);
+  IsPlaying:=IsPlaying_old;
+  Reseted:=Reseted_old;
 
 
   // Set loop repeats

@@ -14254,10 +14254,10 @@ begin
   if IsSinchronizing or ((TSWindow[0] = nil) and (TSWindow[1] = nil)) then
 //   or (TSWindow[0] = Self) then
     Exit;
-  if (TSWindow[0]<>nil) and (Tracks.ShownFrom = TSWindow[0].Tracks.ShownFrom) and (PositionNumber = TSWindow[0].PositionNumber)
-  and ( (TSWindow[1]=nil)
-  or (TSWindow[1]<>nil) and (Tracks.ShownFrom = TSWindow[1].Tracks.ShownFrom) and (PositionNumber = TSWindow[1].PositionNumber) ) then
-    Exit;
+//  if (TSWindow[0]<>nil) and (Tracks.ShownFrom = TSWindow[0].Tracks.ShownFrom) and (PositionNumber = TSWindow[0].PositionNumber)
+//  and ( (TSWindow[1]=nil)
+//  or (TSWindow[1]<>nil) and (Tracks.ShownFrom = TSWindow[1].Tracks.ShownFrom) and (PositionNumber = TSWindow[1].PositionNumber) ) then
+//    Exit;
 
   if not IsPlaying or (PlayMode <> PMPlayModule) then
   begin
@@ -14310,7 +14310,7 @@ begin
     ScrollPos := ColPos;
 
   PositionsScrollBox.HorzScrollBar.Position := ScrollPos;
-
+{
   if (TSWindow[0] <> nil) and not IsSinchronizing then begin
     TSWindow[0].IsSinchronizing := True;
     TSWindow[0].SelectPosition2(PositionNumber);
@@ -14321,7 +14321,7 @@ begin
     TSWindow[1].SelectPosition2(PositionNumber);
     TSWindow[1].IsSinchronizing := False;
   end;
-
+}
 end;
 
 procedure TMDIChild.SetStringGrid2Scroll(ACol: Integer);
