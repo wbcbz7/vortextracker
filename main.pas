@@ -5503,9 +5503,9 @@ begin
     begin
       TMDIChild(ActiveMDIChild).SavePatternUndo;
       case X1 of
-        15: volChan := 0;
-        29: volChan := 1;
-        43: volChan := 2;
+        15: volChan := ChanAlloc[0];
+        29: volChan := ChanAlloc[1];
+        43: volChan := ChanAlloc[2];
       end;
       evenVol := 0;
       for ff := Y1 to Y2 do
