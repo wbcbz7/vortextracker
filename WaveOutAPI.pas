@@ -335,6 +335,11 @@ begin
 
   SetAYFreq(TMDIChild(MainForm.ActiveMDIChild).VTMP.ChipFreq);
   SetIntFreq(TMDIChild(MainForm.ActiveMDIChild).VTMP.IntFreq);
+  SampleRate := ExportOptions.GetSampleRate;
+
+  If SampleRate=0 then
+    MessageDlg('Something wrong has happened: SampleRate == 0 (!!!)',
+      mtWarning, [mbOK], 0);
 
   ExportStarted := False;
   AudioProblem := False;

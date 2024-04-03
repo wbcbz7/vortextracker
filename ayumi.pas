@@ -238,6 +238,7 @@ begin
 
   noise    := 1;
   SamRate  := sampleRate;
+  if SamRate = 0 then SamRate := 44100;
   DCType   := ADCType;
   DCCutOff := 3;
 
