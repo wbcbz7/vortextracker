@@ -465,6 +465,10 @@ begin
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
+var
+  w11w:integer;
+  heady:integer;
+  headx:integer;
 begin
   ColorDlg := THSL_ColorPickerDlg.Create(Owner);
   APan.TickStyle := tsManual;
@@ -501,7 +505,20 @@ begin
   AyumiDCFiltBox.Left := FiltersGroup.Left;
   AyumiDCFiltBox.Top  := FiltersGroup.Top;
 
-  OpsPages.ActivePageIndex := 0;  
+  heady:=Form1.Height-Form1.ClientHeight;
+  headx:=Form1.Width-Form1.ClientWidth;
+  Form1.Constraints.MaxHeight := Form1.Button2.Top+Form1.Button2.Height
+                                  +round(heady*0.4+hscrollbarsize*1.3);
+  w11w:=Form1.Button2.Left+Form1.Button2.Width;
+  Form1.Constraints.MaxWidth:=w11w+round(headx*0.2+vscrollbarsize*1.5);
+  Form1.Height:=Constraints.MaxHeight;
+  Form1.Width:=Constraints.MaxWidth;
+//  Form1.FileAssocList.Width:=FileAssocBox.Width-150;
+  FileAssocList.Height:=FileAssocBox.Height-AllFileAssoc.Height*2;
+//  Caption:=inttostr(VscrollbarSize)+' '+inttostr(w11w)+' '+inttostr(heady)+' '+inttostr(headx);
+
+
+  OpsPages.ActivePageIndex := 0;
 end;
 
 

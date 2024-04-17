@@ -1,8 +1,8 @@
 object MainForm: TMainForm
-  Left = 651
-  Top = 120
+  Left = 744
+  Top = 0
   Width = 562
-  Height = 618
+  Height = 541
   HorzScrollBar.Smooth = True
   HorzScrollBar.Tracking = True
   Caption = 'Vortex Tracker'
@@ -30,7 +30,7 @@ object MainForm: TMainForm
   TextHeight = 13
   object StatusBar: TStatusBar
     Left = 0
-    Top = 547
+    Top = 470
     Width = 554
     Height = 20
     AutoHint = True

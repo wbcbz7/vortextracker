@@ -1599,8 +1599,10 @@ begin
       c.EnableAlign;
 
     end;
-    c.Panel16.Left := 456 + c.PageControl1.Left;
-    c.Panel17.Left := 456 + c.PageControl1.Left + c.Panel16.Width+1;
+//    c.Panel16.Left := 456 + c.PageControl1.Left;
+//    c.Panel17.Left := 456 + c.PageControl1.Left + c.Panel16.Width+1;
+    c.Panel16.Left := c.PageControl1.Left+c.PageControl1.Width-c.Panel16.Width*2-16;
+    c.Panel17.Left := c.Panel16.Left + c.Panel16.Width+2;
   end
   else
 
@@ -2800,6 +2802,11 @@ begin
   NewLeft := MainForm.Left + MainForm.Width div 2 - Form1.Width div 2;
   NewTop := MainForm.Top + MainForm.Height div 2 - Form1.Height div 2;
   Form1.SetBounds(NewLeft, NewTop, Form1.Width, Form1.Height);
+
+  Form1.FileAssocList.Top:=Form1.AllFileAssoc.Top+Form1.AllFileAssoc.Height+8;
+//  Form1.FileAssocList.Left:=Form1.AllFileAssoc.Top+Form1.AllFileAssoc.Height+8;
+  Form1.FileAssocList.Height:=Form1.FileAssocBox.Height-(Form1.AllFileAssoc.Top+Form1.AllFileAssoc.Height)-16;
+  Form1.FileAssocList.Width:=Form1.FileAssocBox.Width-16;
 
   // Apply Options - user press OK button
   if Form1.ShowModal = mrOk then

@@ -1,12 +1,12 @@
 object MDIChild: TMDIChild
-  Left = 810
-  Top = 122
+  Left = 719
+  Top = 0
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Module'
-  ClientHeight = 708
+  ClientHeight = 510
   ClientWidth = 595
   Color = clBtnFace
   Constraints.MinHeight = 470

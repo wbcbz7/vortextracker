@@ -1,16 +1,15 @@
 object Form1: TForm1
-  Left = 333
-  Top = 168
+  Left = 536
+  Top = 188
+  Width = 550
+  Height = 614
+  HorzScrollBar.Tracking = True
+  VertScrollBar.Tracking = True
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsSingle
   Caption = 'Options'
-  ClientHeight = 598
-  ClientWidth = 545
   Color = clBtnFace
-  Constraints.MaxHeight = 647
-  Constraints.MaxWidth = 561
-  Constraints.MinHeight = 598
-  Constraints.MinWidth = 530
+  Constraints.MinHeight = 380
+  Constraints.MinWidth = 550
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -27,9 +26,9 @@ object Form1: TForm1
   object OpsPages: TPageControl
     Left = 0
     Top = 0
-    Width = 545
-    Height = 561
-    ActivePage = WOAPITAB
+    Width = 542
+    Height = 545
+    ActivePage = ColorThemesTab
     Align = alTop
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -42,7 +41,7 @@ object Form1: TForm1
       Caption = 'Main'
       ImageIndex = 2
       object PatEditorOpts: TGroupBox
-        Left = 8
+        Left = 0
         Top = 8
         Width = 521
         Height = 217
@@ -183,7 +182,7 @@ object Form1: TForm1
       end
       object PriorGrp: TRadioGroup
         Left = 269
-        Top = 384
+        Top = 376
         Width = 252
         Height = 105
         Caption = ' Application Priority '
@@ -248,7 +247,7 @@ object Form1: TForm1
       end
       object FreqTableBox: TGroupBox
         Left = 0
-        Top = 384
+        Top = 376
         Width = 252
         Height = 105
         Caption = ' Frequency Table '
@@ -316,7 +315,7 @@ object Form1: TForm1
       Caption = 'Appearance'
       ImageIndex = 5
       object GroupBox3: TGroupBox
-        Left = 8
+        Left = 0
         Top = 8
         Width = 257
         Height = 161
@@ -378,7 +377,7 @@ object Form1: TForm1
         end
       end
       object GroupBox4: TGroupBox
-        Left = 8
+        Left = 0
         Top = 176
         Width = 521
         Height = 337
@@ -1207,7 +1206,7 @@ object Form1: TForm1
         end
       end
       object GroupBox1: TGroupBox
-        Left = 272
+        Left = 264
         Top = 8
         Width = 257
         Height = 161
@@ -1330,7 +1329,7 @@ object Form1: TForm1
       ImageIndex = 1
       object Label7: TLabel
         Left = 16
-        Top = 509
+        Top = 501
         Width = 166
         Height = 13
         Caption = 'Some changes will be heared after:'
@@ -1338,14 +1337,14 @@ object Form1: TForm1
       end
       object LBChg: TLabel
         Left = 186
-        Top = 509
+        Top = 501
         Width = 40
         Height = 13
         Caption = '2178 ms'
         Visible = False
       end
       object ChipSel: TRadioGroup
-        Left = 128
+        Left = 120
         Top = 128
         Width = 152
         Height = 65
@@ -1358,7 +1357,7 @@ object Form1: TForm1
         OnClick = ChipSelClick
       end
       object IntSel: TRadioGroup
-        Left = 8
+        Left = 0
         Top = 296
         Width = 272
         Height = 201
@@ -1381,7 +1380,7 @@ object Form1: TForm1
         OnClick = IntSelClick
       end
       object Opt: TRadioGroup
-        Left = 8
+        Left = 0
         Top = 200
         Width = 113
         Height = 89
@@ -1400,7 +1399,7 @@ object Form1: TForm1
         OnClick = OptClick
       end
       object ChFreq: TRadioGroup
-        Left = 288
+        Left = 280
         Top = 8
         Width = 241
         Height = 489
@@ -1436,7 +1435,7 @@ object Form1: TForm1
         OnClick = ChFreqClick
       end
       object FiltersGroup: TGroupBox
-        Left = 128
+        Left = 120
         Top = 200
         Width = 152
         Height = 89
@@ -1504,7 +1503,7 @@ object Form1: TForm1
         OnKeyUp = EdIntFrqKeyUp
       end
       object PanoramBox: TGroupBox
-        Left = 128
+        Left = 120
         Top = 8
         Width = 152
         Height = 113
@@ -1609,7 +1608,7 @@ object Form1: TForm1
         end
       end
       object ChanVisAlloc: TRadioGroup
-        Left = 8
+        Left = 0
         Top = 8
         Width = 113
         Height = 185
@@ -1686,7 +1685,7 @@ object Form1: TForm1
       Caption = 'Audio'
       ImageIndex = 4
       object SpeedButton1: TSpeedButton
-        Left = 472
+        Left = 464
         Top = 376
         Width = 55
         Height = 25
@@ -1721,7 +1720,7 @@ object Form1: TForm1
         Margin = 2
       end
       object grp1: TGroupBox
-        Left = 277
+        Left = 269
         Top = 224
         Width = 252
         Height = 137
@@ -1776,7 +1775,7 @@ object Form1: TForm1
         end
       end
       object SR: TRadioGroup
-        Left = 8
+        Left = 0
         Top = 8
         Width = 129
         Height = 201
@@ -1797,7 +1796,7 @@ object Form1: TForm1
         OnClick = SRClick
       end
       object BR: TRadioGroup
-        Left = 152
+        Left = 144
         Top = 8
         Width = 108
         Height = 121
@@ -1815,7 +1814,7 @@ object Form1: TForm1
         OnClick = BRClick
       end
       object NCh: TRadioGroup
-        Left = 152
+        Left = 144
         Top = 144
         Width = 108
         Height = 65
@@ -1828,7 +1827,7 @@ object Form1: TForm1
         OnClick = NChClick
       end
       object Buff: TGroupBox
-        Left = 277
+        Left = 269
         Top = 8
         Width = 252
         Height = 201
@@ -1904,7 +1903,7 @@ object Form1: TForm1
         end
       end
       object SelDev: TGroupBox
-        Left = 8
+        Left = 0
         Top = 224
         Width = 252
         Height = 137
@@ -1946,16 +1945,16 @@ object Form1: TForm1
       Caption = 'HotKeys'
       ImageIndex = 6
       object GroupBox2: TGroupBox
-        Left = 8
+        Left = 0
         Top = 8
         Width = 521
-        Height = 521
+        Height = 495
         TabOrder = 0
         object HotKeyList: TListView
           Left = 8
           Top = 14
           Width = 505
-          Height = 499
+          Height = 473
           BiDiMode = bdLeftToRight
           Columns = <
             item
@@ -1977,6 +1976,7 @@ object Form1: TForm1
           Font.Name = 'Microsoft Sans Serif'
           Font.Style = []
           GridLines = True
+          HotTrack = True
           IconOptions.Arrangement = iaLeft
           IconOptions.WrapText = False
           ReadOnly = True
@@ -1997,7 +1997,7 @@ object Form1: TForm1
       Caption = 'Compatibility'
       ImageIndex = 3
       object SaveHead: TRadioGroup
-        Left = 8
+        Left = 0
         Top = 264
         Width = 521
         Height = 97
@@ -2011,7 +2011,7 @@ object Form1: TForm1
         OnClick = SaveHeadClick
       end
       object RadioGroup1: TRadioGroup
-        Left = 8
+        Left = 0
         Top = 376
         Width = 521
         Height = 113
@@ -2026,17 +2026,17 @@ object Form1: TForm1
         OnClick = RadioGroup1Click
       end
       object FileAssocBox: TGroupBox
-        Left = 8
+        Left = 0
         Top = 8
         Width = 521
         Height = 241
         Caption = ' File Associations '
         TabOrder = 0
         object FileAssocList: TListView
-          Left = 16
-          Top = 48
-          Width = 489
-          Height = 177
+          Left = 8
+          Top = 54
+          Width = 505
+          Height = 179
           Checkboxes = True
           Columns = <
             item
@@ -2053,6 +2053,7 @@ object Form1: TForm1
             end>
           ColumnClick = False
           GridLines = True
+          HotTrack = True
           Items.Data = {
             200000000100000000000000FFFFFFFFFFFFFFFF000000000000000003567433}
           ReadOnly = True
@@ -2084,7 +2085,7 @@ object Form1: TForm1
   end
   object Button1: TButton
     Left = 368
-    Top = 568
+    Top = 552
     Width = 75
     Height = 25
     Caption = 'OK'
@@ -2092,8 +2093,8 @@ object Form1: TForm1
     TabOrder = 1
   end
   object Button2: TButton
-    Left = 456
-    Top = 568
+    Left = 448
+    Top = 552
     Width = 75
     Height = 25
     Caption = 'Cancel'
@@ -2105,14 +2106,14 @@ object Form1: TForm1
     Filter = 'Vortext Tracker Theme (*.vtt)|*.vtt'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofCreatePrompt, ofNoReadOnlyReturn, ofEnableSizing]
     Left = 16
-    Top = 536
+    Top = 552
   end
   object LoadThemeDialog: TOpenDialog
     DefaultExt = 'vtt'
     Filter = 'Vortext Tracker Theme (*.vtt)|*.vtt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofFileMustExist, ofNoLongNames, ofEnableSizing]
     Left = 48
-    Top = 536
+    Top = 552
   end
   object TemplateDialog: TOpenDialog
     DefaultExt = 'vt2'
@@ -2121,11 +2122,11 @@ object Form1: TForm1
       '(*.txt)|*.txt'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Left = 80
-    Top = 536
+    Top = 552
   end
   object OpenCustomNoteTableDialog1: TOpenDialog
     Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
     Left = 132
-    Top = 536
+    Top = 552
   end
 end
