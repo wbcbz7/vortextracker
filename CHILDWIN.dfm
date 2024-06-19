@@ -1,5 +1,5 @@
 object MDIChild: TMDIChild
-  Left = 719
+  Left = 711
   Top = 0
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
