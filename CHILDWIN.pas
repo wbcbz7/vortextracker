@@ -19169,7 +19169,6 @@ begin
         if ChanLines[j][XOffset+0] = #0 then Break;
         if not (ChanLines[j][XOffset+0] in ['.', ' ']) and not (ChanLines[j][XOffset+1] in ['.', ' ']) then begin
           SGetNumber(ChanLines[j][XOffset+0]+ChanLines[j][XOffset+1], 30, num);
-          //num := StrToInt(ChanLines[j][XOffset+0]+ChanLines[j][XOffset+1]) and 31;
           ChannelLine.Sample := num + 1;
         end
         else
@@ -19228,11 +19227,7 @@ begin
           XOffset := XOffset + 2;
 
         until (ChanLines[j][XOffset+0] = #0);
-      end(* else begin
-        ChannelLine.Additional_Command.Number    := 0;
-        ChannelLine.Additional_Command.Delay     := 0;
-        ChannelLine.Additional_Command.Parameter := 0;
-      end*);
+      end;
 
       if CurChan = 2 then Break;
       Inc(CurChan);
