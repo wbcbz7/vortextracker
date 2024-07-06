@@ -1135,7 +1135,7 @@ function Pattern_PlayCurrentLine: integer;
           end;
         7:
           begin
-            if (VTM.FeaturesLevel >= 3) then begin
+            if ((VTM.FeaturesLevel >= 3) and (Additional_Command.Parameter <= 31)) then begin
               PlVars[CurChip].EnvOrnament := Additional_Command.Parameter;
               PlVars[CurChip].EnvOrnamentPosition := 0;
             end;
