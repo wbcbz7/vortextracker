@@ -365,6 +365,8 @@ var
     AddToEnv, AddToNoise: shortint;
     PT3Noise: Byte;
     IntCnt: integer;
+    EnvOrnament: integer;
+    EnvOrnamentPosition: integer;
   end;
 
 procedure checkVTMPointer;
@@ -657,6 +659,8 @@ begin
   PlVars[CurChip].PT3Noise := 0;
   PlVars[CurChip].Env_Base := 0;
   PlVars[CurChip].IntCnt := 0;
+  PlVars[CurChip].EnvOrnament := 0;
+  PlVars[CurChip].EnvOrnamentPosition := 0;
   if All then
     for k := 0 to 2 do
     begin
@@ -953,6 +957,7 @@ var
 
 var
   k: integer;
+  EnvBase, EnvNote : integer;
 begin
   Inc(PlVars[CurChip].IntCnt);
   PlVars[CurChip].AddToEnv := 0;
@@ -973,8 +978,32 @@ begin
     SetAmplC(PlVars[CurChip].ParamsOfChan[2].Amplitude);
 
     AYRegisters.Noise := (PlVars[CurChip].PT3Noise + PlVars[CurChip].AddToNoise) and 31;
+    
+    EnvBase := PlVars[CurChip].Env_Base;
+    if ((VTM.FeaturesLevel >= 3) and (PlVars[CurChip].EnvOrnament <> 0)) then begin
+      EnvNote := GetNoteByEnvelope(EnvBase);
+      if (VTM.Ornaments[PlVars[CurChip].EnvOrnament] = nil) or
+          (PlVars[CurChip].EnvOrnamentPosition >= VTM.Ornaments[PlVars[CurChip].EnvOrnament].Length) then
+          EnvNote := EnvNote
+        else
+          EnvNote := EnvNote + VTM.Ornaments[PlVars[CurChip].EnvOrnament].Items[PlVars[CurChip].EnvOrnamentPosition];
 
-    AYRegisters.Envelope := PlVars[CurChip].AddToEnv + PlVars[CurChip].Cur_Env_Slide + PlVars[CurChip].Env_Base;
+        if EnvNote < 0 then
+          EnvNote := 0
+        else if EnvNote > 95 then
+          EnvNote := 95;
+
+        EnvBase := round(GetNoteFreq(VTM.Ton_Table, EnvNote) / 16);  // TODO: check calculations!
+
+        if VTM.Ornaments[PlVars[CurChip].EnvOrnament] <> nil then
+        begin
+          inc(PlVars[CurChip].EnvOrnamentPosition);
+          if PlVars[CurChip].EnvOrnamentPosition >= VTM.Ornaments[PlVars[CurChip].EnvOrnament].Length then
+             PlVars[CurChip].EnvOrnamentPosition := VTM.Ornaments[PlVars[CurChip].EnvOrnament].Loop
+        end
+    end;
+
+    AYRegisters.Envelope := PlVars[CurChip].AddToEnv + PlVars[CurChip].Cur_Env_Slide + EnvBase;
   end;
 
   if PlVars[CurChip].Cur_Env_Delay > 0 then
@@ -1104,6 +1133,13 @@ function Pattern_PlayCurrentLine: integer;
             PlVars[CurChip].ParamsOfChan[Ch].Ton_Slide_Count := 0;
             PlVars[CurChip].ParamsOfChan[Ch].Current_Ton_Sliding := 0
           end;
+        7:
+          begin
+            if (VTM.FeaturesLevel >= 3) then begin
+              PlVars[CurChip].EnvOrnament := Additional_Command.Parameter;
+              PlVars[CurChip].EnvOrnamentPosition := 0;
+            end;
+          end;
         9:
           begin
             PlVars[CurChip].Env_Delay := Additional_Command.Delay;
@@ -1149,6 +1185,11 @@ begin
         exit
       end;
       PlVars[CurChip].AddToNoise := VTM.Patterns[PlVars[CurChip].CurrentPattern].Items[PlVars[CurChip].CurrentLine].Noise;
+      if ((VTM.FeaturesLevel >= 3) and (VTM.Patterns[PlVars[CurChip].CurrentPattern].Items[PlVars[CurChip].CurrentLine].Envelope <> 0)) then begin
+        PlVars[CurChip].Env_Base := VTM.Patterns[PlVars[CurChip].CurrentPattern].Items[PlVars[CurChip].CurrentLine].Envelope;
+        PlVars[CurChip].EnvOrnament := 0;
+        PlVars[CurChip].EnvOrnamentPosition := 0;
+      end;
       for k := 0 to 2 do
         PatternInterpreter(k);
       Inc(PlVars[CurChip].CurrentLine);
@@ -1700,6 +1741,8 @@ var
           VTM.FeaturesLevel := 0
         else if s1 = '3.7' then
           VTM.FeaturesLevel := 2
+        else if s1 = '3.8' then
+          VTM.FeaturesLevel := 3
         else
           VTM.FeaturesLevel := 1;
       end
@@ -2835,8 +2878,8 @@ begin
         Write(TxtFile, Value[i]);
         if i <> Length - 1 then Write(TxtFile, ',');
       end;
-
     Writeln(TxtFile);
+
 
     if MaxIntValue(VTM.Positions.Colors) <> 0 then
     begin

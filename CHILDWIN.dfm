@@ -1,12 +1,12 @@
 object MDIChild: TMDIChild
-  Left = 711
-  Top = 0
+  Left = 683
+  Top = 142
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Module'
-  ClientHeight = 510
+  ClientHeight = 519
   ClientWidth = 595
   Color = clBtnFace
   Constraints.MinHeight = 470
@@ -1950,7 +1950,8 @@ object MDIChild: TMDIChild
           Items.Strings = (
             'Pro Tracker 3.5'
             'Vortex Tracker II (PT 3.6)'
-            'Pro Tracker 3.7')
+            'Pro Tracker 3.7'
+            'Pro Tracker 3.7 + ext features')
           ParentFont = False
           TabOrder = 4
           OnClick = VtmFeaturesGrpClick
