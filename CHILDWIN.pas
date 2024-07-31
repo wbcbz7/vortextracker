@@ -9369,7 +9369,7 @@ begin
 
     MainForm.BuffSample.Items := Samples.ShownSample.Items;
     MainForm.BuffSample.Loop := 0;
-    MainForm.BuffSample.Length := 63;    
+    MainForm.BuffSample.Length := MaxSamLen-1;    
     SaveSyncSample;
     Exit;
   end;
@@ -9549,7 +9549,7 @@ begin
   TracksCopy.Pattern.Items := SavedPattern.Items;
   
   // Copy sample
-  for i := 0 to 63 do
+  for i := 0 to MaxSamLen-1 do
     Samples.ShownSample.Items[i] := NewSample.Items[i];
   Samples.ShownSample.Length := NewSample.Length;
   Samples.ShownSample.Loop   := NewSample.Loop;
@@ -9682,7 +9682,7 @@ begin
   // Paste part of sample
   for ff := 0 to MainForm.BuffSample.Length-1 do
   begin
-    if ff + ii <= 63 then
+    if ff + ii <= MaxSamLen-1 then
     begin
       Samples.ShownSample.items[ff + ii] := MainForm.BuffSample.Items[ff];
       if ff + ii >= Samples.ShownSample.Length then
@@ -10197,21 +10197,21 @@ begin
               Samples.ShownSample.Loop := Samples.ShownSample.Loop - 1;
           end;
 
-          for ff := ii to 62 do
+          for ff := ii to MaxSamLen-2 do
           begin
             Samples.ShownSample.Items[ff] := Samples.ShownSample.Items[ff + 1];
           end;
-          Samples.ShownSample.Items[63].Add_to_Ton := 0;
-          Samples.ShownSample.Items[63].Add_to_Ton := 0;
-          Samples.ShownSample.Items[63].Ton_Accumulation := False;
-          Samples.ShownSample.Items[63].Amplitude := 0;
-          Samples.ShownSample.Items[63].Amplitude_Sliding := False;
-          Samples.ShownSample.Items[63].Amplitude_Slide_Up := False;
-          Samples.ShownSample.Items[63].Envelope_Enabled := False;
-          Samples.ShownSample.Items[63].Envelope_or_Noise_Accumulation := False;
-          Samples.ShownSample.Items[63].Add_to_Envelope_or_Noise := 0;
-          Samples.ShownSample.Items[63].Mixer_Ton := False;
-          Samples.ShownSample.Items[63].Mixer_Noise := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Add_to_Ton := 0;
+          Samples.ShownSample.Items[MaxSamLen-1].Add_to_Ton := 0;
+          Samples.ShownSample.Items[MaxSamLen-1].Ton_Accumulation := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Amplitude := 0;
+          Samples.ShownSample.Items[MaxSamLen-1].Amplitude_Sliding := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Amplitude_Slide_Up := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Envelope_Enabled := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Envelope_or_Noise_Accumulation := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Add_to_Envelope_or_Noise := 0;
+          Samples.ShownSample.Items[MaxSamLen-1].Mixer_Ton := False;
+          Samples.ShownSample.Items[MaxSamLen-1].Mixer_Noise := False;
 
           SampleLenUpDown.Position  := Samples.ShownSample.Length;
           SampleLoopUpDown.Position := Samples.ShownSample.Loop;
@@ -10236,14 +10236,14 @@ begin
           ValidateSample2(SamNum);
           GetSamParams(ll, ii);
 
-          if (ll < 64) and (ii <= (ll)) then
+          if (ll < MaxSamLen) and (ii <= (ll)) then
           begin
             Samples.ShownSample.Length := Samples.ShownSample.Length + 1;
             if Samples.ShownSample.Loop >= ii then
               Samples.ShownSample.Loop := Samples.ShownSample.Loop + 1;
           end;
 
-          for ff := 62 downto ii do
+          for ff := MaxSamLen-2 downto ii do
           begin
             Samples.ShownSample.Items[ff + 1] := Samples.ShownSample.Items[ff];
           end;
@@ -10440,7 +10440,7 @@ begin
           begin
           for ff:= Samples.ShownSample.loop to ll do
           begin
-            if ii + ff - Samples.ShownSample.loop <=63 then
+            if ii + ff - Samples.ShownSample.loop <= MaxSamLen-1 then
             Samples.ShownSample.Items[ii+ff - Samples.ShownSample.loop ]:= Samples.ShownSample.Items[ff];
           end;
 
@@ -10473,7 +10473,7 @@ begin
           if not Samples.isSelecting then
           begin
             Samples.selStart := 0;
-            Samples.selEnd := 64;
+            Samples.selEnd := MaxSamLen;
             Samples.isSelecting := True;
           end
           else
@@ -12033,7 +12033,7 @@ begin
   begin
     i := ShownFrom + y;
 
-    if (i < 0) or (i >= 64) then Exit;
+    if (i < 0) or (i >= MaxSamLen) then Exit;
     if ShownSample.Items[i].Amplitude <> x then
     begin
       SongChanged := True;
@@ -23904,7 +23904,7 @@ begin
   VTMP.Samples[s1].Enabled := VTMP.Samples[s2].Enabled;
   VTMP.Samples[s2].Enabled:=tb;
 
-  for i:=0 to 63 do begin
+  for i:=0 to MaxSamLen-1 do begin
     tt:=VTMP.Samples[s1].Items[i];
     VTMP.Samples[s1].Items[i] := VTMP.Samples[s2].Items[i];
     VTMP.Samples[s2].Items[i]:=tt;

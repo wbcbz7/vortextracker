@@ -32,7 +32,8 @@ const
 
   MaxOrnLen = 255; //can be up to 255; 64 in ZX version of PT3-editor
 
-  MaxSamLen = 64; //not bigger than 64 (players limitation)
+  MaxSamLen = 255; //not bigger than 64 (players limitation)
+  MaxSamLenPT3 = 64;
 
   MaxPosNum = 255; // max positions in track
 
@@ -2320,7 +2321,7 @@ begin
     else
     begin
 
-      if (PT3.Index[PT3.PT3_SamplePointers[i]] > MaxSamLen-1) or (PT3.Index[PT3.PT3_SamplePointers[i] + 1] > MaxSamLen) then
+      if (PT3.Index[PT3.PT3_SamplePointers[i]] > MaxSamLenPT3-1) or (PT3.Index[PT3.PT3_SamplePointers[i] + 1] > MaxSamLenPT3) then
         Continue;
 
       New(VTM1.Samples[i]);
@@ -2970,6 +2971,8 @@ var
   Orn, Sam, Orn1, Sam1: boolean;
   OrnNum: integer;
   OrnBroken: boolean;
+  SamLenClamped, SamLoopClamped: integer;
+  SamBroken: boolean;
   PrevNoise, Dl: integer;
   IsOrnament: array[0..31] of boolean;
   IsSample: array[1..31] of boolean;
@@ -3377,24 +3380,27 @@ begin
       end
     end;
 
+  SamBroken := false;
   for i := 1 to 31 do
     if IsSample[i] then
     begin
       if PatNum >= 65536 - 2 - 3 then exit;
       PT3.PT3_SamplePointers[i] := PatNum;
-      if VTM.Samples[i] <> nil then
-        PT3.Index[PatNum] := VTM.Samples[i].Loop
-      else
+      if VTM.Samples[i] <> nil then begin
+        if (VTM.Samples[i].Loop > MaxSamLenPT3-1) then begin SamBroken := true; SamLoopClamped := MaxSamLenPT3-1; end else SamLoopClamped := VTM.Samples[i].Loop;
+        PT3.Index[PatNum] := SamLoopClamped;
+      end else
         PT3.Index[PatNum] := 0;
       Inc(PatNum);
-      if VTM.Samples[i] <> nil then
-        PT3.Index[PatNum] := VTM.Samples[i].Length
-      else
+      if VTM.Samples[i] <> nil then begin
+        if (VTM.Samples[i].Length > MaxSamLenPT3) then begin SamBroken := true; SamLenClamped := MaxSamLenPT3; end else SamLenClamped := VTM.Samples[i].Length;
+        PT3.Index[PatNum] := SamLenClamped;
+      end else
         PT3.Index[PatNum] := 1;
       Inc(PatNum);
       if PatNum > 65536 - PT3.Index[PatNum - 1] * 4 - 3 then exit;
       if VTM.Samples[i] <> nil then
-        for j := 0 to VTM.Samples[i].Length - 1 do
+        for j := 0 to SamLenClamped do
         begin
           d := 0;
           if not VTM.Samples[i].Items[j].Envelope_Enabled then d := 1;
@@ -3465,9 +3471,15 @@ begin
 
   if OrnBroken then
   begin
-    Result := 'This VTII module has ornaments > 15, incompatible with PT3. You can save it as text still.';
+    Result := 'This VTII module has more than 15 ornaments, incompatible with PT3. You can still save it as text.';
     exit;
   end;
+  if SamBroken then
+  begin
+    Result := 'This VTII module has samples longer than 64 lines, incompatible with PT3. You can still save it as text.';
+    exit;
+  end;
+
   Result := '';
 
 end;
@@ -3637,15 +3649,15 @@ begin
       VTM.Samples[i] := nil
     else
     begin
-      if PT2.Index[PT2.PT2_SamplePointers[i] + 1] > MaxSamLen-1 then Continue;
-      if PT2.Index[PT2.PT2_SamplePointers[i]] > MaxSamLen then Continue;
+      if PT2.Index[PT2.PT2_SamplePointers[i] + 1] > MaxSamLenPT3-1 then Continue;
+      if PT2.Index[PT2.PT2_SamplePointers[i]] > MaxSamLenPT3 then Continue;
 
       New(VTM.Samples[i]);
       VTM.Samples[i].Loop := PT2.Index[PT2.PT2_SamplePointers[i] + 1];
       VTM.Samples[i].Length := PT2.Index[PT2.PT2_SamplePointers[i]];
 
-      if (VTM.Samples[i].Length = 0) or (VTM.Samples[i].Length > MaxSamLen) then
-        VTM.Samples[i].Length := MaxSamLen;
+      if (VTM.Samples[i].Length = 0) or (VTM.Samples[i].Length > MaxSamLenPT3) then
+        VTM.Samples[i].Length := MaxSamLenPT3;
       if VTM.Samples[i].Loop >= VTM.Samples[i].Length then
         VTM.Samples[i].Loop := VTM.Samples[i].Length - 1;
       for j := 0 to VTM.Samples[i].Length - 1 do
@@ -4278,7 +4290,7 @@ begin
     if IsSample[i] then
     begin
       j := WordPtr(@STP.Index[STP.STP_SamplesPointer + (i - 1) * 2])^;
-      if ((STP.Index[j] <> 255) and (STP.Index[j] > MaxSamLen-1)) or (STP.Index[j+1] > MaxSamLen) then 
+      if ((STP.Index[j] <> 255) and (STP.Index[j] > MaxSamLenPT3-1)) or (STP.Index[j+1] > MaxSamLenPT3) then 
         Continue;
 
       New(VTM.Samples[i]);
@@ -5428,9 +5440,9 @@ begin
             shortint(ASC.Index[j] shl 3) div 8;
         Inc(k);
         Inc(j, 3);
-        if k = MaxSamLen then break;
+        if k = MaxSamLenPT3 then break;
       until ASC.Index[j - 3] and (64 + 32) <> 0;
-      if (ASC.Index[j - 3] and (64 + 32) = 32) and (k < MaxSamLen) then
+      if (ASC.Index[j - 3] and (64 + 32) = 32) and (k < MaxSamLenPT3) then
       begin
         VTM.Samples[l].Loop := k;
         Inc(k);
@@ -5686,7 +5698,7 @@ var
       end;
       Inc(k);
       Inc(j, 6);
-      if k = MaxSamLen then break;
+      if k = MaxSamLenPT3 then break;
     until PSC.Index[j - 2] and (64 + 32) in [0, 32, 64];
   end;
 
@@ -6000,9 +6012,9 @@ begin
             shortint(PSC.Index[j + 2]);
         Inc(k);
         Inc(j, 6);
-        if k = MaxSamLen then break;
+        if k = MaxSamLenPT3 then break;
       until PSC.Index[j - 2] and (64 + 32) in [0, 32, 64];
-      if (PSC.Index[j - 2] and (64 + 32) = 64) and (k < MaxSamLen) then
+      if (PSC.Index[j - 2] and (64 + 32) = 64) and (k < MaxSamLenPT3) then
       begin
         VTM.Samples[l].Loop := k;
         Inc(k);
@@ -6706,7 +6718,7 @@ begin
     if IsSample[i] then
     begin
       j := PT1.PT1_SamplesPointers[i - 1];
-      if (PT1.Index[j] > MaxSamLen) or (PT1.Index[j + 1] > MaxSamLen-1) then
+      if (PT1.Index[j] > MaxSamLenPT3) or (PT1.Index[j + 1] > MaxSamLenPT3-1) then
         Continue;
 
       New(VTM.Samples[i]);  
@@ -6905,7 +6917,7 @@ begin
     begin
       j := GTR.GTR_SamplesPointers[i - 1];
 
-      if (GTR.Index[j] div 4 > MaxSamLen-1) or (GTR.Index[j + 1] div 4 > MaxSamLen) then
+      if (GTR.Index[j] div 4 > MaxSamLenPT3-1) or (GTR.Index[j + 1] div 4 > MaxSamLenPT3) then
         Continue;
 
       New(VTM.Samples[i]);
@@ -7312,7 +7324,7 @@ begin
     begin
       j := FTC.FTC_SamplesPointers[i] + 3;
 
-      if (FTC.Index[j - 2] > MaxSamLen-1) or (FTC.Index[j - 1] + 1 > MaxSamLen) then
+      if (FTC.Index[j - 2] > MaxSamLenPT3-1) or (FTC.Index[j - 1] + 1 > MaxSamLenPT3) then
         Continue;
 
       New(VTM.Samples[l]);
@@ -7391,7 +7403,7 @@ var
     Channel: array[0..2] of TChannelLine;
   end;
 
-  VirtualSample: array[0..MaxSamLen - 1] of record
+  VirtualSample: array[0..MaxSamLenPT3 - 1] of record
     ST: TSampleTick;
     CAddr: word;
   end;
@@ -8321,7 +8333,7 @@ begin
     tmp := Instruments[i].Mixer;
     SamAddr := Instruments[i].SamplePtr;
     OrnAddr := Instruments[i].OrnPtr;
-    while j < MaxSamLen do
+    while j < MaxSamLenPT3 do
     begin
       VirtualSample[j].CAddr := SamAddr;
       VirtualSample[j].ST := EmptySampleTick;
@@ -8429,7 +8441,7 @@ begin
       VirtualSample[j].ST.Mixer_Noise := (tmp and 8) = 0;
       inc(j)
     end;
-    if SLen = 0 then SLen := MaxSamLen;
+    if SLen = 0 then SLen := MaxSamLenPT3;
     if SLoop = 255 then
     begin
       SLoop := SLen - 1;
@@ -8499,7 +8511,7 @@ begin
       inc(MaxSam);
       Instruments[i].SamNum := MaxSam;
 
-      if (SLoop > MaxSamLen-1) or (SLen > MaxSamLen) then
+      if (SLoop > MaxSamLenPT3-1) or (SLen > MaxSamLenPT3) then
         Continue;
 
       New(VTM.Samples[MaxSam]);
@@ -9041,10 +9053,10 @@ begin
               b2 := VTM.Samples[k].Loop;
               lc := b1 shr 5;
               lp := len + 1;
-              while (len < MaxSamLen - 1) and (lc > 0) do
+              while (len < MaxSamLenPT3 - 1) and (lc > 0) do
               begin
                 l := 0;
-                while (l <= ls) and (len + l < MaxSamLen - 1) do
+                while (l <= ls) and (len + l < MaxSamLenPT3 - 1) do
                 begin
                   VTM.Samples[k].Items[len + l + 1] := VTM.Samples[k].Items[b2 + l];
                   if j > 0 then
@@ -9079,7 +9091,7 @@ begin
                 VTM.Samples[k].Items[lp].Amplitude_Slide_Up := True;
                 break;
               end
-            until len >= MaxSamLen - 1;
+            until len >= MaxSamLenPT3 - 1;
         end;
         VTM.Samples[k].Length := Len + 1;
         if VTM.Samples[k].Loop >= VTM.Samples[k].Length then
