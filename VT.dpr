@@ -12,7 +12,6 @@ Version 2.0 and later
 program VT;
 
 uses
-  //FastMM4,
   Forms,
   Dialogs,
   Windows,
@@ -39,7 +38,8 @@ uses
   UnloopDlg in 'UnloopDlg.pas' {UnloopDlg},
   TrackInf in 'TrackInf.pas' {TrackInfoForm},
   Logger in 'Logger.pas',
-  PatternPacker in 'PatternPacker.pas';
+  PatternPacker in 'PatternPacker.pas',
+  SamStretchDlg in 'SamStretchDlg.pas';
 
 {$R *.RES}
 {$R SNDH\SNDH.RES}
@@ -66,6 +66,7 @@ begin
   Application.CreateForm(TExportOptions, ExportOptions);
   Application.CreateForm(TUnloopDlg, UnloopDialog);
   Application.CreateForm(TTrackInfoForm, TrackInfoForm);
+  Application.CreateForm(TSamStretchDlg, SamStretchDialog);
   MainForm.CheckCommandLine;
   Application.Run;
 end.

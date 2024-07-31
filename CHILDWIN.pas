@@ -677,6 +677,7 @@ type
     N71: TMenuItem;
     N81: TMenuItem;
     N91: TMenuItem;
+    StretchBtn: TButton;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -1114,6 +1115,7 @@ type
     procedure AutoLLMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure LLAutoMenuClick(Sender: TObject);
+    procedure StretchBtnClick(Sender: TObject);
 
 
 
@@ -1224,7 +1226,7 @@ var
 implementation
 
 uses
-  Main, options, selectts, TglSams, GlbTrn, TrkMng, ntfs, UnloopDlg, ClipBrd, TrackInf, PatternPacker;
+  Main, options, selectts, TglSams, GlbTrn, TrkMng, ntfs, UnloopDlg, SamStretchDlg, ClipBrd, TrackInf, PatternPacker;
 
 {$R *.DFM}
 {$J+} { Assignable Typed Constant }
@@ -2717,6 +2719,7 @@ begin
   DoubleBuffered := True;
   SampleBox.DoubleBuffered := True;
   UnloopBtn.DoubleBuffered := True;
+  StretchBtn.DoubleBuffered := True;
   ClearSample.DoubleBuffered := True;
   SampleNumEdit.DoubleBuffered := True;
   SampleLenUpDown.DoubleBuffered := True;
@@ -2954,7 +2957,12 @@ begin
   // Unloop button
   UnloopBtn.Top := SampleLoopEdit.Top + SampleLoopEdit.Height + spacer2;
   UnloopBtn.Left := SampleLoopEdit.Left;
-  UnloopBtn.Width  := EditWidth;
+  UnloopBtn.Width  := EditWidth div 2;
+
+  // Stretch button
+  StretchBtn.Top := SampleLoopEdit.Top + SampleLoopEdit.Height + spacer2;
+  StretchBtn.Left := SampleLoopEdit.Left + UnloopBtn.Width;
+  StretchBtn.Width  := EditWidth div 2;
 
   // Clear button
   ClearSample.Top := UnloopBtn.Top;
@@ -21490,6 +21498,108 @@ begin
   SaveSampleRedo;
 end;
 
+procedure TMDIChild.StretchBtnClick(Sender: TObject);
+var
+  ScaleFactor, LenSrc, LoopSrc, LenDst, LoopDst, i, j, k: Integer;
+  IsStretch, Done: Boolean;
+
+  LineTone, FreqAccum, LineNoise, NoiseAccum, LineAmplitude, AmplitudeAccum: SmallInt;
+  SampleTick: PSampleTick;
+  SampleSrc: PSample;
+  SampleDst: TSample;
+  StretchDialog: TSamStretchDlg;
+begin
+  if Samples.ShownSample = nil then Exit;
+
+  Samples.isSelecting := False;
+  SampleSrc  := Samples.ShownSample;
+  LenSrc     := SampleSrc.Length;
+  LoopSrc    := SampleSrc.Loop;
+  Done       := False;
+
+  SaveSampleUndo(SampleSrc);
+  SongChanged := True;
+  BackupSongChanged := True;
+
+  StretchDialog := TSamStretchDlg.Create(MainForm);
+  if StretchDialog.ShowModal = mrCancel then
+    Exit;
+
+  IsStretch := StretchDialog.ModeRadioGroup.ItemIndex = 0;
+
+  ScaleFactor := StretchDialog.StretchUpDown.Position;
+  if (ScaleFactor <= 1) then
+    Exit;
+
+  if (IsStretch) then begin
+    LenDst  := LenSrc * ScaleFactor;
+    LoopDst := LoopSrc * ScaleFactor;
+    
+    if (LenDst > MaxSamLen) then begin
+      MessageDlg('Stretched sample is longer than 255 lines - unable to stretch!',  mtWarning, [mbOK], 0);
+      Exit;
+    end;
+
+    SampleDst.Loop    := LoopDst;
+    SampleDst.Length  := LenDst;
+    SampleDst.Enabled := SampleSrc.Enabled;
+
+    k := 0;
+    for i := 0 to LenSrc-1 do begin
+      // copy first line as-is
+      SampleDst.Items[k] := SampleSrc.Items[i];
+      inc(k);
+      for j := 1 to ScaleFactor-1 do begin 
+        // copy inner lines
+        SampleDst.Items[k].Mixer_Ton          := SampleSrc.Items[i].Mixer_Ton;
+        SampleDst.Items[k].Mixer_Noise        := SampleSrc.Items[i].Mixer_Noise;
+        SampleDst.Items[k].Envelope_Enabled   := SampleSrc.Items[i].Envelope_Enabled;
+        SampleDst.Items[k].Amplitude          := SampleSrc.Items[i].Amplitude;
+        
+        // volume slides are activated on first tick of samples, disable for next
+        SampleDst.Items[k].Amplitude_Sliding  := false;
+        SampleDst.Items[k].Amplitude_Slide_Up := false;
+        
+        // deal with tone/noise/env offsets
+        if (SampleSrc.Items[i].Ton_Accumulation) then begin
+          SampleDst.Items[k].Ton_Accumulation := false;
+          SampleDst.Items[k].Add_to_Ton       := 0;
+        end else begin
+          SampleDst.Items[k].Ton_Accumulation := false;
+          SampleDst.Items[k].Add_to_Ton       := SampleSrc.Items[i].Add_to_Ton;
+        end;
+
+        if (SampleSrc.Items[i].Envelope_or_Noise_Accumulation) then begin
+          SampleDst.Items[k].Envelope_or_Noise_Accumulation := false;
+          SampleDst.Items[k].Add_to_Envelope_or_Noise := 0;
+        end else begin
+          SampleDst.Items[k].Envelope_or_Noise_Accumulation := false;
+          SampleDst.Items[k].Add_to_Envelope_or_Noise := SampleSrc.Items[i].Add_to_Envelope_or_Noise;
+        end;
+
+        inc(k);
+      end;
+    end; 
+
+    // replace current sample with stretched
+    SampleSrc.Loop      := SampleDst.Loop;
+    SampleSrc.Length    := SampleDst.Length;
+    for i := 0 to SampleSrc.Length-1 do begin
+      SampleSrc.Items[i] := SampleDst.Items[i];
+    end;
+
+  end else begin
+    MessageDlg('shrink not implemented!',  mtWarning, [mbOK], 0);
+  end;
+
+  // update view
+
+  SampleLenUpDown.Position  := SampleSrc.Length;
+  SampleLoopUpDown.Position := SampleSrc.Loop;
+
+  Samples.RedrawSamples(0);
+  SaveSampleRedo;
+end;
 
 procedure TMDIChild.SampleCopyToEditContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
 begin

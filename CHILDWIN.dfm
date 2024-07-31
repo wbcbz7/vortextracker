@@ -1,6 +1,6 @@
 object MDIChild: TMDIChild
-  Left = 683
-  Top = 142
+  Left = 421
+  Top = 177
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
@@ -1275,9 +1275,9 @@ object MDIChild: TMDIChild
         object UnloopBtn: TButton
           Left = 4
           Top = 125
-          Width = 51
+          Width = 25
           Height = 21
-          Caption = 'Unloop'
+          Caption = 'Un'
           TabOrder = 6
           OnClick = UnloopBtnClick
         end
@@ -1288,8 +1288,17 @@ object MDIChild: TMDIChild
           Height = 21
           Hint = 'Clear Sample'
           Caption = 'Clear'
-          TabOrder = 7
+          TabOrder = 8
           OnClick = ClearSampleClick
+        end
+        object StretchBtn: TButton
+          Left = 32
+          Top = 125
+          Width = 25
+          Height = 21
+          Caption = 'St'
+          TabOrder = 7
+          OnClick = StretchBtnClick
         end
       end
       object NextPrevSampleBox: TGroupBox
