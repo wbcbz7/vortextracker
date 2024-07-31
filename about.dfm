@@ -1,6 +1,6 @@
 object AboutBox: TAboutBox
-  Left = 526
-  Top = 255
+  Left = 416
+  Top = 253
   ActiveControl = OKButton
   BorderStyle = bsDialog
   Caption = 'About Vortex Tracker II'
@@ -409,9 +409,9 @@ object AboutBox: TAboutBox
     end
     object Panel2: TPanel
       Left = 8
-      Top = 120
+      Top = 105
       Width = 265
-      Height = 273
+      Height = 293
       BevelOuter = bvNone
       Enabled = False
       TabOrder = 2
@@ -419,7 +419,7 @@ object AboutBox: TAboutBox
         Left = 0
         Top = 0
         Width = 265
-        Height = 273
+        Height = 293
         Align = alClient
         BevelInner = bvNone
         BevelOuter = bvNone
@@ -450,6 +450,7 @@ object AboutBox: TAboutBox
           'Version 1.5 - 2.6'
           '(c) Dexus (Volutar) 2022-2023'
           'Version 2.6.1'
+          '+ env_ornament branch hacks by wbcbz7'
           ''
           'Date of build: %datetime%')
         ParentFont = False
@@ -459,7 +460,7 @@ object AboutBox: TAboutBox
     end
     object line1: TGroupBox
       Left = 8
-      Top = 110
+      Top = 100
       Width = 265
       Height = 1
       BiDiMode = bdLeftToRight
@@ -485,9 +486,9 @@ object AboutBox: TAboutBox
       ParentCtl3D = False
       TabOrder = 1
     end
-    object GroupBox1: TGroupBox
+    object Line3: TGroupBox
       Left = 8
-      Top = 256
+      Top = 240
       Width = 265
       Height = 1
       BiDiMode = bdLeftToRight

@@ -28,7 +28,7 @@ type
     line2: TGroupBox;
     Memo1: TMemo;
     Panel2: TPanel;
-    GroupBox1: TGroupBox;
+    Line3: TGroupBox;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }

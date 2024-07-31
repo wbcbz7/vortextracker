@@ -34,7 +34,7 @@ const
 
 
   AppName = 'Vortex Tracker';
-  VersionString = '2.6.1';
+  VersionString = '2.6.1_envhack';
   IsBeta = '';
   BetaNumber = '';
 
