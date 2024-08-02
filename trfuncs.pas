@@ -1143,14 +1143,18 @@ function Pattern_PlayCurrentLine: integer;
           end;
         9:
           begin
-            PlVars[CurChip].Env_Delay := Additional_Command.Delay;
-            PlVars[CurChip].Cur_Env_Delay := PlVars[CurChip].Env_Delay;
+            Gls := Additional_Command.Delay;
+            PlVars[CurChip].Env_Delay := Gls;
+            if (Gls = 0) and (VTM.FeaturesLevel >= 3) then Inc(Gls);
+            PlVars[CurChip].Cur_Env_Delay := Gls;
             PlVars[CurChip].Env_Slide_Add := Additional_Command.Parameter
           end;
         10:
           begin
-            PlVars[CurChip].Env_Delay := Additional_Command.Delay;
-            PlVars[CurChip].Cur_Env_Delay := PlVars[CurChip].Env_Delay;
+            Gls := Additional_Command.Delay;
+            PlVars[CurChip].Env_Delay := Gls;
+            if (Gls = 0) and (VTM.FeaturesLevel >= 3) then Inc(Gls);
+            PlVars[CurChip].Cur_Env_Delay := Gls;
             PlVars[CurChip].Env_Slide_Add := -Additional_Command.Parameter
           end;
         11: if Additional_Command.Parameter <> 0 then
