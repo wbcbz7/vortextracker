@@ -732,8 +732,11 @@ begin
     2: Result := PT3NoteTable_ASM[Note];
     3: Result := PT3NoteTable_REAL[Note];
     4: Result := PT3NoteTable_NATURAL[Note];
-  else
-    Result := VTM.CustomNoteTable[Note]; //5
+  else begin
+    checkVTMPointer;
+    if (VTM <> nil) then Result := VTM.CustomNoteTable[Note] //5
+    else Result := CustomNoteTable[Note];
+  end;
   end
 end;
 
@@ -754,8 +757,11 @@ begin
     2: NoteTable := PT3NoteTable_ASM;
     3: NoteTable := PT3NoteTable_REAL;
     4: NoteTable := PT3NoteTable_NATURAL;
-  else
-    NoteTable := VTM.CustomNoteTable; //5
+  else begin
+    checkVTMPointer;
+    if (VTM <> nil) then NoteTable := VTM.CustomNoteTable //5
+    else NoteTable := CustomNoteTable;
+  end;
   end;
   Result := -1;
   for i := 0 to Length(NoteTable)-1 do
