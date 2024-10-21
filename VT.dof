@@ -115,7 +115,7 @@ AutoIncBuild=1
 MajorVer=2
 MinorVer=6
 Release=4
-Build=1257
+Build=1258
 Debug=0
 PreRelease=0
 Special=0
@@ -126,7 +126,7 @@ CodePage=1251
 [Version Info Keys]
 CompanyName=
 FileDescription=Vortex Tracker chip music editor
-FileVersion=2.6.4.1257
+FileVersion=2.6.4.1258
 InternalName=
 LegalCopyright=
 LegalTrademarks=

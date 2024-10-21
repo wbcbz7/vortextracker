@@ -59,6 +59,9 @@ const
 
   
 type
+  PT3ToneTable = array[0..95] of word;
+  PPT3ToneTable = ^PT3ToneTable;
+  
   BytePtr = ^byte;
   WordPtr = ^word;
   DWordPtr = ^longword;
@@ -165,6 +168,7 @@ type
       Global_Ton, Global_Noise, Global_Envelope, EnvelopeEnabled: boolean;
       Ornament, Sample, Volume: byte;
     end;
+    CustomNoteTable: PT3ToneTable;
   end;
 
   PSpeccyModule = ^TSpeccyModule;
@@ -373,69 +377,69 @@ var
 procedure checkVTMPointer;
 
 procedure Module_SetPointer(ModulePointer: PModule; Chip: integer);
-{устанавливает указатель на структуру модуля}
-{Вызывается хотя бы раз перед использованием других процедур}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
 
 procedure Module_SetDelay(Dl: shortint);
-{Устанавливает текущий Delay
-В процессе проигрывания Delay может меняться спец командой}
-{Вызывается каждый раз перед началом проигрывания процедурами
- Pattern_PlayCurrentLine или Module_PlayCurrentLine, иначе
- будет использовано последнее значение Delay, которое в общем
- случае может быть любым. Диапазон значений - 3..255
- (3 - для совместимости с PT3)}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ Delay
+пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Delay пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ Pattern_PlayCurrentLine пїЅпїЅпїЅ Module_PlayCurrentLine, пїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Delay, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - 3..255
+ (3 - пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ PT3)}
 
 procedure Module_SetCurrentPosition(Position: Integer);
-{устанавливает текущую позицию}
-{значения Position: 0..255;
- Это значение используется в качестве индекса при выборе номера паттерна
- из VTM.Position_List)}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Position: 0..255;
+ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅ VTM.Position_List)}
 
 procedure Module_SetCurrentPattern(Pattern: Integer);
-{устанавливает текущую позицию}
-{значения Pattern: 0..MaxPatNum}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Pattern: 0..MaxPatNum}
 
 procedure Pattern_SetCurrentLine(Line: Integer);
-{устанавливает текущую строку в паттерне}
-{Значения: от 0 до PatternLength-1}
-{С этой строки начнут проигрывание функции
- Module_PlayCurrentLine или Pattern_PlayCurrentLine)}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅ 0 пїЅпїЅ PatternLength-1}
+{пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ Module_PlayCurrentLine пїЅпїЅпїЅ Pattern_PlayCurrentLine)}
 
 procedure Module_GoNextPosition;
-{Переход на паттерн следующей позиции, на первую линию}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ}
 
 function Pattern_PlayCurrentLine: Integer;
-{возвращает значения регистров AY для текущей строки паттерна
- и делает следующую строку текущей.
- На выходе:
- Если '1' - строка закончилась и AYRegisters уже от новой строки
- Если '2' - больше строк нет и AYRegisters не меняются
- Иначе - '0'}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ AY пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ:
+ пїЅпїЅпїЅпїЅ '1' - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ AYRegisters пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅ '2' - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ AYRegisters пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅпїЅ - '0'}
 
 function Module_PlayCurrentLine: Integer;
-{возвращает значения регистров AY для текущей строки паттерна
- и делает следующую строку текущей, по достижению последней
- строки автоматически становится текущим следующий по Position
- List паттерн.
- На выходе:
- Если '1' - строка закончилась и AYRegisters уже от новой строки
- Если '2' - Паттерн закончился и AYRegisters - от первой строки
-            следующего по PositionList патерна
- Если '3' - все паттерны закончились и AYRegisters - от первой строки
-            первого по PositionList патерна
- Иначе - '0'}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ AY пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ Position
+ List пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ:
+ пїЅпїЅпїЅпїЅ '1' - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ AYRegisters пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅ '2' - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ AYRegisters - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ PositionList пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅ '3' - пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ AYRegisters - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ PositionList пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅпїЅпїЅпїЅ - '0'}
 
 
 procedure Pattern_PlayOnlyCurrentLine;
-{возвращает значения регистров AY для текущей строки паттерна, переход
- на следующую строку не производится.}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ AY пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.}
 
 function PT32VTM(PT3: PSpeccyModule; FSize: Integer; VTM1: PModule; var VTM2: PModule): boolean;
-{конвертер из PT3 в VTM.
- PT3 - указатель на предварительно загруженный PT3}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ PT3 пїЅ VTM.
+ PT3 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ PT3}
 
 procedure InitTrackerParameters(All: boolean);
-{Вызвать для инициализации внутренних переменных}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
 {All = True => 1F.F => Sam=1,Env=15,Orn=0,Vol=15}
 
 procedure CleanPattern(var Pat: PPattern);
@@ -484,9 +488,9 @@ procedure SaveOrnament(VTM: PModule; n: integer);
 procedure VTM2TextFile(FileName: string; VTM: PModule; Apnd: boolean);
 function VTM2PT3(PT3: PSpeccyModule; VTM: PModule;
   var Module_Size: Integer): String;
-{конвертер из VTM в PT3.
- PT3 - указатель, где будет сформирован PT3
- в Module_Size возвращается размер данного PT3}
+{пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ VTM пїЅ PT3.
+ PT3 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ PT3
+ пїЅ Module_Size пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ PT3}
 
 procedure PrepareZXModule(ZXP: PSpeccyModule; var FType: Available_Types; Length: integer);
 function LoadAndDetect(ZXP: PSpeccyModule; FileName: string; var Length: integer;
@@ -506,10 +510,6 @@ procedure NewVTMP(var VTMP: PModule);
 
 function isSampleEmpty(VTMP:PModule; i: integer):boolean;
 function isOrnamentEmpty(VTMP:PModule; i: integer):boolean;
-
-type
-  PT3ToneTable = array[0..95] of word;
-  PPT3ToneTable = ^PT3ToneTable;
 
 const
   Notes: array[0..11] of string = (
@@ -733,7 +733,7 @@ begin
     3: Result := PT3NoteTable_REAL[Note];
     4: Result := PT3NoteTable_NATURAL[Note];
   else
-    Result :=CustomNoteTable[Note]; //5
+    Result := VTM.CustomNoteTable[Note]; //5
   end
 end;
 
@@ -755,7 +755,7 @@ begin
     3: NoteTable := PT3NoteTable_REAL;
     4: NoteTable := PT3NoteTable_NATURAL;
   else
-    NoteTable := CustomNoteTable; //5
+    NoteTable := VTM.CustomNoteTable; //5
   end;
   Result := -1;
   for i := 0 to Length(NoteTable)-1 do
@@ -1888,6 +1888,43 @@ var
           until False;
         end;
       end
+      else if s1 = 'CUSTOMNOTETABLE' then
+      begin
+        if i = Length(s) then
+          s1 := ''
+        else
+          s1 := TrimLeft(Copy(s, i + 1, Length(s) - i));
+        if s1 <> '' then
+        begin
+          lp := 0;
+          s1 := s1 + ',';
+          repeat
+            i := Pos(',', s1);
+            if i < 2 then
+            begin
+              Result := 2;
+              exit
+            end;
+            s := TrimRight(Copy(s1, 1, i - 1));
+            Val(s, j, er);
+            if er <> 0 then
+              if (s <> '') and (UpperCase(s[1]) = 'L') then
+              begin
+                s[1] := ' ';
+                Val(TrimLeft(s), j, er);
+              end;
+            if er <> 0 then
+            begin
+              Result := 2;
+              exit
+            end;
+            VTM.CustomNoteTable[lp] := j;
+            inc(lp);
+            if i = Length(s1) then break;
+            s1 := TrimLeft(Copy(s1, i + 1, Length(s1) - i));
+          until False;
+        end;
+      end
       else if s1 = 'COLORS' then
       begin
         if i = Length(s) then
@@ -2884,7 +2921,16 @@ begin
         if i <> Length - 1 then Write(TxtFile, ',');
       end;
     Writeln(TxtFile);
-
+    if (VTM.Ton_Table = 5) then begin
+      Write(TxtFile, 'CustomNoteTable=');
+      with VTM.Positions do
+        for i := 0 to 95 do
+        begin
+          Write(TxtFile, VTM.CustomNoteTable[i]);
+          if i <> 95 then Write(TxtFile, ',');
+        end;
+      Writeln(TxtFile);
+    end;
 
     if MaxIntValue(VTM.Positions.Colors) <> 0 then
     begin
@@ -6811,8 +6857,8 @@ var
             EnvT := i;
             VTM.Patterns[PatNum].Items[LnNum].Channel[ChNum].Envelope := i;
             VTM.Patterns[PatNum].Items[LnNum].Channel[ChNum].Ornament := COrn[ChNum];
-                //вероятно, в GTR 1.x это ошибка, поскольку судя по всему с
-                //огибающими должен быть нулевой орнамент
+                //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ GTR 1.x пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ
+                //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             Inc(ChPtr[ChNum]);
             VTM.Patterns[PatNum].Items[LnNum].Envelope := GTR.Index[ChPtr[ChNum]]
           end;
@@ -9330,6 +9376,8 @@ begin
   VTMP.IntFreq := DefaultIntFreq;  
   VTMP.FeaturesLevel := FeaturesLevel;
   VTMP.VortexModule_Header := VortexModuleHeader;
+  for i := 0 to 95 do
+    VTMP.CustomNoteTable[i] := CustomNoteTable[i];
 end;
 
 function isSampleEmpty(VTMP:PModule; i: integer):boolean;
