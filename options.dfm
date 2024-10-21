@@ -118,8 +118,8 @@ object Form1: TForm1
           Width = 345
           Height = 17
           Caption = 
-            'Disable recalculating envelope periods if frequency table is chan' +
-            'ged'
+            'Disable recalculating envelope periods if frequency table is cha' +
+            'nged'
           TabOrder = 7
           OnClick = DisableRecalcEnvOptClick
         end

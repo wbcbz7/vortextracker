@@ -2923,12 +2923,11 @@ begin
     Writeln(TxtFile);
     if (VTM.Ton_Table = 5) then begin
       Write(TxtFile, 'CustomNoteTable=');
-      with VTM.Positions do
-        for i := 0 to 95 do
-        begin
-          Write(TxtFile, VTM.CustomNoteTable[i]);
-          if i <> 95 then Write(TxtFile, ',');
-        end;
+      for i := 0 to 95 do
+      begin
+        Write(TxtFile, VTM.CustomNoteTable[i]);
+        if i <> 95 then Write(TxtFile, ',');
+      end;
       Writeln(TxtFile);
     end;
 

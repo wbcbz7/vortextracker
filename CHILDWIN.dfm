@@ -1,6 +1,6 @@
 object MDIChild: TMDIChild
-  Left = 255
-  Top = 138
+  Left = 215
+  Top = 118
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
@@ -41,7 +41,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = OptTab
+    ActivePage = PatternsSheet
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -2019,7 +2019,7 @@ object MDIChild: TMDIChild
             Height = 13
             Caption = 'ASM or PSC (1.75 MHz)'
           end
-          object A4Tuning: TLabel
+          object A4TuningLabel: TLabel
             Left = 310
             Top = 20
             Width = 73
@@ -2037,6 +2037,7 @@ object MDIChild: TMDIChild
             ShowHint = True
             TabOrder = 0
             Text = '2'
+            OnChange = CurrentTableChange
           end
           object UpDown2: TUpDown
             Left = 171
@@ -2060,6 +2061,7 @@ object MDIChild: TMDIChild
             Height = 22
             Caption = 'Load custom (5)'
             TabOrder = 2
+            OnClick = LoadCustomNoteTableClick
           end
           object SaveCustomNoteTableBtn: TBitBtn
             Left = 200
@@ -2068,6 +2070,7 @@ object MDIChild: TMDIChild
             Height = 22
             Caption = 'Save custom (5)'
             TabOrder = 3
+            OnClick = SaveCustomNoteTableBtnClick
           end
           object TuningEdit: TEdit
             Left = 392
@@ -2076,6 +2079,7 @@ object MDIChild: TMDIChild
             Height = 21
             TabOrder = 4
             Text = '440'
+            OnKeyPress = TuningEditKeyPress
           end
           object CalcCustomTuningBtn: TBitBtn
             Left = 392
@@ -2084,6 +2088,7 @@ object MDIChild: TMDIChild
             Height = 22
             Caption = 'Calculate custom table'
             TabOrder = 5
+            OnClick = CalcCustomTuningBtnClick
           end
           object RoundDownCheckBox: TCheckBox
             Left = 300
@@ -2333,14 +2338,14 @@ object MDIChild: TMDIChild
   object UpdateTimer: TTimer
     Interval = 300
     OnTimer = UpdateTimerTimer
-    Left = 384
+    Left = 368
     Top = 672
   end
   object SampleListPopupMenu: TPopupMenu
     AutoHotkeys = maManual
     AutoPopup = False
     OwnerDraw = True
-    Left = 424
+    Left = 400
     Top = 672
     object Cutsample1: TMenuItem
       Caption = 'Cut sample'
@@ -2378,7 +2383,7 @@ object MDIChild: TMDIChild
     AutoHotkeys = maManual
     AutoPopup = False
     OwnerDraw = True
-    Left = 452
+    Left = 428
     Top = 672
     object Cutornament1: TMenuItem
       Caption = 'Cut ornament'
@@ -2418,7 +2423,7 @@ object MDIChild: TMDIChild
     AutoPopup = False
     OwnerDraw = True
     TrackButton = tbLeftButton
-    Left = 496
+    Left = 456
     Top = 672
     object Disabled1: TMenuItem
       Caption = '0: Disabled'
@@ -2460,5 +2465,13 @@ object MDIChild: TMDIChild
       Caption = '9: [ ][ ][ ][x]'
       OnClick = LLAutoMenuClick
     end
+  end
+  object OpenCustomFreqTableDialog: TOpenDialog
+    Left = 488
+    Top = 672
+  end
+  object SaveCustomFreqTableDialog: TSaveDialog
+    Left = 520
+    Top = 672
   end
 end

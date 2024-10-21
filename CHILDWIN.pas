@@ -687,8 +687,10 @@ type
     SaveCustomNoteTableBtn: TBitBtn;
     TuningEdit: TEdit;
     CalcCustomTuningBtn: TBitBtn;
-    A4Tuning: TLabel;
+    A4TuningLabel: TLabel;
     RoundDownCheckBox: TCheckBox;
+    OpenCustomFreqTableDialog: TOpenDialog;
+    SaveCustomFreqTableDialog: TSaveDialog;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -1127,6 +1129,11 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure LLAutoMenuClick(Sender: TObject);
     procedure StretchBtnClick(Sender: TObject);
+    procedure TuningEditKeyPress(Sender: TObject; var Key: Char);
+    procedure LoadCustomNoteTableClick(Sender: TObject);
+    procedure SaveCustomNoteTableBtnClick(Sender: TObject);
+    procedure CalcCustomTuningBtnClick(Sender: TObject);
+    procedure CurrentTableChange(Sender: TObject);
 
 
 
@@ -16308,6 +16315,7 @@ begin
     BackupSongChanged := True;
     AddUndo(CAChangeToneTable, VTMP.Ton_Table, UpDown4.Position);
     VTMP.Ton_Table := UpDown4.Position;
+    UpDown2.Position := UpDown4.Position;
   end;
 
   UpdateToneTableHints;
@@ -22925,6 +22933,7 @@ begin
   Edit7.Hint   := Format('Table #%d: %s', [VTMP.Ton_Table, TableNames[VTMP.Ton_Table]]);
   UpDown4.Hint := Edit7.Hint;
   ToneTableBox.Hint := Edit7.Hint;
+  TableName.Caption := TableNames[UpDown4.Position];
 end;
 
 
@@ -24244,6 +24253,134 @@ begin
     SetCaretPosition;
     ShowMyCaret;
   end;
+end;
+
+procedure TMDIChild.TuningEditKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not (Key in ['0'..'9']) and (Key <> #8) then begin
+    Key := #0;
+    Exit;
+  end;
+end;
+
+procedure TMDIChild.LoadCustomNoteTableClick(Sender: TObject);
+var
+  TxtFile: TextFile;
+  st,vl: string;
+  vals: TStrings;
+  i,j,rs:integer;
+  enough:boolean;
+begin
+  OpenCustomFreqTableDialog.Title := 'Load note table';
+  OpenCustomFreqTableDialog.DefaultExt := 'txt';
+  if OpenCustomFreqTableDialog.Execute then
+  begin
+    OpenCustomFreqTableDialog.InitialDir := ExtractFilePath(OpenCustomFreqTableDialog.FileName);
+
+    AssignFile(TxtFile, OpenCustomFreqTableDialog.FileName);
+    Reset(TxtFile);
+    j:=0;
+    enough:=false;
+    while not eof(TxtFile) do
+     begin
+      Readln(TxtFile, st);
+      if copy(St,0,3)=#$EF#$BB#$BF then St:=copy(St,4,length(St)-3);
+      St := Trim(St);
+      if Trim(St) = '' then Continue;
+      vals := Split(',',St);
+      for i := 0 to vals.count-1 do
+        begin
+         vl:=trim(vals[i]);
+         if trystrtoint(vl,rs) then
+          begin
+           VTMP.CustomNoteTable[j]:=rs;
+           inc(j);
+           if j=96 then
+            begin
+             enough:=true;
+             break;
+            end;
+          end;
+        end;
+      if enough then break;
+     end;
+    CloseFile(TxtFile);
+  end;
+end;
+
+procedure TMDIChild.SaveCustomNoteTableBtnClick(Sender: TObject);
+var
+  TxtFile: TextFile;
+  st,vl: string;
+  vals: TStrings;
+  i,j,rs:integer;
+  enough:boolean;
+begin
+  SaveCustomFreqTableDialog.Title := 'Save note table';
+  SaveCustomFreqTableDialog.DefaultExt := 'txt';
+  if SaveCustomFreqTableDialog.Execute then
+  begin
+    SaveCustomFreqTableDialog.InitialDir := ExtractFilePath(SaveCustomFreqTableDialog.FileName);
+
+    AssignFile(TxtFile, SaveCustomFreqTableDialog.FileName);
+    Rewrite(TxtFile);
+    j:=0;
+    for i := 0 to 95 do begin
+       Write(TxtFile, VTMP.CustomNoteTable[i]);
+       if (i <> 95) then Write(TxtFile, ',');
+    end;
+    CloseFile(TxtFile);
+  end;
+end;
+
+procedure TMDIChild.CalcCustomTuningBtnClick(Sender: TObject);
+var
+A4Tuning,i,j,k,fi : Integer;
+f,f2 : Double;
+RoundDown: boolean;
+begin
+  if BlockRecursion then exit;
+  A4Tuning := GetValue(TuningEdit.Text);
+  if ((A4Tuning < 220) or (A4Tuning > 880)) then exit;
+  RoundDown := RoundDownCheckBox.Checked;
+
+  BlockRecursion := true;
+
+  for i := 0 to 95 do begin
+    f := A4Tuning * Power(2.0, (i - 45) / 12.0);
+    f2 := (VTMP.ChipFreq / 16) / f;
+
+    if (RoundDown) then begin
+      fi := trunc(f2);
+    end else begin
+      fi := round(f2);
+    end;
+
+    VTMP.CustomNoteTable[i] := fi;
+  end;
+
+  SongChanged := true;
+  BackupSongChanged := true;
+
+  BlockRecursion := false;
+
+end;
+
+procedure TMDIChild.CurrentTableChange(Sender: TObject);
+begin
+  if VTMP.Ton_Table <> UpDown2.Position then
+    begin
+      change_Envelope_when_toneTableChanged(VTMP, VTMP.Ton_Table, UpDown4.Position);
+      SongChanged := True;
+      BackupSongChanged := True;
+      AddUndo(CAChangeToneTable, VTMP.Ton_Table, UpDown2.Position);
+      VTMP.Ton_Table := UpDown2.Position;
+      UpDown4.Position := UpDown2.Position;
+    end;
+
+  UpdateToneTableHints;
+
+  Tracks.RedrawTracks(0);
 end;
 
 end.
