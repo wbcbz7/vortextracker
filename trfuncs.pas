@@ -521,7 +521,7 @@ const
     'Sound Tracker',
     'ASM or PSC (1.75 MHz)',
     'RealSound',
-    'IvanRochin NATURAL Cmaj/Am',
+    'IvanRoshhin NATURAL Cmaj/Am',
     'Custom'
   );
 

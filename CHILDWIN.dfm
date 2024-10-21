@@ -41,7 +41,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = PatternsSheet
+    ActivePage = OptTab
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -2044,9 +2044,6 @@ object MDIChild: TMDIChild
             Top = 20
             Width = 15
             Height = 21
-            Hint = 
-              'Want to change track frequency table?'#13#10'Check the track options t' +
-              'ab.'
             Associate = CurrentTable
             Max = 5
             ParentShowHint = False
@@ -2099,6 +2096,8 @@ object MDIChild: TMDIChild
               'When checked, round down periods for next octave instead of roun' +
               'ding to nearest (as in case of #1 SoundTracker frequency table)'
             Caption = 'Round down'
+            ParentShowHint = False
+            ShowHint = True
             TabOrder = 6
           end
         end
