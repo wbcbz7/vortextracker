@@ -2742,7 +2742,7 @@ begin
   Form1.Opt.ItemIndex := RenderEngine;
 
   if DetectFeaturesLevel then
-    Form1.RadioGroup1.ItemIndex := 3
+    Form1.RadioGroup1.ItemIndex := 4
   else
     Form1.RadioGroup1.ItemIndex := FeaturesLevel;
   Saved_FeaturesLevel := FeaturesLevel;
@@ -4299,8 +4299,9 @@ begin
     ExportRepeats    := GetIntParam('ExportRepeats', 0);
     ExportPath       := GetStrParam('ExportPath', '');
 
-    FeaturesLevel := GetIntParam('FeaturesLevel', 3);
+    FeaturesLevel := GetIntParam('FeaturesLevel', 4);
     DetectFeaturesLevel := GetBoolParam('DetectFeaturesLevel', True);
+    if DetectFeaturesLevel then FeaturesLevel := 1;
 
     VortexModuleHeader := GetBoolParam('VortexModuleHeader', True);
     DetectModuleHeader := GetBoolParam('DetectModuleHeader', True);

@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 1179
-  Top = 225
+  Left = 911
+  Top = 121
   Width = 550
   Height = 614
   HorzScrollBar.Tracking = True
@@ -28,7 +28,7 @@ object Form1: TForm1
     Top = 0
     Width = 542
     Height = 545
-    ActivePage = CurWinds
+    ActivePage = OpMod
     Align = alTop
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -2029,11 +2029,12 @@ object Form1: TForm1
         Width = 521
         Height = 113
         Caption = ' Features Level '
-        ItemIndex = 3
+        ItemIndex = 4
         Items.Strings = (
           'Pro Tracker 3.5'
           'Vortex Tracker II (PT 3.6)'
           'Pro Tracker 3.7'
+          'Pro Tracker 3.7 + ext features'
           'Try to detect')
         TabOrder = 2
         OnClick = RadioGroup1Click

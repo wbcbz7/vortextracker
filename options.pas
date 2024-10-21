@@ -623,7 +623,7 @@ end;
 procedure TForm1.RadioGroup1Click(Sender: TObject);
 begin
   FeaturesLevel := RadioGroup1.ItemIndex;
-  DetectFeaturesLevel := FeaturesLevel > 2;
+  DetectFeaturesLevel := FeaturesLevel > 3;
   if DetectFeaturesLevel then FeaturesLevel := 1;
 end;
 
