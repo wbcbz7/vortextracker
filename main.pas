@@ -748,6 +748,7 @@ var
   DisableHints: Boolean;
   DisableCtrlClick: Boolean;
   DisableInfoWin: Boolean;
+  DisableRecalcEnv: Boolean;
   DisableMidi: Boolean;
   VortexFirstStart: Boolean;
   ManualChipFreq: Integer;
@@ -2580,7 +2581,8 @@ var
     Saved_WinThemeIndex: Integer;
     Saved_DisableMidi: Boolean;
     Saved_DisableCtrlClick: Boolean;
-    Saved_DisableInfoWin: Boolean;    
+    Saved_DisableInfoWin: Boolean;
+    Saved_DisableRecalcEnv: Boolean;
     Saved_ManualChipFreq: Integer;
     Saved_ManualIntFreq: Integer;
     Saved_CenterOffset: Integer;
@@ -2611,6 +2613,9 @@ begin
 
   Saved_DisableInfoWin := DisableInfoWin;
   Form1.DisableInfoWinOpt.Checked := DisableInfoWin;
+
+  Saved_DisableRecalcEnv := DisableRecalcEnv;
+  Form1.DisableRecalcEnvOpt.Checked := DisableRecalcEnv;
 
   Form1.StartsAction.ItemIndex := StartupAction;
   Saved_StartupAction := StartupAction;
@@ -2687,31 +2692,33 @@ begin
 
   Saved_ChipFreq := DefaultChipFreq;
   case DefaultChipFreq of
-    894887:  Form1.ChFreq.ItemIndex := 0;
-    831303:  Form1.ChFreq.ItemIndex := 1;
-    1773400: Form1.ChFreq.ItemIndex := 2;
-    1750000: Form1.ChFreq.ItemIndex := 3;
-    1000000: Form1.ChFreq.ItemIndex := 4;
-    1500000: Form1.ChFreq.ItemIndex := 5;
-    2000000: Form1.ChFreq.ItemIndex := 6;
-    3500000: Form1.ChFreq.ItemIndex := 7;
-    1520640: Form1.ChFreq.ItemIndex := 8;
-    1611062: Form1.ChFreq.ItemIndex := 9;
-    1706861: Form1.ChFreq.ItemIndex := 10;
-    1808356: Form1.ChFreq.ItemIndex := 11;
-    1915886: Form1.ChFreq.ItemIndex := 12;
-    2029811: Form1.ChFreq.ItemIndex := 13;
-    2150510: Form1.ChFreq.ItemIndex := 14;
-    2278386: Form1.ChFreq.ItemIndex := 15;
-    2413866: Form1.ChFreq.ItemIndex := 16;
-    2557401: Form1.ChFreq.ItemIndex := 17;
-    2709472: Form1.ChFreq.ItemIndex := 18;
-    2870586: Form1.ChFreq.ItemIndex := 19;
-    3041280: Form1.ChFreq.ItemIndex := 20;
+    750000:  Form1.ChFreq.ItemIndex := 0;
+    894887:  Form1.ChFreq.ItemIndex := 1;
+    831303:  Form1.ChFreq.ItemIndex := 2;
+    1773400: Form1.ChFreq.ItemIndex := 3;
+    1750000: Form1.ChFreq.ItemIndex := 4;
+    1714286: Form1.ChFreq.ItemIndex := 5;
+    1000000: Form1.ChFreq.ItemIndex := 6;
+    1500000: Form1.ChFreq.ItemIndex := 7;
+    2000000: Form1.ChFreq.ItemIndex := 8;
+    3500000: Form1.ChFreq.ItemIndex := 9;
+    1520640: Form1.ChFreq.ItemIndex := 10;
+    1611062: Form1.ChFreq.ItemIndex := 11;
+    1706861: Form1.ChFreq.ItemIndex := 12;
+    1808356: Form1.ChFreq.ItemIndex := 13;
+    1915886: Form1.ChFreq.ItemIndex := 14;
+    2029811: Form1.ChFreq.ItemIndex := 15;
+    2150510: Form1.ChFreq.ItemIndex := 16;
+    2278386: Form1.ChFreq.ItemIndex := 17;
+    2413866: Form1.ChFreq.ItemIndex := 18;
+    2557401: Form1.ChFreq.ItemIndex := 19;
+    2709472: Form1.ChFreq.ItemIndex := 20;
+    2870586: Form1.ChFreq.ItemIndex := 21;
+    3041280: Form1.ChFreq.ItemIndex := 22;
   else
     begin
      // Form1.EdChipFrq.Text := IntToStr(AY_Freq);
-      Form1.ChFreq.ItemIndex := 21;
+      Form1.ChFreq.ItemIndex := 23;
     end;
   end;
 
@@ -2830,6 +2837,7 @@ begin
     ManualChipFreq := Saved_ManualChipFreq;
     DisableCtrlClick := Saved_DisableCtrlClick;
     DisableInfoWin := Saved_DisableInfoWin;
+    DisableRecalcEnv := Saved_DisableRecalcEnv;
 
     PositionSize := Saved_PositionSize;
     CenterOffset := Saved_CenterOffset;
@@ -4096,6 +4104,7 @@ begin
     SetBoolParam('DisableHints', DisableHints);
     SetBoolParam('DisableCtrlClick', DisableCtrlClick);
     SetBoolParam('DisableInfoWin', DisableInfoWin);
+    SetBoolParam('DisableRecalcEnv', DisableRecalcEnv);
     SetBoolParam('DisableMidi',DisableMidi);
 
     SetBoolParam('SampleBrowserVisible', SampleBrowserVisible);
@@ -4437,6 +4446,7 @@ begin
     DisableHints := GetBoolParam('DisableHints', False);
     DisableCtrlClick := GetBoolParam('DisableCtrlClick', False);
     DisableInfoWin := GetBoolParam('DisableInfoWin', False);
+    DisableRecalcEnv := GetBoolParam('DisableRecalcEnv', False);
     DisableMidi := GetBoolParam('DisableMidi', False);
     SampleBrowserVisible := GetBoolParam('SampleBrowserVisible', True);
     OrnamentsBrowserVisible := GetBoolParam('OrnamentsBrowserVisible', True);

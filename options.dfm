@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 536
-  Top = 188
+  Left = 1179
+  Top = 225
   Width = 550
   Height = 614
   HorzScrollBar.Tracking = True
@@ -28,7 +28,7 @@ object Form1: TForm1
     Top = 0
     Width = 542
     Height = 545
-    ActivePage = ColorThemesTab
+    ActivePage = CurWinds
     Align = alTop
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -49,7 +49,7 @@ object Form1: TForm1
         TabOrder = 0
         object DecNumbersLines: TCheckBox
           Left = 12
-          Top = 27
+          Top = 17
           Width = 295
           Height = 17
           Hint = 'Delete Position'
@@ -59,7 +59,7 @@ object Form1: TForm1
         end
         object DecNumbersNoise: TCheckBox
           Left = 12
-          Top = 52
+          Top = 42
           Width = 287
           Height = 17
           Caption = 'Noise level in pattern and sample in Decimal'
@@ -68,7 +68,7 @@ object Form1: TForm1
         end
         object chkHS: TCheckBox
           Left = 12
-          Top = 78
+          Top = 66
           Width = 287
           Height = 17
           Hint = 'Delete Position'
@@ -78,7 +78,7 @@ object Form1: TForm1
         end
         object DisablePatSeparators: TCheckBox
           Left = 12
-          Top = 103
+          Top = 91
           Width = 273
           Height = 17
           Caption = 'Disable vertical pattern separators'
@@ -87,7 +87,7 @@ object Form1: TForm1
         end
         object DisableHintsOpt: TCheckBox
           Left = 12
-          Top = 129
+          Top = 116
           Width = 279
           Height = 17
           Caption = 'Disable Hints in pattern, sample and ornament editor'
@@ -96,7 +96,7 @@ object Form1: TForm1
         end
         object DisableCtrlClickOpt: TCheckBox
           Left = 12
-          Top = 154
+          Top = 140
           Width = 285
           Height = 17
           Caption = 'Disable Ctrl+Click and Ctrl+Enter on sample/ornament'
@@ -105,12 +105,23 @@ object Form1: TForm1
         end
         object DisableInfoWinOpt: TCheckBox
           Left = 12
-          Top = 180
+          Top = 166
           Width = 261
           Height = 17
           Caption = 'Don'#39't show Info Window when track is loaded'
           TabOrder = 6
           OnMouseUp = DisableInfoWinOptMouseUp
+        end
+        object DisableRecalcEnvOpt: TCheckBox
+          Left = 12
+          Top = 190
+          Width = 345
+          Height = 17
+          Caption = 
+            'Disable recalculating envelope periods if frequency table is chan' +
+            'ged'
+          TabOrder = 7
+          OnClick = DisableRecalcEnvOptClick
         end
       end
       object BackupOpts: TGroupBox
@@ -1407,12 +1418,14 @@ object Form1: TForm1
         Caption = ' Default Chip Frequency '
         ItemIndex = 0
         Items.Strings = (
+          '0.750000 MHz (Sinclair QL)'
           '0.894887 MHz (NES NTSC)'
           '0.8313035 MHz (NES PAL)'
           '1.7734 MHz (ZX Spectrum)'
           '1.75 MHz (Pentagon 128K)'
           '1 MHz (Amstrad CPC)'
           '1.5 MHz (Vectrex console)'
+          '1.714286 MHz (BK-0010/11M) '
           '2 MHz (Atari ST)'
           '3.5 MHz'
           '1520640 Hz (Natural C/Am for 4th table)'
@@ -1675,7 +1688,7 @@ object Form1: TForm1
           Top = 59
           Width = 65
           Height = 17
-          Caption = 'Wbcbz7'
+          Caption = 'IIR'
           TabOrder = 3
           OnMouseUp = DCWbcbz7MouseUp
         end

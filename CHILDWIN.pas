@@ -678,6 +678,17 @@ type
     N81: TMenuItem;
     N91: TMenuItem;
     StretchBtn: TButton;
+    FreqTableBox: TGroupBox;
+    Label15: TLabel;
+    TableName: TLabel;
+    CurrentTable: TEdit;
+    UpDown2: TUpDown;
+    LoadCustomNoteTable: TBitBtn;
+    SaveCustomNoteTableBtn: TBitBtn;
+    TuningEdit: TEdit;
+    CalcCustomTuningBtn: TBitBtn;
+    A4Tuning: TLabel;
+    RoundDownCheckBox: TCheckBox;
     procedure RecalcSampOrnUsage;
     function IsMouseOverControl(const Ctrl: TControl): Boolean;
     function BorderSize: Integer;
@@ -3356,12 +3367,14 @@ begin
     ManualHz.Left := TrackChipFreq.Buttons[20].Left + 95;
     ManualIntFreq.Left := TrackIntSel.Buttons[6].Left + 95;
 
+    FreqTableBox.Width := TrackOptsScrollBox.ClientWidth - FreqTableBox.Left - VScrollbarSize - 3;
 
     // --- INFO TAB -------
     TrackInfoGB.Width := InfoTab.Width - (TrackInfoGB.Left*2);
     EditPanel.Width := TrackInfoGB.ClientWidth - (EditPanel.Left*2);
 
     ViewInfoBtn.Left := EditPanel.Left + EditPanel.Width - ViewInfoBtn.Width - 2;
+
   end;
 
   
@@ -5577,7 +5590,7 @@ begin
     3: ToneTablePtr := @PT3NoteTable_REAL;
     4: ToneTablePtr := @PT3NoteTable_NATURAL;
   else
-    ToneTablePtr := @CustomNoteTable; //5
+    ToneTablePtr := @TMDIChild(ParentWin).VTMP.CustomNoteTable; //5
   end;
 
   // Search last not empty line
@@ -16216,6 +16229,7 @@ var
   ENote, oldE, e: Integer;
   Notefreq: Integer;
 begin
+  if DisableRecalcEnv then exit;
   for ff := -1 to 84 do
   begin
     if VTMZ.Patterns[ff] = nil then
@@ -16262,14 +16276,20 @@ begin
 
   if BlockRecursion then Exit;
 
+  BlockRecursion := True;
+  UpDown2.Position := NewValue;
+  BlockRecursion := False;
+
   if TSWindow[0] <> nil then begin
     TSWindow[0].BlockRecursion := True;
     TSWindow[0].UpDown4.Position := NewValue;
+    TSWindow[0].UpDown2.Position := NewValue;
     TSWindow[0].BlockRecursion := False;
   end;
   if TSWindow[1] <> nil then begin
     TSWindow[1].BlockRecursion := True;
     TSWindow[1].UpDown4.Position := NewValue;
+    TSWindow[1].UpDown2.Position := NewValue;
     TSWindow[1].BlockRecursion := False;
   end;
 end;
@@ -20300,6 +20320,7 @@ begin
           CAChangeToneTable:
             begin
               UpDown4.Position := Pars.prm.Table;
+              UpDown2.Position := Pars.prm.Table;
               Edit7.SelectAll;
               SetF(0, Edit7)
             end;
@@ -22925,29 +22946,31 @@ begin
   VTMP.ChipFreq := FreqValue;
   case FreqValue of
 
-    894887:  TrackChipFreq.ItemIndex := 0;
-    831303:  TrackChipFreq.ItemIndex := 1;
-    1773400: TrackChipFreq.ItemIndex := 2;
-    1750000: TrackChipFreq.ItemIndex := 3;
-    1000000: TrackChipFreq.ItemIndex := 4;
-    1500000: TrackChipFreq.ItemIndex := 5;
-    2000000: TrackChipFreq.ItemIndex := 6;
-    3500000: TrackChipFreq.ItemIndex := 7;
-    1520640: TrackChipFreq.ItemIndex := 8;
-    1611062: TrackChipFreq.ItemIndex := 9;
-    1706861: TrackChipFreq.ItemIndex := 10;
-    1808356: TrackChipFreq.ItemIndex := 11;
-    1915886: TrackChipFreq.ItemIndex := 12;
-    2029811: TrackChipFreq.ItemIndex := 13;
-    2150510: TrackChipFreq.ItemIndex := 14;
-    2278386: TrackChipFreq.ItemIndex := 15;
-    2413866: TrackChipFreq.ItemIndex := 16;
-    2557401: TrackChipFreq.ItemIndex := 17;
-    2709472: TrackChipFreq.ItemIndex := 18;
-    2870586: TrackChipFreq.ItemIndex := 19;
-    3041280: TrackChipFreq.ItemIndex := 20;
+    750000:  TrackChipFreq.ItemIndex := 0;
+    894887:  TrackChipFreq.ItemIndex := 1;
+    831303:  TrackChipFreq.ItemIndex := 2;
+    1773400: TrackChipFreq.ItemIndex := 3;
+    1750000: TrackChipFreq.ItemIndex := 4;
+    1714286: TrackChipFreq.ItemIndex := 5;
+    1000000: TrackChipFreq.ItemIndex := 6;
+    1500000: TrackChipFreq.ItemIndex := 7;
+    2000000: TrackChipFreq.ItemIndex := 8;
+    3500000: TrackChipFreq.ItemIndex := 9;
+    1520640: TrackChipFreq.ItemIndex := 10;
+    1611062: TrackChipFreq.ItemIndex := 11;
+    1706861: TrackChipFreq.ItemIndex := 12;
+    1808356: TrackChipFreq.ItemIndex := 13;
+    1915886: TrackChipFreq.ItemIndex := 14;
+    2029811: TrackChipFreq.ItemIndex := 15;
+    2150510: TrackChipFreq.ItemIndex := 16;
+    2278386: TrackChipFreq.ItemIndex := 17;
+    2413866: TrackChipFreq.ItemIndex := 18;
+    2557401: TrackChipFreq.ItemIndex := 19;
+    2709472: TrackChipFreq.ItemIndex := 20;
+    2870586: TrackChipFreq.ItemIndex := 21;
+    3041280: TrackChipFreq.ItemIndex := 22;
     else
-      TrackChipFreq.ItemIndex := 21;
+      TrackChipFreq.ItemIndex := 23;
       ManualHz.Text := IntToStr(FreqValue);
   end;
 end;
@@ -22957,28 +22980,30 @@ var f: Integer;
 begin
 
   case TrackChipFreq.ItemIndex of
-    0:  VTMP.ChipFreq := 894887;
-    1:  VTMP.ChipFreq := 831303;
-    2:  VTMP.ChipFreq := 1773400;
-    3:  VTMP.ChipFreq := 1750000;
-    4:  VTMP.ChipFreq := 1000000;
-    5:  VTMP.ChipFreq := 1500000;
-    6:  VTMP.ChipFreq := 2000000;
-    7:  VTMP.ChipFreq := 3500000;
-    8:  VTMP.ChipFreq := 1520640;
-    9:  VTMP.ChipFreq := 1611062;
-    10: VTMP.ChipFreq := 1706861;
-    11: VTMP.ChipFreq := 1808356;
-    12: VTMP.ChipFreq := 1915886;
-    13: VTMP.ChipFreq := 2029811;
-    14: VTMP.ChipFreq := 2150510;
-    15: VTMP.ChipFreq := 2278386;
-    16: VTMP.ChipFreq := 2413866;
-    17: VTMP.ChipFreq := 2557401;
-    18: VTMP.ChipFreq := 2709472;
-    19: VTMP.ChipFreq := 2870586;
-    20: VTMP.ChipFreq := 3041280;
-    21: begin
+    0:  VTMP.ChipFreq := 750000;
+    1:  VTMP.ChipFreq := 894887;
+    2:  VTMP.ChipFreq := 831303;
+    3:  VTMP.ChipFreq := 1773400;
+    4:  VTMP.ChipFreq := 1750000;
+    5:  VTMP.ChipFreq := 1714286;
+    6:  VTMP.ChipFreq := 1000000;
+    7:  VTMP.ChipFreq := 1500000;
+    8:  VTMP.ChipFreq := 2000000;
+    9:  VTMP.ChipFreq := 3500000;
+    10: VTMP.ChipFreq := 1520640;
+    11: VTMP.ChipFreq := 1611062;
+    12: VTMP.ChipFreq := 1706861;
+    13: VTMP.ChipFreq := 1808356;
+    14: VTMP.ChipFreq := 1915886;
+    15: VTMP.ChipFreq := 2029811;
+    16: VTMP.ChipFreq := 2150510;
+    17: VTMP.ChipFreq := 2278386;
+    18: VTMP.ChipFreq := 2413866;
+    19: VTMP.ChipFreq := 2557401;
+    20: VTMP.ChipFreq := 2709472;
+    21: VTMP.ChipFreq := 2870586;
+    22: VTMP.ChipFreq := 3041280;
+    23: begin
           f := GetValue(ManualHz.Text);
           if (f < 0) or (f < 700000) or (f > 3546800) then Exit;
           VTMP.ChipFreq := f;

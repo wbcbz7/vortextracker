@@ -226,6 +226,7 @@ type
     OpenCustomNoteTableDialog1: TOpenDialog;
     RemapOnlyPan1: TCheckBox;
     optMidiEnable: TCheckBox;
+    DisableRecalcEnvOpt: TCheckBox;
     procedure StopAndStart;
     procedure ChipSelClick(Sender: TObject);
     procedure IntSelClick(Sender: TObject);
@@ -403,6 +404,7 @@ type
     procedure LoadCustomNoteTableClick(Sender: TObject);
     procedure RemapOnlyPan1Click(Sender: TObject);
     procedure optMidiEnableClick(Sender: TObject);
+    procedure DisableRecalcEnvOptClick(Sender: TObject);
 
 
 
@@ -682,30 +684,31 @@ var
   i, f: integer;
 begin
   case ChFreq.ItemIndex of
-    0:  f := 894887;
-    1:  f := 831303;
-    2:  f := 1773400;
-    3:  f := 1750000;
-    4:  f := 1000000;
-    5:  f := 1500000;
-    6:  f := 2000000;
-    7:  f := 3500000;
+    0:  f := 750000;
+    1:  f := 894887;
+    2:  f := 831303;
+    3:  f := 1773400;
+    4:  f := 1750000;
+    5:  f := 1714286;
+    6:  f := 1000000;
+    7:  f := 1500000;
+    8:  f := 2000000;
+    9:  f := 3500000;
+    10: f := 1520640;
+    11: f := 1611062;
+    12: f := 1706861;
+    13: f := 1808356;
+    14: f := 1915886;
+    15: f := 2029811;
+    16: f := 2150510;
+    17: f := 2278386;
+    18: f := 2413866;
+    19: f := 2557401;
+    20: f := 2709472;
+    21: f := 2870586;
+    22: f := 3041280;
 
-    8:  f := 1520640;
-    9:  f := 1611062;
-    10:  f := 1706861;
-    11: f := 1808356;
-    12: f := 1915886;
-    13: f := 2029811;
-    14: f := 2150510;
-    15: f := 2278386;
-    16: f := 2413866;
-    17: f := 2557401;
-    18: f := 2709472;
-    19: f := 2870586;
-    20: f := 3041280;
-
-    21:
+    23:
       begin
         if not EdChipFrq.Focused and EdChipFrq.CanFocus then
         begin
@@ -1958,6 +1961,11 @@ procedure TForm1.optMidiEnableClick(Sender: TObject);
 begin
   DisableMidi := not optMidiEnable.Checked;
   if DisableMidi then MainForm.midiin1.StopAndClose;
+end;
+
+procedure TForm1.DisableRecalcEnvOptClick(Sender: TObject);
+begin
+  DisableRecalcEnv := DisableRecalcEnvOpt.Checked;
 end;
 
 end.

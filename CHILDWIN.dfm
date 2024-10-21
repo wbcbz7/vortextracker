@@ -1,12 +1,12 @@
 object MDIChild: TMDIChild
-  Left = 421
-  Top = 177
+  Left = 255
+  Top = 138
   HorzScrollBar.Visible = False
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Module'
-  ClientHeight = 519
+  ClientHeight = 715
   ClientWidth = 595
   Color = clBtnFace
   Constraints.MinHeight = 470
@@ -41,7 +41,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = PatternsSheet
+    ActivePage = OptTab
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -1872,12 +1872,14 @@ object MDIChild: TMDIChild
           Font.Style = []
           ItemIndex = 0
           Items.Strings = (
+            '0.750000 MHz (Sinclair QL)'
             '0.894887 MHz (NES NTSC)'
             '0.8313035 MHz (NES PAL)'
             '1.7734 MHz (ZX Spectrum)'
             '1.75 MHz (Pentagon 128K)'
             '1 MHz (Amstrad CPC)'
             '1.5 MHz (Vectrex console)'
+            '1.714286 MHz (BK-0010/11M) '
             '2 MHz (Atari ST)'
             '3.5 MHz'
             '1520640 Hz (Natural C/Am for 4th table)'
@@ -1902,7 +1904,7 @@ object MDIChild: TMDIChild
         end
         object TrackIntSel: TRadioGroup
           Left = 0
-          Top = 316
+          Top = 304
           Width = 537
           Height = 118
           Caption = ' Interrupt Frequency for track'
@@ -1927,7 +1929,7 @@ object MDIChild: TMDIChild
         end
         object SaveHead: TRadioGroup
           Left = 240
-          Top = 453
+          Top = 430
           Width = 297
           Height = 82
           Caption = ' Save with header '
@@ -1946,7 +1948,7 @@ object MDIChild: TMDIChild
         end
         object VtmFeaturesGrp: TRadioGroup
           Left = 0
-          Top = 453
+          Top = 430
           Width = 233
           Height = 82
           Caption = ' Features level '
@@ -1967,7 +1969,7 @@ object MDIChild: TMDIChild
         end
         object ManualHz: TEdit
           Left = 363
-          Top = 266
+          Top = 269
           Width = 64
           Height = 20
           AutoSize = False
@@ -1978,7 +1980,7 @@ object MDIChild: TMDIChild
         end
         object ManualIntFreq: TEdit
           Left = 358
-          Top = 381
+          Top = 370
           Width = 64
           Height = 20
           AutoSize = False
@@ -1986,6 +1988,114 @@ object MDIChild: TMDIChild
           TabOrder = 3
           OnKeyPress = ManualIntFreqKeyPress
           OnKeyUp = ManualIntFreqKeyUp
+        end
+        object FreqTableBox: TGroupBox
+          Left = 0
+          Top = 520
+          Width = 537
+          Height = 73
+          Caption = ' Frequency Table '
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Microsoft Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 6
+          object Label15: TLabel
+            Left = 12
+            Top = 22
+            Width = 120
+            Height = 13
+            Hint = 'Current Frequency Table'
+            Caption = 'Current Frequency Table:'
+            ParentShowHint = False
+            ShowHint = True
+          end
+          object TableName: TLabel
+            Left = 11
+            Top = 48
+            Width = 114
+            Height = 13
+            Caption = 'ASM or PSC (1.75 MHz)'
+          end
+          object A4Tuning: TLabel
+            Left = 310
+            Top = 20
+            Width = 73
+            Height = 13
+            Caption = 'A-4 tuning (Hz):'
+          end
+          object CurrentTable: TEdit
+            Left = 140
+            Top = 20
+            Width = 31
+            Height = 21
+            MaxLength = 1
+            ParentShowHint = False
+            ReadOnly = True
+            ShowHint = True
+            TabOrder = 0
+            Text = '2'
+          end
+          object UpDown2: TUpDown
+            Left = 171
+            Top = 20
+            Width = 15
+            Height = 21
+            Hint = 
+              'Want to change track frequency table?'#13#10'Check the track options t' +
+              'ab.'
+            Associate = CurrentTable
+            Max = 5
+            ParentShowHint = False
+            Position = 2
+            ShowHint = True
+            TabOrder = 1
+          end
+          object LoadCustomNoteTable: TBitBtn
+            Left = 200
+            Top = 14
+            Width = 89
+            Height = 22
+            Caption = 'Load custom (5)'
+            TabOrder = 2
+          end
+          object SaveCustomNoteTableBtn: TBitBtn
+            Left = 200
+            Top = 40
+            Width = 89
+            Height = 22
+            Caption = 'Save custom (5)'
+            TabOrder = 3
+          end
+          object TuningEdit: TEdit
+            Left = 392
+            Top = 16
+            Width = 137
+            Height = 21
+            TabOrder = 4
+            Text = '440'
+          end
+          object CalcCustomTuningBtn: TBitBtn
+            Left = 392
+            Top = 40
+            Width = 137
+            Height = 22
+            Caption = 'Calculate custom table'
+            TabOrder = 5
+          end
+          object RoundDownCheckBox: TCheckBox
+            Left = 300
+            Top = 40
+            Width = 81
+            Height = 17
+            Hint = 
+              'When checked, round down periods for next octave instead of roun' +
+              'ding to nearest (as in case of #1 SoundTracker frequency table)'
+            Caption = 'Round down'
+            TabOrder = 6
+          end
         end
       end
     end
