@@ -2797,6 +2797,7 @@ var
   i, j: integer;
   colors: string;
   Flag1, Flag2: Boolean;
+  ornc: integer;
 begin
   j := 0;
   AssignFile(TxtFile, FileName);
@@ -2853,7 +2854,15 @@ begin
     Writeln(TxtFile);
     Writeln(TxtFile);
 
-    for i := 1 to 31 do
+    // is it 32-ornament version?
+    ornc := 15;
+    for i := 16 to 31 do
+      if not isOrnamentEmpty(VTM, i) then
+      begin
+       ornc := 31;
+       break;
+      end;
+    for i := 1 to ornc do
     begin
       Writeln(TxtFile, '[Ornament' + IntToStr(i) + ']');
       SaveOrnament(VTM, i);
