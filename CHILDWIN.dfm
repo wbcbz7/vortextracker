@@ -865,7 +865,7 @@ object MDIChild: TMDIChild
           ParentCtl3D = False
           ParentFont = False
           PopupMenu = MainForm.PopupMenu1
-          ScrollBars = ssNone
+          ScrollBars = ssHorizontal
           TabOrder = 0
           OnDragDrop = StringGrid1DragDrop
           OnDragOver = StringGrid1DragOver

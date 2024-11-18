@@ -16064,9 +16064,20 @@ end;
 procedure TMDIChild.StringGrid1DragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
 var
   CurrentCol, CurrentRow: Integer;
+  EdgeX1, EdgeX2: Integer;
 begin
   StringGrid1.MouseToCell(X, Y, CurrentCol, CurrentRow);
   Accept := (Sender = Source) and (CurrentCol >= 0);
+
+  EdgeX1:=X-PositionsScrollBox.HorzScrollBar.Position;
+  EdgeX2:=PositionsScrollBox.ClientWidth - (X-PositionsScrollBox.HorzScrollBar.Position)-2;
+
+  if EdgeX1<8 then
+    PositionsScrollBox.HorzScrollBar.Position := PositionsScrollBox.HorzScrollBar.Position - 2*(8-EdgeX1);
+  if EdgeX2<8 then
+    PositionsScrollBox.HorzScrollBar.Position := PositionsScrollBox.HorzScrollBar.Position + 2*(8-EdgeX2);
+
+  caption:=inttostr(CurrentCol)+' '+inttostr(EdgeX1)+' '+inttostr(EdgeX2);
   if Accept then
   begin
     if (PatternsOrderSelection.Right <> PatternsOrderSelection.Left) then
