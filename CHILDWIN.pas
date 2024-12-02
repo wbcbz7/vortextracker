@@ -16077,7 +16077,6 @@ begin
   if EdgeX2<8 then
     PositionsScrollBox.HorzScrollBar.Position := PositionsScrollBox.HorzScrollBar.Position + 2*(8-EdgeX2);
 
-  caption:=inttostr(CurrentCol)+' '+inttostr(EdgeX1)+' '+inttostr(EdgeX2);
   if Accept then
   begin
     if (PatternsOrderSelection.Right <> PatternsOrderSelection.Left) then
@@ -19798,14 +19797,14 @@ begin
                   if DecBaseNoiseOn then  // fix for dec noise
                     newn := 10 * nums[l, k]
                   else
-                    newn := newn and 15 or (nums[l, k] shl 4);
+                    newn := (newn and $0F) or (nums[l, k] shl 4);
                 end;
               6:
                 begin
                   if DecBaseNoiseOn then  // fix for dec noise
-                    newn := newn + nums[l, k]
+                    newn := (newn div 10)*10 + nums[l, k]
                   else
-                    newn := newn and $F0 or nums[l, k];
+                    newn := (newn and $F0) or (nums[l, k] and $0F);
                 end;
               12, 26, 40:
                 if not Merge or (nums[l, k] <> 0) then
