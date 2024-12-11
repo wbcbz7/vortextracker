@@ -11120,7 +11120,7 @@ var
             IncVal:
               IncreaseOrnamentValue(i, Shift);
             DecVal:
-              IncreaseOrnamentValue(i, Shift);
+              DecreaseOrnamentValue(i, Shift);
           end;
         end;
         SaveOrnamentRedo;
