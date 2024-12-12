@@ -19418,6 +19418,8 @@ var
   lptstrCopy: PChar;
   X1, X2, Y1, Y2, i, l, ps: Integer;
   RepaintDisabled: Boolean;
+  dectmp: Boolean;
+  decxtmp: Integer;
   // sc:array[0..2] of string;
 begin
   if not OpenClipboard(MainForm.Handle) then
@@ -19458,6 +19460,11 @@ begin
       Y2 := SelY
     end;
 
+    dectmp := DecBaseLinesOn;
+    DecBaseLinesOn := False;
+    decxtmp := TracksCursorXLeft;
+    if dectmp then
+      dec(TracksCursorXLeft);
     // Note poses [8, 22, 36]
 
     // 1 channel
@@ -19514,6 +19521,9 @@ begin
   finally
     CloseClipboard
   end;
+
+  DecBaseLinesOn := dectmp;
+  TracksCursorXLeft := decxtmp;
 
   // End of dirty hack
   if RepaintDisabled then
@@ -19624,8 +19634,8 @@ begin
     if not GetStr(ps, s) then
       exit;
 
-    if DecBaseLinesOn then
-      s := copy(s, 2, Length(s));
+//    if DecBaseLinesOn then
+//      s := copy(s, 2, Length(s));
 
     inc(Integer(ps), Length(s) + 2);
     if Length(s) <> 49 then
