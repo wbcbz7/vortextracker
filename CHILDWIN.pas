@@ -19568,7 +19568,7 @@ procedure TTracks.PasteFromClipboard(Merge: Boolean);
 var
   hglb: HGLOBAL;
   lps, ps: PChar;
-  X1, X2, Y1, Y2, sz, l, i, j, k, m, newe, newn: Integer;
+  X1, X2, Y1, Y2, sz, l, i, j, k, m, newe, newn, e: Integer;
   newc: array[0..2] of TAdditionalCommand;
   s: string;
   nums: array[0..MaxPatLen - 1, 0..32] of Integer;
@@ -19774,7 +19774,13 @@ begin
         end
         else
         begin
-          if (m = 5) and not DecBaseNoiseOn then
+          if (m = 0) then
+          begin
+            e := Round(getnotefreq(TMDIChild(ParentWin).VTMP.Ton_Table, nums[l,k]-256) / 16);
+            if (e >= 2) and (e < $10000) then newe := e
+            else newe:=0;
+          end
+          else if (m = 5) and not DecBaseNoiseOn then
             sz := 1
           else if (m = 5) and DecBaseNoiseOn then
             sz := 3
