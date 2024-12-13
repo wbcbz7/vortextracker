@@ -19774,7 +19774,7 @@ begin
         end
         else
         begin
-          if (m = 0) then
+          if (m = 0) and (nums[l,k] >= 256 -2) then
           begin
             e := Round(getnotefreq(TMDIChild(ParentWin).VTMP.Ton_Table, nums[l,k]-256) / 16);
             if (e >= 2) and (e < $10000) then newe := e
@@ -19801,7 +19801,8 @@ begin
               sz := ChanAlloc[sz];
             case m of
               0:
-                newe := newe and $FFF or (nums[l, k] shl 12);
+                if nums[l, k] < 256 - 2 then
+                  newe := newe and $FFF or (nums[l, k] shl 12);
               1:
                 newe := newe and $F0FF or (nums[l, k] shl 8);
               2:
