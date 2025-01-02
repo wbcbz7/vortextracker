@@ -2927,7 +2927,7 @@ begin
         if i <> Length - 1 then Write(TxtFile, ',');
       end;
     Writeln(TxtFile);
-    if (VTM.Ton_Table = 5) then begin
+    if ((VTM.FeaturesLevel >= 3) or (VTM.Ton_Table = 5)) then begin
       Write(TxtFile, 'CustomNoteTable=');
       for i := 0 to 95 do
       begin

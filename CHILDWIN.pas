@@ -1134,6 +1134,9 @@ type
     procedure SaveCustomNoteTableBtnClick(Sender: TObject);
     procedure CalcCustomTuningBtnClick(Sender: TObject);
     procedure CurrentTableChange(Sender: TObject);
+    procedure UpDown2ChangingEx(Sender: TObject; var AllowChange: Boolean;
+      NewValue: Smallint; Direction: TUpDownDirection);
+    procedure CurrentTableExit(Sender: TObject);
 
 
 
@@ -13159,6 +13162,7 @@ begin
       CalcHLStep;
     SpeedBpmUpDown.Position := VTMP.Initial_Delay;
     UpDown4.Position := VTMP.Ton_Table;
+    UpDown2.Position := VTMP.Ton_Table;
     Edit3.Text := VTMP.Title;
     Edit4.Text := VTMP.Author;
     PosDelay := VTMP.Initial_Delay;
@@ -16267,6 +16271,14 @@ procedure TMDIChild.UpDown4ChangingEx(Sender: TObject; var AllowChange: Boolean;
 begin
   AllowChange := NewValue in [0..5];
   if not AllowChange then Exit;
+
+  // make sure both tone table controls are ALWAYS synchronized
+  if (BlockRecursion = False) then begin
+    BlockRecursion := True;
+    UpDown2.Position := NewValue;
+    BlockRecursion := False;
+  end;
+
   if VTMP.Ton_Table = NewValue then Exit;
 
   change_Envelope_when_toneTableChanged(VTMP, VTMP.Ton_Table, NewValue);
@@ -16282,10 +16294,6 @@ begin
     SetToolsPattern;
 
   if BlockRecursion then Exit;
-
-  BlockRecursion := True;
-  UpDown2.Position := NewValue;
-  BlockRecursion := False;
 
   if TSWindow[0] <> nil then begin
     TSWindow[0].BlockRecursion := True;
@@ -20330,6 +20338,7 @@ begin
               UpDown4.Position := Pars.prm.Table;
               UpDown2.Position := Pars.prm.Table;
               Edit7.SelectAll;
+              SetF(3, CurrentTable);
               SetF(0, Edit7)
             end;
           CAChangeSampleLoop:
@@ -24370,7 +24379,7 @@ procedure TMDIChild.CurrentTableChange(Sender: TObject);
 begin
   if VTMP.Ton_Table <> UpDown2.Position then
     begin
-      change_Envelope_when_toneTableChanged(VTMP, VTMP.Ton_Table, UpDown4.Position);
+      change_Envelope_when_toneTableChanged(VTMP, VTMP.Ton_Table, UpDown2.Position);
       SongChanged := True;
       BackupSongChanged := True;
       AddUndo(CAChangeToneTable, VTMP.Ton_Table, UpDown2.Position);
@@ -24381,6 +24390,55 @@ begin
   UpdateToneTableHints;
 
   Tracks.RedrawTracks(0);
+end;
+
+procedure TMDIChild.UpDown2ChangingEx(Sender: TObject;
+  var AllowChange: Boolean; NewValue: Smallint;
+  Direction: TUpDownDirection);
+begin
+  AllowChange := NewValue in [0..5];
+  if not AllowChange then Exit;
+
+  // make sure both tone table controls are ALWAYS synchronized
+  if (BlockRecursion = False) then begin
+    BlockRecursion := True;
+    UpDown4.Position := NewValue;
+    BlockRecursion := False;
+  end;
+
+  if VTMP.Ton_Table = NewValue then Exit;
+
+  change_Envelope_when_toneTableChanged(VTMP, VTMP.Ton_Table, NewValue);
+  SongChanged := True;
+  BackupSongChanged := True;
+  AddUndo(CAChangeToneTable, VTMP.Ton_Table, NewValue);
+  VTMP.Ton_Table := NewValue;
+
+  UpdateToneTableHints;
+
+  Tracks.RedrawTracks(0);
+  if Active then
+    SetToolsPattern;
+
+  if BlockRecursion then Exit;
+
+  if TSWindow[0] <> nil then begin
+    TSWindow[0].BlockRecursion := True;
+    TSWindow[0].UpDown4.Position := NewValue;
+    TSWindow[0].UpDown2.Position := NewValue;
+    TSWindow[0].BlockRecursion := False;
+  end;
+  if TSWindow[1] <> nil then begin
+    TSWindow[1].BlockRecursion := True;
+    TSWindow[1].UpDown4.Position := NewValue;
+    TSWindow[1].UpDown2.Position := NewValue;
+    TSWindow[1].BlockRecursion := False;
+  end;
+end;
+
+procedure TMDIChild.CurrentTableExit(Sender: TObject);
+begin
+    CurrentTable.Text := IntToStr(UpDown2.Position);
 end;
 
 end.

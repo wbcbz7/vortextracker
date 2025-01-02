@@ -41,7 +41,7 @@ object MDIChild: TMDIChild
     Top = 0
     Width = 593
     Height = 665
-    ActivePage = OptTab
+    ActivePage = PatternsSheet
     BiDiMode = bdLeftToRight
     Constraints.MinWidth = 516
     Font.Charset = DEFAULT_CHARSET
@@ -2038,6 +2038,7 @@ object MDIChild: TMDIChild
             TabOrder = 0
             Text = '2'
             OnChange = CurrentTableChange
+            OnExit = CurrentTableExit
           end
           object UpDown2: TUpDown
             Left = 171
@@ -2050,6 +2051,7 @@ object MDIChild: TMDIChild
             Position = 2
             ShowHint = True
             TabOrder = 1
+            OnChangingEx = UpDown2ChangingEx
           end
           object LoadCustomNoteTable: TBitBtn
             Left = 200
