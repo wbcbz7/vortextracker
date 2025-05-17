@@ -179,7 +179,7 @@ type
     procedure Configure(isYM: Boolean; clockRate: Double; sampleRate: Integer; ADCType: Integer);
     procedure SetDCType(Value: Integer);
     procedure SetDCCutoff(Value: Integer);
-    procedure ResetChip;
+    procedure ResetChip(RandomizePhase : Boolean = True);
 
     procedure SetChipType(isYM: Boolean);
     procedure SetChipFreq(clockRate: Double);
@@ -221,6 +221,7 @@ implementation
 constructor TAyumi.Create;
 begin
   //
+  ResetChip;
 end;
 
 
@@ -276,7 +277,7 @@ begin
   DCRightWbcbz7.r := DCLeftWbcbz7.r;
 end;
 
-procedure TAyumi.ResetChip;
+procedure TAyumi.ResetChip(RandomizePhase : boolean);
 var i: Integer;
 begin
   x := 0;
@@ -315,6 +316,18 @@ begin
   DCRightWbcbz7.oldY := 0;
   left  := 0;
   right := 0;
+
+
+  if (RandomizePhase) then begin
+    Randomize;
+    noise           := random(1);
+    noiseCounter    := random(32);
+    envelopeCounter := random(65536);
+    for i := 0 to 3 do begin
+      channels[i].tone        := random(1);
+      channels[i].toneCounter := random(4096);
+    end;
+  end;
 end;
 
 
